@@ -129,9 +129,10 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 3s --health-timeout 3s --health-retries 20
       redis:
         image: redis:7-alpine
-        ports: ["6391:6391"]
+        # 宿主 6391（e2e 栈槽位口径）→ 容器默认 6379；健康检查在容器内执行，用默认端口
+        ports: ["6391:6379"]
         options: >-
-          --health-cmd "redis-cli -p 6391 ping" --health-interval 3s --health-timeout 3s --health-retries 20
+          --health-cmd "redis-cli ping" --health-interval 3s --health-timeout 3s --health-retries 20
     env:
       # global-setup 检测到 E2E_DATABASE_URL 即复用 service 库（跳过 embedded PG）
       E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rabbitwork_e2e
