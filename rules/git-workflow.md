@@ -1,0 +1,138 @@
+# rules/git-workflow.md — 分支、PR、CI 与发布规范
+
+> 由 AGENTS.md §5 引用并细化。目标：每个 PR 可追溯到规格文档与高保真确认，CI 全绿才可合并，发布可回滚。
+
+## 1. 分支模型
+
+| 分支                           | 用途                     | 规则                                               |
+| ------------------------------ | ------------------------ | -------------------------------------------------- |
+| `main`                         | 唯一长期分支，始终可发布 | 保护：≥1 approve + CI 全绿 + squash merge          |
+| `feat/{MODULE}-NNN-{slug}`     | 功能开发                 | 与规格文档编号一一对应；生命周期 ≤1 个 sprint      |
+| `fix/{MODULE}-NNN-{slug}`      | 缺陷修复                 | 必须先有失败用例复现（rules/testing.md §5.3）      |
+| `hotfix/{slug}`                | 生产紧急修复             | 从 main 拉出，修复合入后同步 tag；须补审计事件说明 |
+| `docs/{slug}` / `chore/{slug}` | 文档/工程                | 不触碰 apps/packages 代码                          |
+
+## 2. Commit 规范
+
+1. Conventional Commits：`feat|fix|docs|refactor|test|chore|perf(scope): 描述`，scope 用模块缩写（`feat(case): …`、`fix(exec): …`）；commitlint 校验（scope 白名单见 commitlint.config.js）。
+2. 一个 commit 一个关注点；禁止「功能+格式化+无关重构」混提；migration 与其消费代码同 commit 或紧邻。
+3. 提交信息体（body）写「为什么」与影响面；破坏性变更标 `BREAKING CHANGE:` 并说明迁移路径。
+
+## 3. PR 规范
+
+1. 变更 ≤ 400 行（不含生成物与 lockfile）；超出必须拆 PR（按规格章节或分层）。
+2. PR 描述模板（`.github/pull_request_template.md`）必填：对应规格、高保真确认（UI 类）、测试证据（含录屏/trace）、数据库与权限点变更、截图。
+3. Review 要求：至少 1 名维护者 approve；涉及 schema/契约/权限的变更必须由对应 owner 二审（CODEOWNERS 按 `apps/web/src/server/domains` 与 `packages/db` 划分，随首个域建立）。
+4. 合并方式 squash merge，标题沿用 PR 标题（符合 commit 规范）。
+
+## 4. Code Review Checklist（Reviewer 逐项核对）
+
+- [ ] 规格文档存在且状态 ≥ Approved；高保真已人工确认（UI 类）
+- [ ] 测试三类断言齐备（UI/Console/接口）；jmx 四项断言齐备；录屏/trace 产物存在
+- [ ] 权限点已声明（withPermission）；对象级授权（withProjectScope）无遗漏
+- [ ] 跨域引用走 Provider；无 worker→web/db 依赖（`pnpm lint:boundaries` 过）
+- [ ] schema 变更符合一次建齐；migration 只增不改；expand-contract（若破坏性）
+- [ ] 日志/错误码/脱敏符合 observability 与 security 规范
+- [ ] 无规范外新依赖；无 any/裸 throw
+
+## 5. CI 流水线（PR 必过，阶段即失败即止）
+
+```
+lint(oxlint) → typecheck(tsc) → unit(vitest, 覆盖率门禁接入时)
+→ build(next) → migrate-replay(空库全量迁移重放 + prisma diff + seed 幂等)
+∥ e2e(Playwright，PG/Redis service)
+→ audit(pnpm audit --prod)
+```
+
+- **测试作业不串行等待 build**（RabbitAITest INFRA-011 先例）：e2e 自带 web 构建从 t=0 并行起跑——build 是并行「构建门禁」而非前置依赖（原 quality→build→e2e 串行链是总墙钟主因）；quality/build 红时测试作业照跑至完（PR 仍红）。
+- **ci 触发面 PR-only**：ci.yml 仅 `pull_request` + `workflow_dispatch`，merge 到 main 不再重跑（同代码双轮纯浪费）；配套要求分支保护开启「Require branches up to date before merging」防基线漂移。
+- JMeter api-test 作业随首个 jmx 计划加入（分片口径见 rules/testing §2.5）。
+- 产物上传：HTML 报告 always；video/trace/截图 on-failure；保留 30 天。
+- **CI 结果以 GitHub Actions 远端为准**（AGENTS.md 门禁 9）：本地全过仍可能因环境差异挂远端，push 后必须跟踪 Actions 结果直至绿。
+- **main 保持绿（stop the line）**：main CI 变红，所有人停止新功能开发，优先修复或 `git revert` 对应 PR；修复期间冻结合并（hotfix 除外）。
+
+### 5.1 CI 工程纪律（源自 RabbitProjects/RabbitAITest 实践教训）
+
+1. **门禁「第一天真跑」**：任何新门禁（lint/覆盖率/类型检查/性能）接入当天必须全量真跑并**清零存量**——禁止「先接门禁、存量后补」，历史教训：lint 首次真跑爆出 60 项存量错误被迫专门收口。
+2. **CI 起栈必须起全依赖**：种子/测试依赖的每个服务（DB/Redis/mock 等）都要在 CI 编排中声明；本地能起≠CI 能起。
+3. **CI 环境自适应，禁硬编码**：容器名、库名、host、路径一律从环境/统一配置读取；同一资源的地址常量必须**单一来源**——曾因 `127.0.0.1` 与 `localhost` 两处常量不一致导致 403。
+4. **CI 不硬依赖可选产物**：录屏样本、人工产物等缺失时**降级跳过并告警**，不得让整门误红。
+5. **性能门禁阈值按 CI 硬件标定**：P95/P99 阈值必须在 CI 机器上实测标定后写入，不得照搬本地数值。
+6. **pre-push hook 必装**（husky）：push 前至少跑 `lint + typecheck`——实践中该 hook 拦截过参数签名错误等真实缺陷。
+
+## 6. 版本与发布
+
+1. 语义化版本：`v0.x`（迭代期）→ `v1.0`（GA）；pre-release 用 `-alpha.N/-rc.N`。
+2. Changelog：Keep a Changelog 格式，PR 合并时同步追加（用户可读描述，非 commit 罗列）；发布时由 release PR 汇总。
+3. 发布流程：`release/vX.Y.Z` 分支 → 全量回归（Release Gate）→ tag → 构建产物（镜像/Compose 包）→ changelog 归档。
+4. 可回滚：镜像与 Compose 包按 tag 保留；数据库回滚依赖 expand-contract 保证旧代码可跑新 schema（禁止依赖「迁移回退」）；hotfix 只 cherry-pick 修复 commit + 独立 migration。
+
+## 7. 仓库卫生
+
+1. 生成物（覆盖率、test-results、.pgdata、dist）全部 gitignore；禁止提交。
+2. 文档与代码同 PR 变更（AGENTS.md §5）；文档 drift 在 sprint 收尾统一清点。
+3. 分支删除：合并后自动删除；僵死分支（>1 sprint 无活动）由维护者清理。
+
+## 8. Sprint 收尾交付流程（每个 Sprint 结束时必做）
+
+按顺序执行，全部完成才算 Sprint 交付（AGENTS.md 门禁 9.3）：
+
+| #   | 步骤             | 标准                                                                                                                                   |
+| --- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 合并与推送       | 未合并的功能分支完成 review 合入 main（或确需延期的以 feature 分支 push 远程并登记原因）；**所有代码已 push，本地无未提交/未推送内容** |
+| 2   | 远端 CI 确认     | GitHub Actions 在最新 commit 上**全绿**；红灯未解决不得宣布 Sprint 完成                                                                |
+| 3   | 验收核对         | sprint-overview「验收标准」逐条跑通并更新交付表状态；规格文档状态流转（Implemented/Verified）                                          |
+| 4   | 文档与 changelog | 用户可见变更追加 changelog；覆盖率映射表（需求 → 文档编号）同步                                                                        |
+| 5   | 里程碑产物       | 到达里程碑时打 tag 并出 release PR；远端 CI 绿后归档                                                                                   |
+| 6   | 交接说明         | 在 sprint-overview 追加「遗留项与风险」小节，未完成项指向去向 Sprint/文档编号                                                          |
+
+## 9. 并行 worktree 槽位隔离（INFRA-005 先例）
+
+多 worktree 并行联调/自测时，全部环境资源标识（端口 / Redis 键空间 / Docker 容器 / /tmp 共享路径）**按槽位隔离**，单一事实源为 `scripts/rabbit-env.mjs`。
+
+1. **槽位推导**（优先级）：`RABBIT_SLOT` 环境变量（0-9） > worktree 目录名 `RabbitWork-s{N}` → N > 主仓/CI checkout → 0。CI 恒为 slot 0。
+2. **端口表**（base + slot；s = 槽位号 0-9）：
+
+   | 栈                    | web    | mock（预留） | runner（预留） | PostgreSQL | Redis（逻辑库号=s） | 临时路径                      |
+   | --------------------- | ------ | ------------ | -------------- | ---------- | ------------------- | ----------------------------- |
+   | dev（pnpm dev）       | 3600+s | 4600+s       | 4900+s         | 6440+s     | 6390/s              | .pgdata（worktree 本地）      |
+   | e2e（pnpm test:e2e）  | 3700+s | 4700+s       | 4910+s         | 6450+s     | 6391/s              | /tmp/rabbitwork-e2e-root-s{s} |
+   | JMeter（api-test 栈） | 3800+s | 4800+s       | 4920+s         | 6460+s     | 6391/s              | /tmp/rabbitwork-s{s}-jm/      |
+
+   Redis 为项目专用实例（dev 6390 / e2e+jm 6391，与 RabbitAITest 的 6379/6381 错开），**键空间按逻辑库号 = slot 隔离**（BullMQ 队列、SSE Stream 不串台）。
+   **端口基址相对 RabbitAITest（3000/3100/3200/4000/…/5440+ 系）整体偏移**：同机两项目 worktree 并行时互不冲突（`scripts/rabbit-env.test.mjs` 锁定该不变量）。
+
+3. **硬性禁令**：新增服务/脚本/测试**禁止硬编码端口与共享 /tmp 路径**，一律从 `scripts/rabbit-env.mjs` 取值（Node 侧 `import { rabbitEnv }`；bash 侧 `eval "$(node scripts/rabbit-env.mjs --shell)"`，RABBIT_* 仅作默认值、显式 env 可覆盖）；e2e 用例侧统一走 `tests/e2e/env.ts`。CI 用 `pnpm test`（含 `node --test scripts/`）守住端口表唯一性与跨项目零交叠。
+4. **清场纪律与归属检测**：栈脚本/teardown 只清**本槽位**端口与本 worktree 绝对路径下的进程（`pkill -f "<worktree>/apps/..."`）；占用者的 cwd 属于**其他 worktree** 时必须 fail fast 指名冲突，禁止跨槽 lsof 互杀或静默抢占。
+5. **诊断口径**：联调自测异常先查串台——`node scripts/rabbit-env.mjs`（确认本目录槽位）+ `lsof -nP -iTCP -sTCP:LISTEN | grep -E '3[678][0-9]{2}|4[6789][0-9]{2}|6[34][0-9]{2}'` + `redis-cli -p 6391 -n <slot> keys 'bull*'`。
+
+### 9.7 多 worktree 并行开发·启动操作手册（谁照做谁不踩坑）
+
+**第 1 步：建 worktree（目录名决定槽位）**——s{N} 后缀是硬约束，N 取未占用的 0-9：
+
+```bash
+git worktree add ../RabbitWork-s7 -b <MODULE>-NNN-{slug} origin/main
+cd ../RabbitWork-s7 && pnpm install          # worktree 各自独立 node_modules
+node scripts/rabbit-env.mjs                    # 确认槽位：应输出 slot=7 及全部端口
+```
+
+**第 2 步：起 dev 栈（联调）**——一条命令，端口自动落在本槽位，无需任何手工配置：
+
+```bash
+pnpm dev
+# [dev] worktree slot=7（web :3607 · pg :6447）
+# 就绪后：web http://localhost:3607 · PG 6447 · Redis 6390 db7
+```
+
+被占会 fail fast 并给出排查/换槽指引（`RABBIT_SLOT=0-9` 临时换槽或 `lsof -i :端口` 找占用者）。Ctrl-C 统一回收；持久 `.pgdata` 支持幂等重启。
+
+**第 3 步：跑 e2e（自测）**——全新口径直接跑，global-setup 自动起本槽位全套（PG 6450+s / web 3700+s / redis 6391·db{s}）：
+
+```bash
+pnpm test:e2e                                  # 全新口径（与 CI 一致）
+# 修复循环复用口径见 rules/testing.md §3.4.2（E2E_DATABASE_URL 常驻库）
+```
+
+⚠ **同 worktree 里 dev 与 e2e 并行跑**：`next dev` 会写坏生产构建 `.next`，先做槽位专属 web 副本（工具随需移植；§3.4.2 第 3 条）或停 dev 后再跑 e2e。
+
+**冲突排查三件套**：`node scripts/rabbit-env.mjs`（本目录槽位）→ `lsof -nP -iTCP -sTCP:LISTEN | grep -E '3[678][0-9]{2}|4[6789][0-9]{2}|6[34][0-9]{2}'`（谁占了什么）→ `redis-cli -p 6391 -n <slot> keys 'bull*'`（键空间是否串台）。收尾时只杀本 worktree 绝对路径的进程：`pkill -f "$(pwd)/apps/"`。

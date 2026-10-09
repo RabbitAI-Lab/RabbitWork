@@ -1,0 +1,102 @@
+// RabbitWork S0 基线 schema：三级权限模型（系统-组织-项目）的最小载体，
+// 支撑 docs/architecture/rbac-permission-model.md 与认证/隔离的后续落地。
+//
+// 业务域表【必须】随首个域规格「一次建齐」全部列（含未启用列，AGENTS.md 门禁 3），
+// 禁止零散加列；命名/索引/软删规范见 rules/database.md §2-§4
+// （snake_case 复数表名 / UUID 主键 / 软删 deletedAt / 状态列 varchar+应用层 zod，不用 PG ENUM）。
+
+generator client {
+  provider      = "prisma-client-js"
+  // native=构建机；linux-*=Docker/CI（bookworm/ubuntu 均为 openssl 3）
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x", "linux-arm64-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────── system 域基线 ─────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique @db.VarChar(256)
+  name         String    @db.VarChar(128)
+  passwordHash String    @map("password_hash") @db.VarChar(512)
+  status       String    @default("ACTIVE") @db.VarChar(32) // ACTIVE | DISABLED（应用层 zod 登记）
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  orgMemberships     OrgMember[]
+  ownedOrganizations Organization[]  @relation("OrgOwner")
+  projectMembers     ProjectMember[]
+
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(128)
+  isDefault Boolean   @default(false) @map("is_default")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  ownerId  String?     @map("owner_id")
+  owner    User?       @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  members  OrgMember[]
+  projects Project[]
+
+  @@index([deletedAt])
+  @@map("organizations")
+}
+
+model OrgMember {
+  id        String   @id @default(uuid())
+  orgId     String   @map("org_id")
+  userId    String   @map("user_id")
+  role      String   @db.VarChar(32) // OWNER | ADMIN | MEMBER（组权限体系随 SYS 域规格落地）
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([userId])
+  @@map("org_members")
+}
+
+model Project {
+  id        String    @id @default(uuid())
+  orgId     String    @map("org_id")
+  name      String    @db.VarChar(128)
+  status    String    @default("ACTIVE") @db.VarChar(32)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  org     Organization    @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  members ProjectMember[]
+
+  @@index([orgId, deletedAt])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  userId    String   @map("user_id")
+  role      String   @db.VarChar(32) // OWNER | ADMIN | MEMBER
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}

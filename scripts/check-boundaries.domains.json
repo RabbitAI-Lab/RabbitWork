@@ -1,0 +1,7 @@
+{
+  "_comment": "Provider 跨域红线登记（scripts/check-boundaries.mjs 消费）：key=下游域目录名，value=禁止直接 import 的上游域。随首个域规格评审时维护，与 docs/architecture/dependency-graph.md §4 一致。",
+  "exec": ["case", "api_test"],
+  "report": ["case", "api_test"],
+  "plan": ["case", "api_test"],
+  "bug": ["case", "api_test"]
+}
