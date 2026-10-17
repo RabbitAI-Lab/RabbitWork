@@ -1,59 +1,59 @@
 - generic [ref=f22e3]:
-  - complementary [ref=f22e4]:
-    - link "RabbitWork 数字员工平台" [ref=f22e5] [cursor=pointer]:
-      - /url: /office
-      - generic [ref=f22e11]:
-        - generic [ref=f22e12]: RabbitWork
-        - generic [ref=f22e13]: 数字员工平台
-    - navigation [ref=f22e14]:
-      - link [ref=f22e15] [cursor=pointer]:
-        - /url: /staffs
-        - img "appstore" [ref=f22e17]
-        - text: 我的数字员工
-      - link [ref=f22e20] [cursor=pointer]:
-        - /url: /teams
-        - img "team" [ref=f22e22]
-        - text: 我的团队
-      - link [ref=f22e25] [cursor=pointer]:
-        - /url: /office
-        - img "home" [ref=f22e28]
-        - text: 办公室
-    - generic [ref=f22e31]:
-      - generic [ref=f22e32] [cursor=pointer]:
-        - img "user" [ref=f22e34]
-        - generic [ref=f22e37]:
-          - generic [ref=f22e38]: ...
-          - generic [ref=f22e39]: 成员
-      - button "切换主题" [ref=f22e40] [cursor=pointer]:
-        - img "moon" [ref=f22e41]
-  - main [ref=f22e44]:
-    - generic [ref=f22e45]:
-      - generic [ref=f22e46]:
-        - generic [ref=f22e47]:
-          - heading "办公室" [level=1] [ref=f22e48]
-          - paragraph [ref=f22e49]: 楼层平面 · 每层 20 个工位 · 点击工位可发起对话或更换座位
-        - button [ref=f22e50]:
-          - img "loading" [ref=f22e52]
-          - text: 刷新
-      - generic [ref=f22e55]:
-        - complementary [ref=f22e56]:
-          - generic [ref=f22e57]:
-            - button "1F 0/20" [ref=f22e58] [cursor=pointer]:
-              - generic [ref=f22e59]: 1F
-              - generic [ref=f22e60]: 0/20
-            - button "2F 0/20" [ref=f22e61] [cursor=pointer]:
-              - generic [ref=f22e62]: 2F
-              - generic [ref=f22e63]: 0/20
-            - button "3F 0/20" [ref=f22e64] [cursor=pointer]:
-              - generic [ref=f22e65]: 3F
-              - generic [ref=f22e66]: 0/20
-          - generic [ref=f22e67]:
-            - generic [ref=f22e68]:
-              - generic [ref=f22e69]: 待安排就座
-              - generic [ref=f22e70]: "0"
-            - paragraph [ref=f22e71]: 全员就座 🎉
-        - region "1F 楼层平面" [ref=f22e72]:
-          - generic [ref=f22e73]:
-            - heading "1F 楼层平面" [level=2] [ref=f22e74]
-            - generic [ref=f22e75]: 0 / 20 工位在用
-          - paragraph [ref=f22e76]: 楼层加载中…
+    - complementary [ref=f22e4]:
+        - link "RabbitWork 数字员工平台" [ref=f22e5] [cursor=pointer]:
+            - /url: /office
+            - generic [ref=f22e11]:
+                - generic [ref=f22e12]: RabbitWork
+                - generic [ref=f22e13]: 数字员工平台
+        - navigation [ref=f22e14]:
+            - link [ref=f22e15] [cursor=pointer]:
+                - /url: /staffs
+                - img "appstore" [ref=f22e17]
+                - text: 我的数字员工
+            - link [ref=f22e20] [cursor=pointer]:
+                - /url: /teams
+                - img "team" [ref=f22e22]
+                - text: 我的团队
+            - link [ref=f22e25] [cursor=pointer]:
+                - /url: /office
+                - img "home" [ref=f22e28]
+                - text: 办公室
+        - generic [ref=f22e31]:
+            - generic [ref=f22e32] [cursor=pointer]:
+                - img "user" [ref=f22e34]
+                - generic [ref=f22e37]:
+                    - generic [ref=f22e38]: ...
+                    - generic [ref=f22e39]: 成员
+            - button "切换主题" [ref=f22e40] [cursor=pointer]:
+                - img "moon" [ref=f22e41]
+    - main [ref=f22e44]:
+        - generic [ref=f22e45]:
+            - generic [ref=f22e46]:
+                - generic [ref=f22e47]:
+                    - heading "办公室" [level=1] [ref=f22e48]
+                    - paragraph [ref=f22e49]: 楼层平面 · 每层 20 个工位 · 点击工位可发起对话或更换座位
+                - button [ref=f22e50]:
+                    - img "loading" [ref=f22e52]
+                    - text: 刷新
+            - generic [ref=f22e55]:
+                - complementary [ref=f22e56]:
+                    - generic [ref=f22e57]:
+                        - button "1F 0/20" [ref=f22e58] [cursor=pointer]:
+                            - generic [ref=f22e59]: 1F
+                            - generic [ref=f22e60]: 0/20
+                        - button "2F 0/20" [ref=f22e61] [cursor=pointer]:
+                            - generic [ref=f22e62]: 2F
+                            - generic [ref=f22e63]: 0/20
+                        - button "3F 0/20" [ref=f22e64] [cursor=pointer]:
+                            - generic [ref=f22e65]: 3F
+                            - generic [ref=f22e66]: 0/20
+                    - generic [ref=f22e67]:
+                        - generic [ref=f22e68]:
+                            - generic [ref=f22e69]: 待安排就座
+                            - generic [ref=f22e70]: "0"
+                        - paragraph [ref=f22e71]: 全员就座 🎉
+                - region "1F 楼层平面" [ref=f22e72]:
+                    - generic [ref=f22e73]:
+                        - heading "1F 楼层平面" [level=2] [ref=f22e74]
+                        - generic [ref=f22e75]: 0 / 20 工位在用
+                    - paragraph [ref=f22e76]: 楼层加载中…

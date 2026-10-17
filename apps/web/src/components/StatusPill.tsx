@@ -8,7 +8,13 @@ const STATUS_STYLE = {
 
 export type PillStatus = keyof typeof STATUS_STYLE;
 
-export function StatusPill({ status, custom }: { status?: PillStatus; custom?: { label: string; tone: "success" | "warning" | "danger" | "muted" } }) {
+export function StatusPill({
+  status,
+  custom,
+}: {
+  status?: PillStatus;
+  custom?: { label: string; tone: "success" | "warning" | "danger" | "muted" };
+}) {
   const conf = custom
     ? {
         label: custom.label,
@@ -22,8 +28,12 @@ export function StatusPill({ status, custom }: { status?: PillStatus; custom?: {
       }
     : (STATUS_STYLE[status ?? "DRAFT"] ?? STATUS_STYLE.DRAFT);
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${conf.cls}`}>
-      <span className={`h-1.5 w-1.5 rounded-full bg-current ${conf.pulse ? "animate-pulse-dot" : ""}`} />
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${conf.cls}`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full bg-current ${conf.pulse ? "animate-pulse-dot" : ""}`}
+      />
       {conf.label}
     </span>
   );

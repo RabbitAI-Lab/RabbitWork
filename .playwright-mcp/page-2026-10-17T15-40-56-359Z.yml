@@ -1,60 +1,60 @@
 - generic [ref=f6e3]:
-  - complementary [ref=f6e4]:
-    - link "RabbitWork 数字员工平台" [ref=f6e5] [cursor=pointer]:
-      - /url: /office
-      - generic [ref=f6e11]:
-        - generic [ref=f6e12]: RabbitWork
-        - generic [ref=f6e13]: 数字员工平台
-    - navigation [ref=f6e14]:
-      - link [ref=f6e15] [cursor=pointer]:
-        - /url: /staffs
-        - img "appstore" [ref=f6e17]
-        - text: 我的数字员工
-      - link [ref=f6e20] [cursor=pointer]:
-        - /url: /teams
-        - img "team" [ref=f6e22]
-        - text: 我的团队
-      - link [ref=f6e25] [cursor=pointer]:
-        - /url: /office
-        - img "home" [ref=f6e28]
-        - text: 办公室
-    - generic [ref=f6e31]:
-      - generic [ref=f6e32] [cursor=pointer]:
-        - img "user" [ref=f6e34]
-        - generic [ref=f6e37]:
-          - generic [ref=f6e38]: ...
-          - generic [ref=f6e39]: 成员
-      - button "切换主题" [ref=f6e40] [cursor=pointer]:
-        - img "moon" [ref=f6e41]
-  - main [ref=f6e44]:
-    - generic [ref=f6e45]:
-      - generic [ref=f6e46]:
-        - generic [ref=f6e47]:
-          - heading "办公室" [level=1] [ref=f6e48]
-          - paragraph [ref=f6e49]: 工位加载中…,点击工位开始工作
-        - link [ref=f6e50] [cursor=pointer]:
-          - /url: /staffs
-          - text: 管理数字员工
-          - img "arrow-right" [ref=f6e51]
-      - generic [ref=f6e54]:
-        - generic [ref=f6e55]:
-          - generic:
-            - generic:
-              - heading [level=3]
-              - list:
-                - listitem
-                - listitem
-        - generic [ref=f6e56]:
-          - generic:
-            - generic:
-              - heading [level=3]
-              - list:
-                - listitem
-                - listitem
-        - generic [ref=f6e57]:
-          - generic:
-            - generic:
-              - heading [level=3]
-              - list:
-                - listitem
-                - listitem
+    - complementary [ref=f6e4]:
+        - link "RabbitWork 数字员工平台" [ref=f6e5] [cursor=pointer]:
+            - /url: /office
+            - generic [ref=f6e11]:
+                - generic [ref=f6e12]: RabbitWork
+                - generic [ref=f6e13]: 数字员工平台
+        - navigation [ref=f6e14]:
+            - link [ref=f6e15] [cursor=pointer]:
+                - /url: /staffs
+                - img "appstore" [ref=f6e17]
+                - text: 我的数字员工
+            - link [ref=f6e20] [cursor=pointer]:
+                - /url: /teams
+                - img "team" [ref=f6e22]
+                - text: 我的团队
+            - link [ref=f6e25] [cursor=pointer]:
+                - /url: /office
+                - img "home" [ref=f6e28]
+                - text: 办公室
+        - generic [ref=f6e31]:
+            - generic [ref=f6e32] [cursor=pointer]:
+                - img "user" [ref=f6e34]
+                - generic [ref=f6e37]:
+                    - generic [ref=f6e38]: ...
+                    - generic [ref=f6e39]: 成员
+            - button "切换主题" [ref=f6e40] [cursor=pointer]:
+                - img "moon" [ref=f6e41]
+    - main [ref=f6e44]:
+        - generic [ref=f6e45]:
+            - generic [ref=f6e46]:
+                - generic [ref=f6e47]:
+                    - heading "办公室" [level=1] [ref=f6e48]
+                    - paragraph [ref=f6e49]: 工位加载中…,点击工位开始工作
+                - link [ref=f6e50] [cursor=pointer]:
+                    - /url: /staffs
+                    - text: 管理数字员工
+                    - img "arrow-right" [ref=f6e51]
+            - generic [ref=f6e54]:
+                - generic [ref=f6e55]:
+                    - generic:
+                        - generic:
+                            - heading [level=3]
+                            - list:
+                                - listitem
+                                - listitem
+                - generic [ref=f6e56]:
+                    - generic:
+                        - generic:
+                            - heading [level=3]
+                            - list:
+                                - listitem
+                                - listitem
+                - generic [ref=f6e57]:
+                    - generic:
+                        - generic:
+                            - heading [level=3]
+                            - list:
+                                - listitem
+                                - listitem

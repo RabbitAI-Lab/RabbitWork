@@ -1,213 +1,213 @@
 - generic [ref=f1e1]:
-  - generic [ref=f1e3]:
-    - complementary [ref=f1e4]:
-      - link "RabbitWork 数字员工平台" [ref=f1e5] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=f1e11]:
-          - generic [ref=f1e12]: RabbitWork
-          - generic [ref=f1e13]: 数字员工平台
-      - navigation [ref=f1e14]:
-        - link [ref=f1e15] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=f1e17]
-          - text: 我的数字员工
-        - link [ref=f1e21] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=f1e23]
-          - text: 我的团队
-        - link [ref=f1e26] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=f1e28]
-          - text: 办公室
-      - generic [ref=f1e32] [cursor=pointer]:
-        - img "user" [ref=f1e34]
-        - generic [ref=f1e37]:
-          - generic [ref=f1e38]: 管理员
-          - generic [ref=f1e39]: 管理员
-    - main [ref=f1e40]:
-      - generic [ref=f1e41]:
-        - generic [ref=f1e42]:
-          - generic [ref=f1e43]:
-            - heading "我的数字员工" [level=1] [ref=f1e44]
-            - paragraph [ref=f1e45]: 管理你的数字员工档案,点击卡片查看详情
-          - button "plus 新建员工" [ref=f1e46] [cursor=pointer]:
-            - img "plus" [ref=f1e48]
-            - generic [ref=f1e52]: 新建员工
-        - generic [ref=f1e53]:
-          - generic [ref=f1e54]:
-            - img "team" [ref=f1e56]
-            - generic [ref=f1e59]:
-              - generic [ref=f1e60]: "5"
-              - generic [ref=f1e61]: 员工总数
-          - generic [ref=f1e62]:
-            - img "rocket" [ref=f1e64]
-            - generic [ref=f1e67]:
-              - generic [ref=f1e68]: "1"
-              - generic [ref=f1e69]: 在岗员工
-          - generic [ref=f1e70]:
-            - img "edit" [ref=f1e72]
-            - generic [ref=f1e75]:
-              - generic [ref=f1e76]: "4"
-              - generic [ref=f1e77]: 草稿
-        - generic [ref=f1e78]:
-          - radiogroup "segmented control" [ref=f1e79]:
-            - generic [ref=f1e80]:
-              - generic [ref=f1e81] [cursor=pointer]:
-                - radio "全部 (5)" [checked]
-                - generic "全部 (5)" [ref=f1e135]
-              - generic [ref=f1e83] [cursor=pointer]:
-                - radio "在岗 (1)"
-                - generic "在岗 (1)" [ref=f1e136]
-              - generic [ref=f1e85] [cursor=pointer]:
-                - radio "草稿 (4)"
-                - generic "草稿 (4)" [ref=f1e137]
-              - generic [ref=f1e87] [cursor=pointer]:
-                - radio "下线 (0)"
-                - generic "下线 (0)" [ref=f1e88]
-          - generic [ref=f1e89]:
-            - img "search" [ref=f1e91]
-            - textbox "搜索姓名 / 岗位 / 工号" [ref=f1e94]
-        - generic [ref=f1e97]:
-          - generic [ref=f1e138] [cursor=pointer]:
-            - generic [ref=f1e139]:
-              - generic [ref=f1e140]:
-                - generic [ref=f1e141]: 复
-                - generic [ref=f1e143]:
-                  - generic [ref=f1e144]: 复现测试
-                  - generic "前端开发 · STAFF-20261017-1HTA" [ref=f1e145]
-              - generic [ref=f1e146]: 草稿
-            - paragraph [ref=f1e148]: 前端开发
-            - generic [ref=f1e149]: 私有
-            - generic [ref=f1e151]:
-              - button "rocket 发布" [ref=f1e152]:
-                - img "rocket" [ref=f1e154]
-                - generic [ref=f1e157]: 发布
-              - button [ref=f1e158]:
-                - img "edit" [ref=f1e160]
-              - button [ref=f1e163]:
-                - img "delete" [ref=f1e165]
-          - generic [ref=f1e168] [cursor=pointer]:
-            - generic [ref=f1e169]:
-              - generic [ref=f1e170]:
-                - generic [ref=f1e171]: c
-                - generic [ref=f1e173]:
-                  - generic [ref=f1e174]: curl探针
-                  - generic "前端开发 · STAFF-20261017-W7GR" [ref=f1e175]
-              - generic [ref=f1e176]: 草稿
-            - paragraph [ref=f1e178]: 前端开发
-            - generic [ref=f1e179]: 组织内
-            - generic [ref=f1e181]:
-              - button "rocket 发布" [ref=f1e182]:
-                - img "rocket" [ref=f1e184]
-                - generic [ref=f1e187]: 发布
-              - button [ref=f1e188]:
-                - img "edit" [ref=f1e190]
-              - button [ref=f1e193]:
-                - img "delete" [ref=f1e195]
-          - generic [ref=f1e198] [cursor=pointer]:
-            - generic [ref=f1e199]:
-              - generic [ref=f1e200]:
-                - generic [ref=f1e201]: 复
-                - generic [ref=f1e203]:
-                  - generic [ref=f1e204]: 复现测试
-                  - generic "前端开发 · STAFF-20261017-SB0J" [ref=f1e205]
-              - generic [ref=f1e206]: 草稿
-            - paragraph [ref=f1e208]: 前端开发
-            - generic [ref=f1e209]: 私有
-            - generic [ref=f1e211]:
-              - button "rocket 发布" [ref=f1e212]:
-                - img "rocket" [ref=f1e214]
-                - generic [ref=f1e217]: 发布
-              - button [ref=f1e218]:
-                - img "edit" [ref=f1e220]
-              - button [ref=f1e223]:
-                - img "delete" [ref=f1e225]
-          - generic [ref=f1e228] [cursor=pointer]:
-            - generic [ref=f1e229]:
-              - generic [ref=f1e230]:
-                - generic [ref=f1e231]: 复
-                - generic [ref=f1e233]:
-                  - generic [ref=f1e234]: 复现测试
-                  - generic "前端开发 · STAFF-20261017-T8SM" [ref=f1e235]
-              - generic [ref=f1e236]: 草稿
-            - paragraph [ref=f1e238]: 前端开发
-            - generic [ref=f1e239]: 私有
-            - generic [ref=f1e241]:
-              - button "rocket 发布" [ref=f1e242]:
-                - img "rocket" [ref=f1e244]
-                - generic [ref=f1e247]: 发布
-              - button [ref=f1e248]:
-                - img "edit" [ref=f1e250]
-              - button [ref=f1e253]:
-                - img "delete" [ref=f1e255]
-          - generic [ref=f1e258] [cursor=pointer]:
-            - generic [ref=f1e259]:
-              - generic [ref=f1e260]:
-                - generic [ref=f1e261]: 小
-                - generic [ref=f1e263]:
-                  - generic [ref=f1e264]: 小钱
-                  - generic "前端开发 · STAFF-20261017-R84G" [ref=f1e265]
-              - generic [ref=f1e266]: 在岗
-            - paragraph [ref=f1e268]: 前端开发
-            - generic [ref=f1e269]:
-              - generic [ref=f1e270]: 组织内
-              - generic [ref=f1e271]: 发布于 2026-10-17
-            - generic [ref=f1e272]:
-              - button "send 发起对话" [ref=f1e273]:
-                - img "send" [ref=f1e275]
-                - generic [ref=f1e278]: 发起对话
-              - button [ref=f1e279]:
-                - img "edit" [ref=f1e281]
-              - button [ref=f1e284]:
-                - img "delete" [ref=f1e286]
-  - generic [ref=f1e129] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=f1e130]
-    - generic [ref=f1e289]:
-      - button "Open issues overlay" [ref=f1e290]:
-        - generic [ref=f1e291]:
-          - generic [aria-hidden] [ref=f1e292]: "0"
-          - generic [ref=f1e293]: "1"
-        - generic [ref=f1e294]: Issue
-      - button "Collapse issues badge" [ref=f1e295]
-  - alert [ref=f1e134]
-  - generic [ref=f1e298]:
-    - dialog "edit 新建数字员工":
-      - generic [ref=f1e299]:
-        - button "Close" [ref=f1e300] [cursor=pointer]:
-          - generic "Close" [ref=f1e301]:
-            - img "close" [ref=f1e302]
-        - generic [ref=f1e307]:
-          - img "edit" [ref=f1e308]
-          - text: 新建数字员工
-        - generic [ref=f1e312]:
-          - generic [ref=f1e313]:
-            - generic [ref=f1e315]:
-              - generic "姓名" [ref=f1e317]
-              - textbox "姓名" [ref=f1e321]:
-                - /placeholder: 如：小兔
-            - generic [ref=f1e323]:
-              - generic "岗位" [ref=f1e325]
-              - textbox "岗位" [ref=f1e329]:
-                - /placeholder: 如：售前咨询顾问
-          - generic [ref=f1e331]:
-            - generic "人设（System Prompt）" [ref=f1e333]
-            - generic [ref=f1e334]:
-              - generic [ref=f1e337]:
-                - textbox "人设（System Prompt）" [ref=f1e338]:
-                  - /placeholder: "你是……\n- 说话风格：亲切、专业\n- 擅长：产品介绍、需求梳理\n- 回答习惯：先给结论，再给依据"
-                - generic: 0 / 20000
-              - generic [ref=f1e339]: 描述这位数字员工的性格、专长与说话风格——越具体越好
-          - generic [ref=f1e342]:
-            - generic "职责边界（可选）" [ref=f1e344]
-            - generic [ref=f1e345]:
-              - textbox "职责边界（可选）" [ref=f1e348]:
-                - /placeholder: 不承诺具体价格与合同条款；遇到投诉建议转人工。
-              - generic [ref=f1e349]: 不回答的问题范围、转人工条件等
-          - generic [ref=f1e352]:
-            - generic "可见性" [ref=f1e354]
-            - generic [ref=f1e360] [cursor=pointer]:
-              - combobox "可见性" [ref=f1e362]
-              - generic "私有（仅创建者）" [ref=f1e363]
-        - generic [ref=f1e364]:
-          - button "取 消" [ref=f1e365] [cursor=pointer]
-          - button "创 建" [ref=f1e367] [cursor=pointer]
+    - generic [ref=f1e3]:
+        - complementary [ref=f1e4]:
+            - link "RabbitWork 数字员工平台" [ref=f1e5] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=f1e11]:
+                    - generic [ref=f1e12]: RabbitWork
+                    - generic [ref=f1e13]: 数字员工平台
+            - navigation [ref=f1e14]:
+                - link [ref=f1e15] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=f1e17]
+                    - text: 我的数字员工
+                - link [ref=f1e21] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=f1e23]
+                    - text: 我的团队
+                - link [ref=f1e26] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=f1e28]
+                    - text: 办公室
+            - generic [ref=f1e32] [cursor=pointer]:
+                - img "user" [ref=f1e34]
+                - generic [ref=f1e37]:
+                    - generic [ref=f1e38]: 管理员
+                    - generic [ref=f1e39]: 管理员
+        - main [ref=f1e40]:
+            - generic [ref=f1e41]:
+                - generic [ref=f1e42]:
+                    - generic [ref=f1e43]:
+                        - heading "我的数字员工" [level=1] [ref=f1e44]
+                        - paragraph [ref=f1e45]: 管理你的数字员工档案,点击卡片查看详情
+                    - button "plus 新建员工" [ref=f1e46] [cursor=pointer]:
+                        - img "plus" [ref=f1e48]
+                        - generic [ref=f1e52]: 新建员工
+                - generic [ref=f1e53]:
+                    - generic [ref=f1e54]:
+                        - img "team" [ref=f1e56]
+                        - generic [ref=f1e59]:
+                            - generic [ref=f1e60]: "5"
+                            - generic [ref=f1e61]: 员工总数
+                    - generic [ref=f1e62]:
+                        - img "rocket" [ref=f1e64]
+                        - generic [ref=f1e67]:
+                            - generic [ref=f1e68]: "1"
+                            - generic [ref=f1e69]: 在岗员工
+                    - generic [ref=f1e70]:
+                        - img "edit" [ref=f1e72]
+                        - generic [ref=f1e75]:
+                            - generic [ref=f1e76]: "4"
+                            - generic [ref=f1e77]: 草稿
+                - generic [ref=f1e78]:
+                    - radiogroup "segmented control" [ref=f1e79]:
+                        - generic [ref=f1e80]:
+                            - generic [ref=f1e81] [cursor=pointer]:
+                                - radio "全部 (5)" [checked]
+                                - generic "全部 (5)" [ref=f1e135]
+                            - generic [ref=f1e83] [cursor=pointer]:
+                                - radio "在岗 (1)"
+                                - generic "在岗 (1)" [ref=f1e136]
+                            - generic [ref=f1e85] [cursor=pointer]:
+                                - radio "草稿 (4)"
+                                - generic "草稿 (4)" [ref=f1e137]
+                            - generic [ref=f1e87] [cursor=pointer]:
+                                - radio "下线 (0)"
+                                - generic "下线 (0)" [ref=f1e88]
+                    - generic [ref=f1e89]:
+                        - img "search" [ref=f1e91]
+                        - textbox "搜索姓名 / 岗位 / 工号" [ref=f1e94]
+                - generic [ref=f1e97]:
+                    - generic [ref=f1e138] [cursor=pointer]:
+                        - generic [ref=f1e139]:
+                            - generic [ref=f1e140]:
+                                - generic [ref=f1e141]: 复
+                                - generic [ref=f1e143]:
+                                    - generic [ref=f1e144]: 复现测试
+                                    - generic "前端开发 · STAFF-20261017-1HTA" [ref=f1e145]
+                            - generic [ref=f1e146]: 草稿
+                        - paragraph [ref=f1e148]: 前端开发
+                        - generic [ref=f1e149]: 私有
+                        - generic [ref=f1e151]:
+                            - button "rocket 发布" [ref=f1e152]:
+                                - img "rocket" [ref=f1e154]
+                                - generic [ref=f1e157]: 发布
+                            - button [ref=f1e158]:
+                                - img "edit" [ref=f1e160]
+                            - button [ref=f1e163]:
+                                - img "delete" [ref=f1e165]
+                    - generic [ref=f1e168] [cursor=pointer]:
+                        - generic [ref=f1e169]:
+                            - generic [ref=f1e170]:
+                                - generic [ref=f1e171]: c
+                                - generic [ref=f1e173]:
+                                    - generic [ref=f1e174]: curl探针
+                                    - generic "前端开发 · STAFF-20261017-W7GR" [ref=f1e175]
+                            - generic [ref=f1e176]: 草稿
+                        - paragraph [ref=f1e178]: 前端开发
+                        - generic [ref=f1e179]: 组织内
+                        - generic [ref=f1e181]:
+                            - button "rocket 发布" [ref=f1e182]:
+                                - img "rocket" [ref=f1e184]
+                                - generic [ref=f1e187]: 发布
+                            - button [ref=f1e188]:
+                                - img "edit" [ref=f1e190]
+                            - button [ref=f1e193]:
+                                - img "delete" [ref=f1e195]
+                    - generic [ref=f1e198] [cursor=pointer]:
+                        - generic [ref=f1e199]:
+                            - generic [ref=f1e200]:
+                                - generic [ref=f1e201]: 复
+                                - generic [ref=f1e203]:
+                                    - generic [ref=f1e204]: 复现测试
+                                    - generic "前端开发 · STAFF-20261017-SB0J" [ref=f1e205]
+                            - generic [ref=f1e206]: 草稿
+                        - paragraph [ref=f1e208]: 前端开发
+                        - generic [ref=f1e209]: 私有
+                        - generic [ref=f1e211]:
+                            - button "rocket 发布" [ref=f1e212]:
+                                - img "rocket" [ref=f1e214]
+                                - generic [ref=f1e217]: 发布
+                            - button [ref=f1e218]:
+                                - img "edit" [ref=f1e220]
+                            - button [ref=f1e223]:
+                                - img "delete" [ref=f1e225]
+                    - generic [ref=f1e228] [cursor=pointer]:
+                        - generic [ref=f1e229]:
+                            - generic [ref=f1e230]:
+                                - generic [ref=f1e231]: 复
+                                - generic [ref=f1e233]:
+                                    - generic [ref=f1e234]: 复现测试
+                                    - generic "前端开发 · STAFF-20261017-T8SM" [ref=f1e235]
+                            - generic [ref=f1e236]: 草稿
+                        - paragraph [ref=f1e238]: 前端开发
+                        - generic [ref=f1e239]: 私有
+                        - generic [ref=f1e241]:
+                            - button "rocket 发布" [ref=f1e242]:
+                                - img "rocket" [ref=f1e244]
+                                - generic [ref=f1e247]: 发布
+                            - button [ref=f1e248]:
+                                - img "edit" [ref=f1e250]
+                            - button [ref=f1e253]:
+                                - img "delete" [ref=f1e255]
+                    - generic [ref=f1e258] [cursor=pointer]:
+                        - generic [ref=f1e259]:
+                            - generic [ref=f1e260]:
+                                - generic [ref=f1e261]: 小
+                                - generic [ref=f1e263]:
+                                    - generic [ref=f1e264]: 小钱
+                                    - generic "前端开发 · STAFF-20261017-R84G" [ref=f1e265]
+                            - generic [ref=f1e266]: 在岗
+                        - paragraph [ref=f1e268]: 前端开发
+                        - generic [ref=f1e269]:
+                            - generic [ref=f1e270]: 组织内
+                            - generic [ref=f1e271]: 发布于 2026-10-17
+                        - generic [ref=f1e272]:
+                            - button "send 发起对话" [ref=f1e273]:
+                                - img "send" [ref=f1e275]
+                                - generic [ref=f1e278]: 发起对话
+                            - button [ref=f1e279]:
+                                - img "edit" [ref=f1e281]
+                            - button [ref=f1e284]:
+                                - img "delete" [ref=f1e286]
+    - generic [ref=f1e129] [cursor=pointer]:
+        - button "Open Next.js Dev Tools" [ref=f1e130]
+        - generic [ref=f1e289]:
+            - button "Open issues overlay" [ref=f1e290]:
+                - generic [ref=f1e291]:
+                    - generic [aria-hidden] [ref=f1e292]: "0"
+                    - generic [ref=f1e293]: "1"
+                - generic [ref=f1e294]: Issue
+            - button "Collapse issues badge" [ref=f1e295]
+    - alert [ref=f1e134]
+    - generic [ref=f1e298]:
+        - dialog "edit 新建数字员工":
+            - generic [ref=f1e299]:
+                - button "Close" [ref=f1e300] [cursor=pointer]:
+                    - generic "Close" [ref=f1e301]:
+                        - img "close" [ref=f1e302]
+                - generic [ref=f1e307]:
+                    - img "edit" [ref=f1e308]
+                    - text: 新建数字员工
+                - generic [ref=f1e312]:
+                    - generic [ref=f1e313]:
+                        - generic [ref=f1e315]:
+                            - generic "姓名" [ref=f1e317]
+                            - textbox "姓名" [ref=f1e321]:
+                                - /placeholder: 如：小兔
+                        - generic [ref=f1e323]:
+                            - generic "岗位" [ref=f1e325]
+                            - textbox "岗位" [ref=f1e329]:
+                                - /placeholder: 如：售前咨询顾问
+                    - generic [ref=f1e331]:
+                        - generic "人设（System Prompt）" [ref=f1e333]
+                        - generic [ref=f1e334]:
+                            - generic [ref=f1e337]:
+                                - textbox "人设（System Prompt）" [ref=f1e338]:
+                                    - /placeholder: "你是……\n- 说话风格：亲切、专业\n- 擅长：产品介绍、需求梳理\n- 回答习惯：先给结论，再给依据"
+                                - generic: 0 / 20000
+                            - generic [ref=f1e339]: 描述这位数字员工的性格、专长与说话风格——越具体越好
+                    - generic [ref=f1e342]:
+                        - generic "职责边界（可选）" [ref=f1e344]
+                        - generic [ref=f1e345]:
+                            - textbox "职责边界（可选）" [ref=f1e348]:
+                                - /placeholder: 不承诺具体价格与合同条款；遇到投诉建议转人工。
+                            - generic [ref=f1e349]: 不回答的问题范围、转人工条件等
+                    - generic [ref=f1e352]:
+                        - generic "可见性" [ref=f1e354]
+                        - generic [ref=f1e360] [cursor=pointer]:
+                            - combobox "可见性" [ref=f1e362]
+                            - generic "私有（仅创建者）" [ref=f1e363]
+                - generic [ref=f1e364]:
+                    - button "取 消" [ref=f1e365] [cursor=pointer]
+                    - button "创 建" [ref=f1e367] [cursor=pointer]

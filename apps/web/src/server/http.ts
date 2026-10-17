@@ -28,11 +28,19 @@ export function jsonError(code: number, message: string): Response {
 export function toErrorResponse(e: unknown): Response {
   if (e instanceof DomainError) return jsonError(e.code, e.message);
   if (e instanceof ZodError) {
-    return jsonError(ErrCode.VALIDATION_FAILED, e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
+    return jsonError(
+      ErrCode.VALIDATION_FAILED,
+      e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+    );
   }
   if (e instanceof AgentScopeError) {
     // AgentScope 不可达（网络层）→ 503 DEGRADED；上游语义错误 → 502 AGENTSCOPE_ERROR
-    if (e.status === 0 || e.name === "TypeError" || e.message.includes("fetch failed") || e.status === 503) {
+    if (
+      e.status === 0 ||
+      e.name === "TypeError" ||
+      e.message.includes("fetch failed") ||
+      e.status === 503
+    ) {
       return jsonError(ErrCode.DEGRADED, "AgentScope 服务不可用");
     }
     return jsonError(ErrCode.AGENTSCOPE_ERROR, e.message);
@@ -41,7 +49,10 @@ export function toErrorResponse(e: unknown): Response {
   return jsonError(ErrCode.INTERNAL, "内部错误");
 }
 
-export async function parseBody<S extends ZodTypeAny>(req: Request, schema: S): Promise<z.output<S>> {
+export async function parseBody<S extends ZodTypeAny>(
+  req: Request,
+  schema: S,
+): Promise<z.output<S>> {
   let raw: unknown;
   try {
     raw = await req.json();

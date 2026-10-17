@@ -35,13 +35,13 @@ export interface PageResult<T> {
 
 export const staffApi = {
   list: (params: { page?: number; pageSize?: number } = {}) =>
-    get<PageResult<StaffDto>>(`/api/v1/staffs?page=${params.page ?? 1}&pageSize=${params.pageSize ?? 50}`),
+    get<PageResult<StaffDto>>(
+      `/api/v1/staffs?page=${params.page ?? 1}&pageSize=${params.pageSize ?? 50}`,
+    ),
   create: (input: StaffCreateInput) => post<StaffDto>("/api/v1/staffs", input),
   update: (id: string, input: StaffUpdateInput) => patch<StaffDto>(`/api/v1/staffs/${id}`, input),
   remove: (id: string) => del<{ ok: boolean }>(`/api/v1/staffs/${id}`),
-  publish: (
-    id: string,
-  ) =>
+  publish: (id: string) =>
     post<StaffDto & { agentStatus: string; usedFallback: boolean; version: number }>(
       `/api/v1/staffs/${id}/publish`,
     ),
@@ -80,7 +80,8 @@ export const chatApi = {
   detail: (id: string) => get<ConversationDetail>(`/api/v1/conversations/${id}`),
   send: (id: string, input: MessageSendInput) =>
     post<{ runId: string; userMessage: MessageDto }>(`/api/v1/conversations/${id}/messages`, input),
-  interrupt: (id: string) => post<{ ok: boolean; upstream: boolean }>(`/api/v1/conversations/${id}/interrupt`),
+  interrupt: (id: string) =>
+    post<{ ok: boolean; upstream: boolean }>(`/api/v1/conversations/${id}/interrupt`),
 };
 
 /** SSE 事件流地址（EventSource 用；cookie 同源鉴权）。 */
@@ -92,12 +93,16 @@ export function conversationEventsUrl(id: string): string {
 
 export const teamApi = {
   list: (params: { page?: number; pageSize?: number } = {}) =>
-    get<PageResult<TeamDto>>(`/api/v1/teams?page=${params.page ?? 1}&pageSize=${params.pageSize ?? 50}`),
+    get<PageResult<TeamDto>>(
+      `/api/v1/teams?page=${params.page ?? 1}&pageSize=${params.pageSize ?? 50}`,
+    ),
   detail: (id: string) => get<TeamDetailDto>(`/api/v1/teams/${id}`),
   create: (input: TeamCreateInput) => post<TeamDto>("/api/v1/teams", input),
-  update: (id: string, input: TeamUpdateInput) => patch<TeamDetailDto>(`/api/v1/teams/${id}`, input),
+  update: (id: string, input: TeamUpdateInput) =>
+    patch<TeamDetailDto>(`/api/v1/teams/${id}`, input),
   remove: (id: string) => del<{ ok: boolean }>(`/api/v1/teams/${id}`),
-  addMember: (id: string, input: TeamMemberAddInput) => post<TeamDetailDto>(`/api/v1/teams/${id}/members`, input),
+  addMember: (id: string, input: TeamMemberAddInput) =>
+    post<TeamDetailDto>(`/api/v1/teams/${id}/members`, input),
   removeMember: (id: string, employeeId: string) =>
     del<TeamDetailDto>(`/api/v1/teams/${id}/members?employeeId=${encodeURIComponent(employeeId)}`),
 };

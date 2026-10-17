@@ -32,7 +32,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
           ...(input.name !== undefined ? { name: input.name } : {}),
           ...(input.description !== undefined ? { description: input.description ?? null } : {}),
           ...(input.kind !== undefined ? { kind: input.kind } : {}),
-          ...(input.promptTemplate !== undefined ? { promptTemplate: input.promptTemplate ?? null } : {}),
+          ...(input.promptTemplate !== undefined
+            ? { promptTemplate: input.promptTemplate ?? null }
+            : {}),
           version: { increment: 1 },
         },
       });
@@ -54,7 +56,9 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     const { id } = await ctx.params;
     await findSkill(id);
     await prisma.$transaction([
-      prisma.employeeResourceBinding.deleteMany({ where: { resourceId: id, resourceType: "SKILL" } }),
+      prisma.employeeResourceBinding.deleteMany({
+        where: { resourceId: id, resourceType: "SKILL" },
+      }),
       prisma.skillDefinition.update({ where: { id }, data: { deletedAt: new Date() } }),
     ]);
     return jsonOk({ ok: true });

@@ -23,37 +23,37 @@
 
 ### 1.1 色彩（语义变量，禁止组件内写裸 hex）
 
-| 语义 | 变量 | 亮色 | 暗色 | 用途 |
-|---|---|---|---|---|
-| 页面底 | `--rw-bg` | `#FAFAFA` | `#0B0F1A` | 应用背景 |
-| 卡片面 | `--rw-card` | `#FFFFFF` | `#111827` | 卡片/表格/浮层容器 |
-| 前景 | `--rw-fg` | `#0F172A` | `#F1F5F9` | 主文本 |
-| 次前景 | `--rw-fg-muted` | `#64748B` | `#94A3B8` | 辅助文本/标签 |
-| 弱前景 | `--rw-fg-subtle` | `#94A3B8` | `#5B6B82` | 占位/禁用（只配大字号或非关键信息） |
-| 边框 | `--rw-border` | `#E4E8EE` | `#1E293B` | 1px 发丝线 |
-| 沉浸边框 | `--rw-border-strong` | `#CBD5E1` | `#334155` | 输入框/hover 边框 |
-| **强调** | `--rw-accent` | `#10B981` | `#34D399` | 主按钮/链接/focus/在岗 |
-| 强调 hover | `--rw-accent-hover` | `#059669` | `#6EE7B7` | — |
-| 强调前景 | `--rw-accent-fg` | `#FFFFFF` | `#052E21` | 强调底上的文字 |
-| 强调浅底 | `--rw-accent-subtle` | `#ECFDF5` | `rgba(52,211,153,.12)` | 选中态/高亮底 |
-| 成功 | `--rw-success(-subtle)` | 同 accent 系 | 同 accent 系 | 在岗/成功 |
-| 警告 | `--rw-warning(-subtle)` | `#D97706` / `#FEF3E2` | `#F59E0B` / `.14 透明底` | 草稿/警告 |
-| 危险 | `--rw-danger(-subtle)` | `#DC2626` / `#FDECEC` | `#F87171` / `.12 透明底` | 删除/下线/失败 |
-| 中性底 | `--rw-muted-subtle` | `#F1F5F9` | `rgba(148,163,184,.10)` | 标签底/hover 底 |
-| 焦点环 | `--rw-ring` | `rgba(16,185,129,.45)` | `rgba(52,211,153,.5)` | focus 光环（3px 扩散） |
-| 浮层阴影 | `--rw-shadow-float` | `0 8px 24px rgba(15,23,42,.12)` | `0 8px 24px rgba(0,0,0,.5)` | 仅弹窗/下拉/hover 浮起 |
-| 氛围光 A | `--rw-aurora-a` | `rgba(16,185,129,.07)` | `rgba(52,211,153,.09)` | 背景极光（绿） |
-| 氛围光 B | `--rw-aurora-b` | `rgba(14,165,233,.05)` | `rgba(56,189,248,.06)` | 背景极光（蓝，辅助） |
+| 语义       | 变量                    | 亮色                            | 暗色                        | 用途                                |
+| ---------- | ----------------------- | ------------------------------- | --------------------------- | ----------------------------------- |
+| 页面底     | `--rw-bg`               | `#FAFAFA`                       | `#0B0F1A`                   | 应用背景                            |
+| 卡片面     | `--rw-card`             | `#FFFFFF`                       | `#111827`                   | 卡片/表格/浮层容器                  |
+| 前景       | `--rw-fg`               | `#0F172A`                       | `#F1F5F9`                   | 主文本                              |
+| 次前景     | `--rw-fg-muted`         | `#64748B`                       | `#94A3B8`                   | 辅助文本/标签                       |
+| 弱前景     | `--rw-fg-subtle`        | `#94A3B8`                       | `#5B6B82`                   | 占位/禁用（只配大字号或非关键信息） |
+| 边框       | `--rw-border`           | `#E4E8EE`                       | `#1E293B`                   | 1px 发丝线                          |
+| 沉浸边框   | `--rw-border-strong`    | `#CBD5E1`                       | `#334155`                   | 输入框/hover 边框                   |
+| **强调**   | `--rw-accent`           | `#10B981`                       | `#34D399`                   | 主按钮/链接/focus/在岗              |
+| 强调 hover | `--rw-accent-hover`     | `#059669`                       | `#6EE7B7`                   | —                                   |
+| 强调前景   | `--rw-accent-fg`        | `#FFFFFF`                       | `#052E21`                   | 强调底上的文字                      |
+| 强调浅底   | `--rw-accent-subtle`    | `#ECFDF5`                       | `rgba(52,211,153,.12)`      | 选中态/高亮底                       |
+| 成功       | `--rw-success(-subtle)` | 同 accent 系                    | 同 accent 系                | 在岗/成功                           |
+| 警告       | `--rw-warning(-subtle)` | `#D97706` / `#FEF3E2`           | `#F59E0B` / `.14 透明底`    | 草稿/警告                           |
+| 危险       | `--rw-danger(-subtle)`  | `#DC2626` / `#FDECEC`           | `#F87171` / `.12 透明底`    | 删除/下线/失败                      |
+| 中性底     | `--rw-muted-subtle`     | `#F1F5F9`                       | `rgba(148,163,184,.10)`     | 标签底/hover 底                     |
+| 焦点环     | `--rw-ring`             | `rgba(16,185,129,.45)`          | `rgba(52,211,153,.5)`       | focus 光环（3px 扩散）              |
+| 浮层阴影   | `--rw-shadow-float`     | `0 8px 24px rgba(15,23,42,.12)` | `0 8px 24px rgba(0,0,0,.5)` | 仅弹窗/下拉/hover 浮起              |
+| 氛围光 A   | `--rw-aurora-a`         | `rgba(16,185,129,.07)`          | `rgba(52,211,153,.09)`      | 背景极光（绿）                      |
+| 氛围光 B   | `--rw-aurora-b`         | `rgba(14,165,233,.05)`          | `rgba(56,189,248,.06)`      | 背景极光（蓝，辅助）                |
 
 **默认零阴影**：卡片常态无阴影，靠 1px 边框分层；hover/浮起才用 `--rw-shadow-float`。
 
 ### 1.2 字体（双语分治）
 
-| 层 | 栈 |
-|---|---|
-| 标题/数字 | `"Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif` |
-| 正文 | `"DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif` |
-| 代码/工号/ID | `"JetBrains Mono", ui-monospace, SFMono-Regular, monospace` |
+| 层           | 栈                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------ |
+| 标题/数字    | `"Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif` |
+| 正文         | `"DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif`       |
+| 代码/工号/ID | `"JetBrains Mono", ui-monospace, SFMono-Regular, monospace`                          |
 
 字号阶梯（紧凑工具密度）：`12 / 13(正文) / 15 / 20(页题) / 30–38(英雄)`；行高 1.6；标题 600 字重不加 bold；标题字距 `-0.01em ~ -0.025em`；数字一律 `font-variant-numeric: tabular-nums`。
 
@@ -67,24 +67,24 @@
 ### 1.4 动效刻度
 
 ```css
---t-fast: 140ms;   /* L1 */
---t-base: 200ms;   /* L2 */
---t-slow: 360ms;   /* L2 重 */
+--t-fast: 140ms; /* L1 */
+--t-base: 200ms; /* L2 */
+--t-slow: 360ms; /* L2 重 */
 --t-reveal: 520ms; /* L3 */
 --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
---ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);  /* 仅按压/弹入 */
+--ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1); /* 仅按压/弹入 */
 ```
 
 ---
 
 ## 2. 动效四层体系（L1-L4）
 
-| 层 | 语义 | 时长/缓动 | 清单（白名单制） |
-|---|---|---|---|
-| **L1 交互反馈** | 系统收到了 | 140ms · ease-out/spring | 按钮 hover 变色+光晕 · 按压 `scale(0.96)` · 输入 focus 环 · chip 弹起 · 链接下划线 |
-| **L2 状态过渡** | 属性变化连续性 | 200-360ms · ease-out | 卡片 hover（边框亮起+顶线流光+translateY(-3px)+浮层阴影）· 主题切换颜色过渡 · 骨架 shimmer · 气泡 pop-in（spring）· 展开/收起 |
-| **L3 编排揭示** | 页面叙事 | 520ms · 错峰 80ms | Hero 三幕（徽章→逐行标题+下划线展开→数据）· 统计数字 count-up（900ms, cubic-out）· 卡片墙错峰入场（fade-up 14px）· 滚动出现（IntersectionObserver 一次性） |
-| **L4 环境氛围** | 空间质感 | 46-58s 极慢漂移 | 背景极光（径向渐变 blur(90px) 漂移动画）· 噪点纹理（SVG feTurbulence, opacity ≤0.05）· 玻璃顶栏（blur(16px) saturate(1.4)）· 在岗呼吸点（2.4s pulse） |
+| 层              | 语义           | 时长/缓动               | 清单（白名单制）                                                                                                                                           |
+| --------------- | -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L1 交互反馈** | 系统收到了     | 140ms · ease-out/spring | 按钮 hover 变色+光晕 · 按压 `scale(0.96)` · 输入 focus 环 · chip 弹起 · 链接下划线                                                                         |
+| **L2 状态过渡** | 属性变化连续性 | 200-360ms · ease-out    | 卡片 hover（边框亮起+顶线流光+translateY(-3px)+浮层阴影）· 主题切换颜色过渡 · 骨架 shimmer · 气泡 pop-in（spring）· 展开/收起                              |
+| **L3 编排揭示** | 页面叙事       | 520ms · 错峰 80ms       | Hero 三幕（徽章→逐行标题+下划线展开→数据）· 统计数字 count-up（900ms, cubic-out）· 卡片墙错峰入场（fade-up 14px）· 滚动出现（IntersectionObserver 一次性） |
+| **L4 环境氛围** | 空间质感       | 46-58s 极慢漂移         | 背景极光（径向渐变 blur(90px) 漂移动画）· 噪点纹理（SVG feTurbulence, opacity ≤0.05）· 玻璃顶栏（blur(16px) saturate(1.4)）· 在岗呼吸点（2.4s pulse）      |
 
 **工程红线**：
 
@@ -100,24 +100,24 @@
 
 > 原则：**不重造 antd 轮子**；通过 §6 主题穿透让 antd 组件天生符合本规范；下表是「用哪个 antd 组件 + 定制点」。
 
-| 场景 | 组件 | 定制要点 |
-|---|---|---|
-| 主操作 | `Button type="primary"` | 实色 accent（主题已穿透）；hover 自动光晕；`danger` 用 `--rw-danger` |
-| 次操作 | `Button`（default） | 边框态，配 `--rw-border-strong` |
-| 幽灵/取消 | `Button type="text"` | hover 中性底 |
-| 表单 | `Form` + `Input/Select/TextArea` | 边框 `--rw-border-strong`；focus 环 accent 3px；紧凑 `size` 优先 |
-| 工号/ID 展示 | mono 字体 span/Tag | `--rw-*` 等宽 + accent-subtle 底 |
-| 列表 | `Table` | 行高 40px；表头背景 `--rw-muted-subtle`；边框发丝线；hover 行 `--rw-muted-subtle` |
-| 卡片容器 | `div` + Tailwind | `bg-[var(--rw-card)] border border-[var(--rw-border)] rounded-lg(8px)`；可点卡片加 L2 hover 全套 |
-| 弹窗 | `Modal` | 12px 圆角；浮层阴影；`destroyOnHidden`；表单弹窗宽度 560px 基准 |
-| 确认删除 | `Popconfirm` | danger 语义 |
-| 状态标签 | 自建 `StatusPill`（packages/ui） | 胶囊 + 呼吸点（仅 success 态 pulse）；见 preview 02 区 |
-| 头像 | 自建或 `Avatar` | 4px 圆角；accent 同色系微渐变底或中性底；单字中文名 |
-| 加载态 | 骨架屏优先 | shimmer 骨架 > Spin；表格用 `Skeleton.Button/Input` 组合；禁止整页转圈 |
-| 空态 | `Empty` + 主操作引导 | 空态必须给「创建第一个 X」出口按钮 |
-| 提示反馈 | `App.useApp()` 的 message/notification | **必须有 `<App>` 祖先**（providers 已修）；成功=success 语义色 |
-| 分页 | `Pagination` | 紧凑 size；总数展示 |
-| 下拉/浮层 | `Select/Dropdown` | 4px 圆角浮层 + `--rw-shadow-float`；**必须 portal 挂载**（rules/react-nextjs §5.5） |
+| 场景         | 组件                                   | 定制要点                                                                                         |
+| ------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 主操作       | `Button type="primary"`                | 实色 accent（主题已穿透）；hover 自动光晕；`danger` 用 `--rw-danger`                             |
+| 次操作       | `Button`（default）                    | 边框态，配 `--rw-border-strong`                                                                  |
+| 幽灵/取消    | `Button type="text"`                   | hover 中性底                                                                                     |
+| 表单         | `Form` + `Input/Select/TextArea`       | 边框 `--rw-border-strong`；focus 环 accent 3px；紧凑 `size` 优先                                 |
+| 工号/ID 展示 | mono 字体 span/Tag                     | `--rw-*` 等宽 + accent-subtle 底                                                                 |
+| 列表         | `Table`                                | 行高 40px；表头背景 `--rw-muted-subtle`；边框发丝线；hover 行 `--rw-muted-subtle`                |
+| 卡片容器     | `div` + Tailwind                       | `bg-[var(--rw-card)] border border-[var(--rw-border)] rounded-lg(8px)`；可点卡片加 L2 hover 全套 |
+| 弹窗         | `Modal`                                | 12px 圆角；浮层阴影；`destroyOnHidden`；表单弹窗宽度 560px 基准                                  |
+| 确认删除     | `Popconfirm`                           | danger 语义                                                                                      |
+| 状态标签     | 自建 `StatusPill`（packages/ui）       | 胶囊 + 呼吸点（仅 success 态 pulse）；见 preview 02 区                                           |
+| 头像         | 自建或 `Avatar`                        | 4px 圆角；accent 同色系微渐变底或中性底；单字中文名                                              |
+| 加载态       | 骨架屏优先                             | shimmer 骨架 > Spin；表格用 `Skeleton.Button/Input` 组合；禁止整页转圈                           |
+| 空态         | `Empty` + 主操作引导                   | 空态必须给「创建第一个 X」出口按钮                                                               |
+| 提示反馈     | `App.useApp()` 的 message/notification | **必须有 `<App>` 祖先**（providers 已修）；成功=success 语义色                                   |
+| 分页         | `Pagination`                           | 紧凑 size；总数展示                                                                              |
+| 下拉/浮层    | `Select/Dropdown`                      | 4px 圆角浮层 + `--rw-shadow-float`；**必须 portal 挂载**（rules/react-nextjs §5.5）              |
 
 **弹层红线**（继承 rules/react-nextjs §5.5）：所有浮层 portal/fixed，禁止被父容器 overflow 裁剪。
 
@@ -127,14 +127,14 @@
 
 > 全部 AI 对话 UI 使用 `@ant-design/x`（Bubble / Sender / Conversations / ThoughtChain / Welcome / Attachments），经 `XProvider` 接入同一主题——翠绿、亮暗、token 自动穿透，**禁止自绘对话气泡体系**。
 
-| 组件 | 用法 | 规范点 |
-|---|---|---|
-| `Bubble` | 消息列表 | 用户消息 = accent 实心（右）；员工消息 = card 底 + 边框（左）+ 28px 头像；入场 pop-in（spring 360ms）；markdown 渲染走安全管线（禁 raw HTML） |
-| `Sender` | 输入区 | 4px 圆角 + focus-within 环；⌘/Ctrl+Enter 发送；placeholder 语义化（「给 XX 发消息…」）；变高上限 6 行 |
-| `Conversations` | 会话列表（chat 侧栏） | 紧凑行高；活跃会话 accent-subtle 底 |
-| `ThoughtChain` | 推理/步骤过程 | mono 小字；步骤完成打钩动画（一次性） |
-| `Welcome` | 空态唤醒 | 快捷话题 chips（≤3 个）+ 主引导语；chips hover 弹起 |
-| 打字指示 | Bubble typing | 三点 blink；**生成完成后必须消失**（状态翻转强信号，rules/testing §3.5.1） |
+| 组件            | 用法                  | 规范点                                                                                                                                        |
+| --------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Bubble`        | 消息列表              | 用户消息 = accent 实心（右）；员工消息 = card 底 + 边框（左）+ 28px 头像；入场 pop-in（spring 360ms）；markdown 渲染走安全管线（禁 raw HTML） |
+| `Sender`        | 输入区                | 4px 圆角 + focus-within 环；⌘/Ctrl+Enter 发送；placeholder 语义化（「给 XX 发消息…」）；变高上限 6 行                                         |
+| `Conversations` | 会话列表（chat 侧栏） | 紧凑行高；活跃会话 accent-subtle 底                                                                                                           |
+| `ThoughtChain`  | 推理/步骤过程         | mono 小字；步骤完成打钩动画（一次性）                                                                                                         |
+| `Welcome`       | 空态唤醒              | 快捷话题 chips（≤3 个）+ 主引导语；chips hover 弹起                                                                                           |
+| 打字指示        | Bubble typing         | 三点 blink；**生成完成后必须消失**（状态翻转强信号，rules/testing §3.5.1）                                                                    |
 
 **对话页专属**：消息区 `scroll-slim` 细滚动条；SSE 断线重连提示条用 warning 语义；interrupt 后残留气泡标记「已中断」。
 
@@ -240,16 +240,16 @@ apps/web/src/components/theme-toggle.tsx
 
 ## 10. 现有页面迁移（旧 → 新）
 
-| 页面 | 现状问题 | 迁移动作 |
-|---|---|---|
-| login | 旧品牌色、无氛围层 | 新 token 重做 + hero 编排入场 |
-| office | 旧色板卡片 | 换 token + 统计 count-up + 卡片 hover L2 |
-| staffs (+[id]) | `bg-slate-*` 裸类、旧渐变按钮、avatar 渐变 | 语义类替换 + StatusPill + 编排入场 |
-| teams (+[id]) | 同上 | 同上 |
-| chat/[id] | 自绘气泡/输入 | **重写为 antdx Bubble+Sender+Conversations** + 主题穿透 |
+| 页面           | 现状问题                                   | 迁移动作                                                |
+| -------------- | ------------------------------------------ | ------------------------------------------------------- |
+| login          | 旧品牌色、无氛围层                         | 新 token 重做 + hero 编排入场                           |
+| office         | 旧色板卡片                                 | 换 token + 统计 count-up + 卡片 hover L2                |
+| staffs (+[id]) | `bg-slate-*` 裸类、旧渐变按钮、avatar 渐变 | 语义类替换 + StatusPill + 编排入场                      |
+| teams (+[id])  | 同上                                       | 同上                                                    |
+| chat/[id]      | 自绘气泡/输入                              | **重写为 antdx Bubble+Sender+Conversations** + 主题穿透 |
 
 迁移随各功能迭代 PR 逐步进行（不一次性大爆炸）；新页面一律直接按本规范开发。
 
 ---
 
-*生成：2026-10-17 · 决策记录：推翻 v1 藏青金融风 → 现代工具感（用户拍板）；亮暗双主题；圆角 4/8/12（用户修正）；AI 组件 = Ant Design X（用户指定）；动效四层（用户要求「高端大气眼前一亮」）。*
+_生成：2026-10-17 · 决策记录：推翻 v1 藏青金融风 → 现代工具感（用户拍板）；亮暗双主题；圆角 4/8/12（用户修正）；AI 组件 = Ant Design X（用户指定）；动效四层（用户要求「高端大气眼前一亮」）。_

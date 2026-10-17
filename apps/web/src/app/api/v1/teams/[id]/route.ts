@@ -64,7 +64,10 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     await requirePermission("ORG_TEAM:DELETE");
     const { id } = await ctx.params;
     await findTeam(id);
-    await prisma.team.update({ where: { id }, data: { deletedAt: new Date(), status: "ARCHIVED" } });
+    await prisma.team.update({
+      where: { id },
+      data: { deletedAt: new Date(), status: "ARCHIVED" },
+    });
     return jsonOk({ ok: true });
   } catch (e) {
     return toErrorResponse(e);

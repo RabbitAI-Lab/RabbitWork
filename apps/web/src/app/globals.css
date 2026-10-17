@@ -48,7 +48,9 @@ body {
   font-family: var(--font-body);
   background: var(--rw-bg);
   color: var(--rw-fg);
-  transition: background var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out);
+  transition:
+    background var(--t-base) var(--ease-out),
+    color var(--t-base) var(--ease-out);
 }
 
 h1,
@@ -196,7 +198,9 @@ h4,
 /* ── L2 卡片 hover 全套（边框亮起 + 流光顶线 + 上浮）── */
 .card-hover {
   position: relative;
-  transition: border-color var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-spring),
+  transition:
+    border-color var(--t-base) var(--ease-out),
+    transform var(--t-base) var(--ease-spring),
     box-shadow var(--t-base) var(--ease-out);
 }
 .card-hover::before {
@@ -257,7 +261,9 @@ h4,
   border-radius: var(--radius-sm);
   border-color: var(--rw-border-strong);
   background: var(--rw-card);
-  transition: border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
+  transition:
+    border-color var(--t-base) var(--ease-out),
+    box-shadow var(--t-base) var(--ease-out);
 }
 .rw-sender:focus-within {
   border-color: var(--rw-accent);
@@ -274,7 +280,9 @@ h4,
   display: grid;
   place-items: center;
   font-size: 14px;
-  transition: background var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-spring),
+  transition:
+    background var(--t-fast) var(--ease-out),
+    transform var(--t-fast) var(--ease-spring),
     box-shadow var(--t-base) var(--ease-out);
 }
 .rw-send-btn:hover:not(:disabled) {
@@ -327,34 +335,88 @@ h4,
    How to apply: 仅覆盖会被 antd 重置的元素级选择器（<a> / <button>）
         影响的属性（color / background-color / border-color）。Tailwind
         的物理布局类（inset / flex 等）放在 utilities 层已能正确生效。 */
-.text-rw-fg { color: var(--rw-fg); }
-.text-rw-fg-muted { color: var(--rw-fg-muted); }
-.text-rw-fg-subtle { color: var(--rw-fg-subtle); }
-.text-rw-accent { color: var(--rw-accent); }
-.text-rw-success { color: var(--rw-success); }
-.text-rw-warning { color: var(--rw-warning); }
-.text-rw-danger { color: var(--rw-danger); }
+.text-rw-fg {
+  color: var(--rw-fg);
+}
+.text-rw-fg-muted {
+  color: var(--rw-fg-muted);
+}
+.text-rw-fg-subtle {
+  color: var(--rw-fg-subtle);
+}
+.text-rw-accent {
+  color: var(--rw-accent);
+}
+.text-rw-success {
+  color: var(--rw-success);
+}
+.text-rw-warning {
+  color: var(--rw-warning);
+}
+.text-rw-danger {
+  color: var(--rw-danger);
+}
 
-.hover\:text-rw-fg:hover { color: var(--rw-fg); }
-.hover\:text-rw-fg-muted:hover { color: var(--rw-fg-muted); }
-.hover\:text-rw-accent:hover { color: var(--rw-accent); }
+.hover\:text-rw-fg:hover {
+  color: var(--rw-fg);
+}
+.hover\:text-rw-fg-muted:hover {
+  color: var(--rw-fg-muted);
+}
+.hover\:text-rw-accent:hover {
+  color: var(--rw-accent);
+}
 
-.bg-rw-bg { background-color: var(--rw-bg); }
-.bg-rw-card { background-color: var(--rw-card); }
-.bg-rw-muted-subtle { background-color: var(--rw-muted-subtle); }
-.bg-rw-accent { background-color: var(--rw-accent); }
-.bg-rw-accent-subtle { background-color: var(--rw-accent-subtle); }
-.bg-rw-success { background-color: var(--rw-success); }
-.bg-rw-success-subtle { background-color: var(--rw-success-subtle); }
-.bg-rw-warning-subtle { background-color: var(--rw-warning-subtle); }
-.bg-rw-danger-subtle { background-color: var(--rw-danger-subtle); }
-.bg-rw-card\/50 { background-color: color-mix(in srgb, var(--rw-card) 50%, transparent); }
+.bg-rw-bg {
+  background-color: var(--rw-bg);
+}
+.bg-rw-card {
+  background-color: var(--rw-card);
+}
+.bg-rw-muted-subtle {
+  background-color: var(--rw-muted-subtle);
+}
+.bg-rw-accent {
+  background-color: var(--rw-accent);
+}
+.bg-rw-accent-subtle {
+  background-color: var(--rw-accent-subtle);
+}
+.bg-rw-success {
+  background-color: var(--rw-success);
+}
+.bg-rw-success-subtle {
+  background-color: var(--rw-success-subtle);
+}
+.bg-rw-warning-subtle {
+  background-color: var(--rw-warning-subtle);
+}
+.bg-rw-danger-subtle {
+  background-color: var(--rw-danger-subtle);
+}
+.bg-rw-card\/50 {
+  background-color: color-mix(in srgb, var(--rw-card) 50%, transparent);
+}
 
-.hover\:bg-rw-muted-subtle:hover { background-color: var(--rw-muted-subtle); }
-.hover\:bg-rw-accent-subtle:hover { background-color: var(--rw-accent-subtle); }
+.hover\:bg-rw-muted-subtle:hover {
+  background-color: var(--rw-muted-subtle);
+}
+.hover\:bg-rw-accent-subtle:hover {
+  background-color: var(--rw-accent-subtle);
+}
 
-.border-rw-border { border-color: var(--rw-border); }
-.border-rw-border-strong { border-color: var(--rw-border-strong); }
-.border-rw-accent { border-color: var(--rw-accent); }
-.hover\:border-rw-border-strong:hover { border-color: var(--rw-border-strong); }
-.hover\:border-rw-accent:hover { border-color: var(--rw-accent); }
+.border-rw-border {
+  border-color: var(--rw-border);
+}
+.border-rw-border-strong {
+  border-color: var(--rw-border-strong);
+}
+.border-rw-accent {
+  border-color: var(--rw-accent);
+}
+.hover\:border-rw-border-strong:hover {
+  border-color: var(--rw-border-strong);
+}
+.hover\:border-rw-accent:hover {
+  border-color: var(--rw-accent);
+}

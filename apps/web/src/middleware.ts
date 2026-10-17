@@ -12,11 +12,15 @@ export async function middleware(request: NextRequest) {
   const claims = await verifySession(request.cookies.get(SESSION_COOKIE)?.value, secret);
 
   const isApi = pathname.startsWith("/api/");
-  const isPublicApi = pathname.startsWith("/api/v1/auth/") || pathname.startsWith("/api/v1/system/");
+  const isPublicApi =
+    pathname.startsWith("/api/v1/auth/") || pathname.startsWith("/api/v1/system/");
 
   let res: NextResponse;
   if (!claims && isApi && !isPublicApi) {
-    res = NextResponse.json({ code: 10001, message: "未登录或会话已过期", data: null }, { status: 401 });
+    res = NextResponse.json(
+      { code: 10001, message: "未登录或会话已过期", data: null },
+      { status: 401 },
+    );
   } else if (!claims && !isApi && !pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

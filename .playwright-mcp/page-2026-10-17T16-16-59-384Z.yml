@@ -1,54 +1,54 @@
 - generic [ref=f12e1]:
-  - button "Open Next.js Dev Tools" [ref=f12e91] [cursor=pointer]
-  - alert [ref=f12e95]
-  - generic [ref=f12e97]:
-    - complementary [ref=f12e98]:
-      - link "RabbitWork 数字员工平台" [ref=f12e99] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=f12e105]:
-          - generic [ref=f12e106]: RabbitWork
-          - generic [ref=f12e107]: 数字员工平台
-      - navigation [ref=f12e108]:
-        - link [ref=f12e109] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=f12e111]
-          - text: 我的数字员工
-        - link [ref=f12e114] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=f12e116]
-          - text: 我的团队
-        - link [ref=f12e119] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=f12e122]
-          - text: 办公室
-      - generic [ref=f12e125]:
-        - generic [ref=f12e126] [cursor=pointer]:
-          - img "user" [ref=f12e128]
-          - generic [ref=f12e131]:
-            - generic [ref=f12e132]: 管理员
-            - generic [ref=f12e133]: 管理员
-        - button "切换主题" [ref=f12e134] [cursor=pointer]:
-          - img "sun" [ref=f12e135]
-    - main [ref=f12e138]:
-      - generic [ref=f12e139]:
-        - generic [ref=f12e140]:
-          - generic [ref=f12e141]: 小
-          - generic [ref=f12e144]:
-            - generic [ref=f12e145]: 小钱
-            - generic [ref=f12e146]: 前端开发
-          - generic [ref=f12e147]: 空闲
-          - button "返回办公室" [ref=f12e150] [cursor=pointer]:
-            - img "arrow-left" [ref=f12e151]
-        - generic [ref=f12e154]:
-          - generic [ref=f12e155]: "1"
-          - generic [ref=f12e158]:
-            - generic [ref=f12e159]: 小
-            - generic [ref=f12e163]:
-              - text: "Hi! It looks like your message just contains \"1\" — I don't have any prior context or a list of options to pick from in this conversation. Could you let me know what you'd like help with? For example: - A question to answer - Code to write, debug, or review - A file or project to explore in the workspace - Research or analysis to perform Just describe the task and I'll get started."
-              - generic [ref=f12e164]: glm-5.3 · 5849 输入 / 160 输出 tokens
-        - generic [ref=f12e165]:
-          - generic [ref=f12e167]:
-            - textbox "向 小钱 发送消息…" [active] [ref=f12e168]
-            - button "发送" [disabled] [ref=f12e170]:
-              - img "send" [ref=f12e171]
-          - generic [ref=f12e174]: ⌘↵ 发送 · Shift+↵ 换行
+    - button "Open Next.js Dev Tools" [ref=f12e91] [cursor=pointer]
+    - alert [ref=f12e95]
+    - generic [ref=f12e97]:
+        - complementary [ref=f12e98]:
+            - link "RabbitWork 数字员工平台" [ref=f12e99] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=f12e105]:
+                    - generic [ref=f12e106]: RabbitWork
+                    - generic [ref=f12e107]: 数字员工平台
+            - navigation [ref=f12e108]:
+                - link [ref=f12e109] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=f12e111]
+                    - text: 我的数字员工
+                - link [ref=f12e114] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=f12e116]
+                    - text: 我的团队
+                - link [ref=f12e119] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=f12e122]
+                    - text: 办公室
+            - generic [ref=f12e125]:
+                - generic [ref=f12e126] [cursor=pointer]:
+                    - img "user" [ref=f12e128]
+                    - generic [ref=f12e131]:
+                        - generic [ref=f12e132]: 管理员
+                        - generic [ref=f12e133]: 管理员
+                - button "切换主题" [ref=f12e134] [cursor=pointer]:
+                    - img "sun" [ref=f12e135]
+        - main [ref=f12e138]:
+            - generic [ref=f12e139]:
+                - generic [ref=f12e140]:
+                    - generic [ref=f12e141]: 小
+                    - generic [ref=f12e144]:
+                        - generic [ref=f12e145]: 小钱
+                        - generic [ref=f12e146]: 前端开发
+                    - generic [ref=f12e147]: 空闲
+                    - button "返回办公室" [ref=f12e150] [cursor=pointer]:
+                        - img "arrow-left" [ref=f12e151]
+                - generic [ref=f12e154]:
+                    - generic [ref=f12e155]: "1"
+                    - generic [ref=f12e158]:
+                        - generic [ref=f12e159]: 小
+                        - generic [ref=f12e163]:
+                            - text: 'Hi! It looks like your message just contains "1" — I don''t have any prior context or a list of options to pick from in this conversation. Could you let me know what you''d like help with? For example: - A question to answer - Code to write, debug, or review - A file or project to explore in the workspace - Research or analysis to perform Just describe the task and I''ll get started.'
+                            - generic [ref=f12e164]: glm-5.3 · 5849 输入 / 160 输出 tokens
+                - generic [ref=f12e165]:
+                    - generic [ref=f12e167]:
+                        - textbox "向 小钱 发送消息…" [active] [ref=f12e168]
+                        - button "发送" [disabled] [ref=f12e170]:
+                            - img "send" [ref=f12e171]
+                    - generic [ref=f12e174]: ⌘↵ 发送 · Shift+↵ 换行

@@ -137,7 +137,10 @@ class RealProvider implements AgentScopeProvider {
 
 class MockProvider implements AgentScopeProvider {
   readonly mode = "mock" as const;
-  constructor(private opts: AgentScopeOptions, private mock = new MockAgentScope(opts)) {}
+  constructor(
+    private opts: AgentScopeOptions,
+    private mock = new MockAgentScope(opts),
+  ) {}
 
   async ensureAgent(input: EnsureAgentInput): Promise<EnsureAgentResult> {
     const agent = await this.mock.createAgent(input);

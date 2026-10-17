@@ -1,95 +1,95 @@
 - generic [ref=f8e3]:
-  - complementary [ref=f8e4]:
-    - link "RabbitWork 数字员工平台" [ref=f8e5] [cursor=pointer]:
-      - /url: /office
-      - generic [ref=f8e11]:
-        - generic [ref=f8e12]: RabbitWork
-        - generic [ref=f8e13]: 数字员工平台
-    - navigation [ref=f8e14]:
-      - link [ref=f8e15] [cursor=pointer]:
-        - /url: /staffs
-        - img "appstore" [ref=f8e18]
-        - text: 我的数字员工
-      - link [ref=f8e21] [cursor=pointer]:
-        - /url: /teams
-        - img "team" [ref=f8e23]
-        - text: 我的团队
-      - link [ref=f8e26] [cursor=pointer]:
-        - /url: /office
-        - img "home" [ref=f8e28]
-        - text: 办公室
-    - generic [ref=f8e31]:
-      - generic [ref=f8e32] [cursor=pointer]:
-        - img "user" [ref=f8e34]
-        - generic [ref=f8e37]:
-          - generic [ref=f8e38]: ...
-          - generic [ref=f8e39]: 成员
-      - button "切换主题" [ref=f8e40] [cursor=pointer]:
-        - img "moon" [ref=f8e41]
-  - main [ref=f8e44]:
-    - generic [ref=f8e45]:
-      - generic [ref=f8e46]:
-        - generic [ref=f8e47]:
-          - heading "我的数字员工" [level=1] [ref=f8e48]
-          - paragraph [ref=f8e49]: 管理你的数字员工档案,点击卡片查看详情
-        - button [ref=f8e50]:
-          - img "plus" [ref=f8e52]
-          - text: 新建员工
-      - generic [ref=f8e56]:
-        - generic [ref=f8e57]:
-          - img "team" [ref=f8e59]
-          - generic [ref=f8e62]:
-            - generic [ref=f8e63]: "0"
-            - generic [ref=f8e64]: 员工总数
-        - generic [ref=f8e65]:
-          - img "rocket" [ref=f8e67]
-          - generic [ref=f8e70]:
-            - generic [ref=f8e71]: "0"
-            - generic [ref=f8e72]: 在岗员工
-        - generic [ref=f8e73]:
-          - img "edit" [ref=f8e75]
-          - generic [ref=f8e78]:
-            - generic [ref=f8e79]: "0"
-            - generic [ref=f8e80]: 草稿
-      - generic [ref=f8e81]:
-        - radiogroup "segmented control" [ref=f8e82]:
-          - generic [ref=f8e83]:
-            - generic [ref=f8e84]:
-              - radio "全部 (0)" [checked] [ref=f8e85]
-              - generic "全部 (0)" [ref=f8e86]
-            - generic [ref=f8e87]:
-              - radio "在岗 (0)" [ref=f8e88]
-              - generic "在岗 (0)" [ref=f8e89]
-            - generic [ref=f8e90]:
-              - radio "草稿 (0)" [ref=f8e91]
-              - generic "草稿 (0)" [ref=f8e92]
-            - generic [ref=f8e93]:
-              - radio "下线 (0)" [ref=f8e94]
-              - generic "下线 (0)" [ref=f8e95]
-        - generic [ref=f8e96]:
-          - img "search" [ref=f8e98]
-          - textbox "搜索姓名 / 岗位 / 工号" [ref=f8e101]
-          - button [ref=f8e103]:
-            - img "close-circle" [ref=f8e104]
-      - generic [ref=f8e108]:
-        - generic [ref=f8e109]:
-          - generic:
-            - generic:
-              - heading [level=3]
-              - list:
-                - listitem
-                - listitem
-        - generic [ref=f8e110]:
-          - generic:
-            - generic:
-              - heading [level=3]
-              - list:
-                - listitem
-                - listitem
-        - generic [ref=f8e111]:
-          - generic:
-            - generic:
-              - heading [level=3]
-              - list:
-                - listitem
-                - listitem
+    - complementary [ref=f8e4]:
+        - link "RabbitWork 数字员工平台" [ref=f8e5] [cursor=pointer]:
+            - /url: /office
+            - generic [ref=f8e11]:
+                - generic [ref=f8e12]: RabbitWork
+                - generic [ref=f8e13]: 数字员工平台
+        - navigation [ref=f8e14]:
+            - link [ref=f8e15] [cursor=pointer]:
+                - /url: /staffs
+                - img "appstore" [ref=f8e18]
+                - text: 我的数字员工
+            - link [ref=f8e21] [cursor=pointer]:
+                - /url: /teams
+                - img "team" [ref=f8e23]
+                - text: 我的团队
+            - link [ref=f8e26] [cursor=pointer]:
+                - /url: /office
+                - img "home" [ref=f8e28]
+                - text: 办公室
+        - generic [ref=f8e31]:
+            - generic [ref=f8e32] [cursor=pointer]:
+                - img "user" [ref=f8e34]
+                - generic [ref=f8e37]:
+                    - generic [ref=f8e38]: ...
+                    - generic [ref=f8e39]: 成员
+            - button "切换主题" [ref=f8e40] [cursor=pointer]:
+                - img "moon" [ref=f8e41]
+    - main [ref=f8e44]:
+        - generic [ref=f8e45]:
+            - generic [ref=f8e46]:
+                - generic [ref=f8e47]:
+                    - heading "我的数字员工" [level=1] [ref=f8e48]
+                    - paragraph [ref=f8e49]: 管理你的数字员工档案,点击卡片查看详情
+                - button [ref=f8e50]:
+                    - img "plus" [ref=f8e52]
+                    - text: 新建员工
+            - generic [ref=f8e56]:
+                - generic [ref=f8e57]:
+                    - img "team" [ref=f8e59]
+                    - generic [ref=f8e62]:
+                        - generic [ref=f8e63]: "0"
+                        - generic [ref=f8e64]: 员工总数
+                - generic [ref=f8e65]:
+                    - img "rocket" [ref=f8e67]
+                    - generic [ref=f8e70]:
+                        - generic [ref=f8e71]: "0"
+                        - generic [ref=f8e72]: 在岗员工
+                - generic [ref=f8e73]:
+                    - img "edit" [ref=f8e75]
+                    - generic [ref=f8e78]:
+                        - generic [ref=f8e79]: "0"
+                        - generic [ref=f8e80]: 草稿
+            - generic [ref=f8e81]:
+                - radiogroup "segmented control" [ref=f8e82]:
+                    - generic [ref=f8e83]:
+                        - generic [ref=f8e84]:
+                            - radio "全部 (0)" [checked] [ref=f8e85]
+                            - generic "全部 (0)" [ref=f8e86]
+                        - generic [ref=f8e87]:
+                            - radio "在岗 (0)" [ref=f8e88]
+                            - generic "在岗 (0)" [ref=f8e89]
+                        - generic [ref=f8e90]:
+                            - radio "草稿 (0)" [ref=f8e91]
+                            - generic "草稿 (0)" [ref=f8e92]
+                        - generic [ref=f8e93]:
+                            - radio "下线 (0)" [ref=f8e94]
+                            - generic "下线 (0)" [ref=f8e95]
+                - generic [ref=f8e96]:
+                    - img "search" [ref=f8e98]
+                    - textbox "搜索姓名 / 岗位 / 工号" [ref=f8e101]
+                    - button [ref=f8e103]:
+                        - img "close-circle" [ref=f8e104]
+            - generic [ref=f8e108]:
+                - generic [ref=f8e109]:
+                    - generic:
+                        - generic:
+                            - heading [level=3]
+                            - list:
+                                - listitem
+                                - listitem
+                - generic [ref=f8e110]:
+                    - generic:
+                        - generic:
+                            - heading [level=3]
+                            - list:
+                                - listitem
+                                - listitem
+                - generic [ref=f8e111]:
+                    - generic:
+                        - generic:
+                            - heading [level=3]
+                            - list:
+                                - listitem
+                                - listitem

@@ -43,7 +43,9 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     const { id } = await ctx.params;
     await findKb(id);
     await prisma.$transaction([
-      prisma.employeeResourceBinding.deleteMany({ where: { resourceId: id, resourceType: "KNOWLEDGE" } }),
+      prisma.employeeResourceBinding.deleteMany({
+        where: { resourceId: id, resourceType: "KNOWLEDGE" },
+      }),
       prisma.knowledgeBase.update({ where: { id }, data: { deletedAt: new Date() } }),
     ]);
     return jsonOk({ ok: true });

@@ -2,8 +2,29 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { App, Avatar, Button, Empty, Form, Input, Modal, Popconfirm, Segmented, Select, Skeleton, Tag } from "antd";
-import { PlusOutlined, RocketOutlined, SendOutlined, EditOutlined, DeleteOutlined, TeamOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  App,
+  Avatar,
+  Button,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Segmented,
+  Select,
+  Skeleton,
+  Tag,
+} from "antd";
+import {
+  PlusOutlined,
+  RocketOutlined,
+  SendOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  TeamOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { StatusPill } from "@/components/StatusPill";
@@ -52,7 +73,8 @@ export default function StaffsPage() {
     onError: (e) => message.error(e instanceof Error ? e.message : "创建失败"),
   });
   const update = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: StaffUpdateInput }) => staffApi.update(id, input),
+    mutationFn: ({ id, input }: { id: string; input: StaffUpdateInput }) =>
+      staffApi.update(id, input),
     onSuccess: () => {
       message.success("已保存");
       setModalOpen(false);
@@ -103,8 +125,16 @@ export default function StaffsPage() {
 
   const stats = [
     { label: "员工总数", value: all.length, icon: <TeamOutlined className="text-rw-accent" /> },
-    { label: "在岗员工", value: all.filter((s) => s.status === "PUBLISHED").length, icon: <RocketOutlined className="text-rw-success" /> },
-    { label: "草稿", value: all.filter((s) => s.status === "DRAFT").length, icon: <EditOutlined className="text-rw-warning" /> },
+    {
+      label: "在岗员工",
+      value: all.filter((s) => s.status === "PUBLISHED").length,
+      icon: <RocketOutlined className="text-rw-success" />,
+    },
+    {
+      label: "草稿",
+      value: all.filter((s) => s.status === "DRAFT").length,
+      icon: <EditOutlined className="text-rw-warning" />,
+    },
   ];
 
   return (
@@ -112,7 +142,9 @@ export default function StaffsPage() {
       <div className="mx-auto max-w-6xl px-8 py-8" data-testid="staffs-page">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">我的数字员工</h1>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">
+              我的数字员工
+            </h1>
             <p className="mt-1 text-sm text-rw-fg-subtle">管理你的数字员工档案,点击卡片查看详情</p>
           </div>
           <Button
@@ -128,7 +160,10 @@ export default function StaffsPage() {
 
         <div className="mb-6 grid grid-cols-3 gap-4">
           {stats.map((s) => (
-            <div key={s.label} className="flex items-center gap-4 rounded-rw-md border border-rw-border bg-rw-card px-5 py-4">
+            <div
+              key={s.label}
+              className="flex items-center gap-4 rounded-rw-md border border-rw-border bg-rw-card px-5 py-4"
+            >
               <span className="bg-rw-muted-subtle flex h-10 w-10 shrink-0 items-center justify-center rounded-rw-sm text-base [&_svg]:text-lg">
                 {s.icon}
               </span>
@@ -150,9 +185,15 @@ export default function StaffsPage() {
             data-testid="staff-filter"
             options={[
               { value: "ALL", label: `全部 (${all.length})` },
-              { value: "PUBLISHED", label: `在岗 (${all.filter((s) => s.status === "PUBLISHED").length})` },
+              {
+                value: "PUBLISHED",
+                label: `在岗 (${all.filter((s) => s.status === "PUBLISHED").length})`,
+              },
               { value: "DRAFT", label: `草稿 (${all.filter((s) => s.status === "DRAFT").length})` },
-              { value: "OFFLINE", label: `下线 (${all.filter((s) => s.status === "OFFLINE").length})` },
+              {
+                value: "OFFLINE",
+                label: `下线 (${all.filter((s) => s.status === "OFFLINE").length})`,
+              },
             ]}
           />
           <Input
@@ -201,12 +242,20 @@ export default function StaffsPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <Avatar size={44} className={`!flex !shrink-0 !items-center !justify-center ${i % 3 === 0 ? "avatar-accent" : "bg-rw-muted-subtle text-rw-fg-muted"}`}>
+                      <Avatar
+                        size={44}
+                        className={`!flex !shrink-0 !items-center !justify-center ${i % 3 === 0 ? "avatar-accent" : "bg-rw-muted-subtle text-rw-fg-muted"}`}
+                      >
                         <span className="text-base font-medium">{s.name.slice(0, 1)}</span>
                       </Avatar>
                       <div className="min-w-0">
-                        <div className="truncate text-[15px] font-semibold text-rw-fg">{s.name}</div>
-                        <div className="mt-0.5 truncate font-mono text-xs text-rw-fg-subtle" title={`${s.title} · ${s.code}`}>
+                        <div className="truncate text-[15px] font-semibold text-rw-fg">
+                          {s.name}
+                        </div>
+                        <div
+                          className="mt-0.5 truncate font-mono text-xs text-rw-fg-subtle"
+                          title={`${s.title} · ${s.code}`}
+                        >
                           {s.title} · {s.code}
                         </div>
                       </div>
@@ -219,8 +268,15 @@ export default function StaffsPage() {
                   </p>
 
                   <div className="mt-2 flex items-center gap-1.5 text-[11px] text-rw-fg-subtle">
-                    <Tag bordered={false} className="!m-0 !rounded-rw-sm !bg-rw-muted-subtle !text-[11px] !text-rw-fg-muted">
-                      {s.visibility === "ORG" ? "组织内" : s.visibility === "GALLERY" ? "广场" : "私有"}
+                    <Tag
+                      bordered={false}
+                      className="!m-0 !rounded-rw-sm !bg-rw-muted-subtle !text-[11px] !text-rw-fg-muted"
+                    >
+                      {s.visibility === "ORG"
+                        ? "组织内"
+                        : s.visibility === "GALLERY"
+                          ? "广场"
+                          : "私有"}
                     </Tag>
                     {s.publishedAt && <span>发布于 {s.publishedAt.slice(0, 10)}</span>}
                   </div>
@@ -254,9 +310,28 @@ export default function StaffsPage() {
                       </Button>
                     )}
                     <div className="flex-1" />
-                    <Button size="small" type="text" icon={<EditOutlined />} onClick={() => openEdit(s)} aria-label="编辑" className="!rounded-rw-sm" />
-                    <Popconfirm title="确认删除该员工？" okText="删除" cancelText="取消" onConfirm={() => remove.mutate(s.id)}>
-                      <Button size="small" type="text" danger icon={<DeleteOutlined />} aria-label="删除" className="!rounded-rw-sm" />
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={() => openEdit(s)}
+                      aria-label="编辑"
+                      className="!rounded-rw-sm"
+                    />
+                    <Popconfirm
+                      title="确认删除该员工？"
+                      okText="删除"
+                      cancelText="取消"
+                      onConfirm={() => remove.mutate(s.id)}
+                    >
+                      <Button
+                        size="small"
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        aria-label="删除"
+                        className="!rounded-rw-sm"
+                      />
                     </Popconfirm>
                   </div>
                 </div>
@@ -290,10 +365,18 @@ export default function StaffsPage() {
             }
           >
             <div className="grid grid-cols-2 gap-x-4">
-              <Form.Item name="name" label="姓名" rules={[{ required: true, message: "请输入姓名" }]}>
+              <Form.Item
+                name="name"
+                label="姓名"
+                rules={[{ required: true, message: "请输入姓名" }]}
+              >
                 <Input data-testid="staff-form-name" placeholder="如：小兔" maxLength={128} />
               </Form.Item>
-              <Form.Item name="title" label="岗位" rules={[{ required: true, message: "请输入岗位" }]}>
+              <Form.Item
+                name="title"
+                label="岗位"
+                rules={[{ required: true, message: "请输入岗位" }]}
+              >
                 <Input placeholder="如：售前咨询顾问" maxLength={128} />
               </Form.Item>
             </div>
@@ -306,13 +389,23 @@ export default function StaffsPage() {
               <Input.TextArea
                 data-testid="staff-form-persona"
                 rows={6}
-                placeholder={"你是……\n- 说话风格：亲切、专业\n- 擅长：产品介绍、需求梳理\n- 回答习惯：先给结论，再给依据"}
+                placeholder={
+                  "你是……\n- 说话风格：亲切、专业\n- 擅长：产品介绍、需求梳理\n- 回答习惯：先给结论，再给依据"
+                }
                 showCount
                 maxLength={20000}
               />
             </Form.Item>
-            <Form.Item name="boundary" label="职责边界（可选）" extra="不回答的问题范围、转人工条件等">
-              <Input.TextArea rows={3} placeholder="不承诺具体价格与合同条款；遇到投诉建议转人工。" maxLength={20000} />
+            <Form.Item
+              name="boundary"
+              label="职责边界（可选）"
+              extra="不回答的问题范围、转人工条件等"
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder="不承诺具体价格与合同条款；遇到投诉建议转人工。"
+                maxLength={20000}
+              />
             </Form.Item>
             <Form.Item name="visibility" label="可见性" initialValue="PRIVATE" className="!mb-0">
               <Select

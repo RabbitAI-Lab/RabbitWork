@@ -8,7 +8,13 @@ import { kbApi, skillApi, staffResourceApi } from "@rabbit/api-client";
 import type { KbCreateInput, SkillCreateInput } from "@rabbit/shared";
 
 /** 员工资源绑定（RESOURCE-001）：穿梭框配置技能/知识库 + 库内新建/删除 + 差分保存。 */
-export function ResourceBindings({ staffId, type }: { staffId: string; type: "SKILL" | "KNOWLEDGE" }) {
+export function ResourceBindings({
+  staffId,
+  type,
+}: {
+  staffId: string;
+  type: "SKILL" | "KNOWLEDGE";
+}) {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
   const [targetKeys, setTargetKeys] = useState<string[] | null>(null); // null = 未编辑，回显服务端态
@@ -21,9 +27,13 @@ export function ResourceBindings({ staffId, type }: { staffId: string; type: "SK
   // 归一化为 Transfer 所需的公共形状（技能/知识库两个列表接口的联合类型不可直接推导）
   const library = useQuery({
     queryKey: listKey,
-    queryFn: async (): Promise<{ items: Array<{ id: string; name: string; description: string | null }> }> => {
+    queryFn: async (): Promise<{
+      items: Array<{ id: string; name: string; description: string | null }>;
+    }> => {
       const res = type === "SKILL" ? await skillApi.list() : await kbApi.list();
-      return { items: res.items.map((it) => ({ id: it.id, name: it.name, description: it.description })) };
+      return {
+        items: res.items.map((it) => ({ id: it.id, name: it.name, description: it.description })),
+      };
     },
   });
   const bound = useQuery({
@@ -37,7 +47,9 @@ export function ResourceBindings({ staffId, type }: { staffId: string; type: "SK
     return type === "SKILL" ? dto.skills.map((s) => s.id) : dto.knowledgeBases.map((k) => k.id);
   }, [bound.data, type]);
   const current = targetKeys ?? serverKeys;
-  const dirty = targetKeys !== null && JSON.stringify([...targetKeys].sort()) !== JSON.stringify([...serverKeys].sort());
+  const dirty =
+    targetKeys !== null &&
+    JSON.stringify([...targetKeys].sort()) !== JSON.stringify([...serverKeys].sort());
 
   const save = useMutation({
     mutationFn: async (nextSkillIds: string[]) => {
@@ -100,11 +112,16 @@ export function ResourceBindings({ staffId, type }: { staffId: string; type: "SK
         <div>
           <h2 className="text-rw-fg text-[15px] font-semibold">{listLabel}配置</h2>
           <p className="text-rw-fg-subtle mt-0.5 text-xs">
-            勾选该员工可用的{listLabel}（当前 {current.length} 项）——保存后随下一次发布生效于运行时。
+            勾选该员工可用的{listLabel}（当前 {current.length}{" "}
+            项）——保存后随下一次发布生效于运行时。
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button icon={<PlusOutlined />} onClick={() => setCreateOpen(true)} data-testid={`resource-create-${type}`}>
+          <Button
+            icon={<PlusOutlined />}
+            onClick={() => setCreateOpen(true)}
+            data-testid={`resource-create-${type}`}
+          >
             新建{listLabel}
           </Button>
           <Button
@@ -136,7 +153,10 @@ export function ResourceBindings({ staffId, type }: { staffId: string; type: "SK
           targetKeys={current}
           onChange={onChange}
           render={(item) => (
-            <span className="flex min-w-0 items-center gap-2" data-testid={`resource-item-${item.key}`}>
+            <span
+              className="flex min-w-0 items-center gap-2"
+              data-testid={`resource-item-${item.key}`}
+            >
               <span className="text-rw-fg truncate text-[13px] font-medium">{item.title}</span>
               <span className="text-rw-fg-subtle truncate text-xs">{item.description}</span>
               <Popconfirm
@@ -175,8 +195,16 @@ export function ResourceBindings({ staffId, type }: { staffId: string; type: "SK
         destroyOnHidden
       >
         <Form form={form} layout="vertical" requiredMark={false} onFinish={(v) => create.mutate(v)}>
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: `请输入${listLabel}名称` }]}>
-            <Input data-testid={`resource-form-name-${type}`} placeholder={type === "SKILL" ? "如：结构化周报生成" : "如：产品手册"} maxLength={128} />
+          <Form.Item
+            name="name"
+            label="名称"
+            rules={[{ required: true, message: `请输入${listLabel}名称` }]}
+          >
+            <Input
+              data-testid={`resource-form-name-${type}`}
+              placeholder={type === "SKILL" ? "如：结构化周报生成" : "如：产品手册"}
+              maxLength={128}
+            />
           </Form.Item>
           <Form.Item name="description" label="描述（可选）">
             <Input placeholder="一句话说明用途" maxLength={512} />
@@ -188,7 +216,11 @@ export function ResourceBindings({ staffId, type }: { staffId: string; type: "SK
               extra="员工的 System Prompt 之后追加；支持 {{变量}} 占位（运行时注入）"
               className="!mb-0"
             >
-              <Input.TextArea rows={4} placeholder={"请按以下结构输出：\n1. …\n2. …"} maxLength={20000} />
+              <Input.TextArea
+                rows={4}
+                placeholder={"请按以下结构输出：\n1. …\n2. …"}
+                maxLength={20000}
+              />
             </Form.Item>
           )}
         </Form>

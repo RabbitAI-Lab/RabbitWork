@@ -31,7 +31,12 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
       description: `${staff.title}｜${staff.personaPrompt.slice(0, 180)}`,
     });
 
-    const promptCompiled = compilePrompt(staff.name, staff.title, staff.personaPrompt, staff.boundary);
+    const promptCompiled = compilePrompt(
+      staff.name,
+      staff.title,
+      staff.personaPrompt,
+      staff.boundary,
+    );
     const lastVersion = await prisma.employeeVersion.findFirst({
       where: { employeeId: staff.id },
       orderBy: { version: "desc" },
@@ -78,13 +83,13 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
   }
 }
 
-function compilePrompt(name: string, title: string, persona: string, boundary: string | null): string {
-  const lines = [
-    `你是${name}，一名${title}数字员工。`,
-    "",
-    "# 人设",
-    persona,
-  ];
+function compilePrompt(
+  name: string,
+  title: string,
+  persona: string,
+  boundary: string | null,
+): string {
+  const lines = [`你是${name}，一名${title}数字员工。`, "", "# 人设", persona];
   if (boundary) lines.push("", "# 职责边界", boundary);
   return lines.join("\n");
 }

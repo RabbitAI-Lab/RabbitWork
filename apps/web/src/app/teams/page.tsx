@@ -34,8 +34,12 @@ export default function TeamsPage() {
       <div className="mx-auto max-w-5xl px-8 py-8" data-testid="teams-page">
         <div className="mb-7 flex items-end justify-between">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">我的团队</h1>
-            <p className="mt-1 text-sm text-rw-fg-subtle">组建数字员工团队,指定项目领导(TL)协同工作</p>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">
+              我的团队
+            </h1>
+            <p className="mt-1 text-sm text-rw-fg-subtle">
+              组建数字员工团队,指定项目领导(TL)协同工作
+            </p>
           </div>
           <Button
             type="primary"
@@ -83,7 +87,9 @@ export default function TeamsPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-[15px] font-semibold text-rw-fg">{t.name}</span>
+                      <span className="truncate text-[15px] font-semibold text-rw-fg">
+                        {t.name}
+                      </span>
                       {t.leaderName && (
                         <span className="bg-rw-warning-subtle text-rw-warning inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium">
                           <CrownOutlined />
@@ -107,7 +113,12 @@ export default function TeamsPage() {
         </div>
 
         <Modal
-          title={<span className="flex items-center gap-2"><TeamOutlined className="text-rw-accent" />新建团队</span>}
+          title={
+            <span className="flex items-center gap-2">
+              <TeamOutlined className="text-rw-accent" />
+              新建团队
+            </span>
+          }
           open={open}
           onCancel={() => setOpen(false)}
           onOk={() => form.submit()}
@@ -116,8 +127,17 @@ export default function TeamsPage() {
           confirmLoading={create.isPending}
           destroyOnHidden
         >
-          <Form form={form} layout="vertical" requiredMark={false} onFinish={(v) => create.mutate(v)}>
-            <Form.Item name="name" label="团队名称" rules={[{ required: true, message: "请输入团队名称" }]}>
+          <Form
+            form={form}
+            layout="vertical"
+            requiredMark={false}
+            onFinish={(v) => create.mutate(v)}
+          >
+            <Form.Item
+              name="name"
+              label="团队名称"
+              rules={[{ required: true, message: "请输入团队名称" }]}
+            >
               <Input data-testid="team-form-name" placeholder="如:内容创作组" maxLength={128} />
             </Form.Item>
             <Form.Item name="description" label="团队简介(可选)">

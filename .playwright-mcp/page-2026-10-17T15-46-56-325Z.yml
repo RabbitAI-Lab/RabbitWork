@@ -1,54 +1,54 @@
 - generic [ref=f10e1]:
-  - button "Open Next.js Dev Tools" [ref=f10e88] [cursor=pointer]
-  - alert [ref=f10e92]
-  - generic [ref=f10e94]:
-    - complementary [ref=f10e95]:
-      - link "RabbitWork 数字员工平台" [ref=f10e96] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=f10e102]:
-          - generic [ref=f10e103]: RabbitWork
-          - generic [ref=f10e104]: 数字员工平台
-      - navigation [ref=f10e105]:
-        - link [ref=f10e106] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=f10e108]
-          - text: 我的数字员工
-        - link [ref=f10e111] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=f10e113]
-          - text: 我的团队
-        - link [ref=f10e116] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=f10e119]
-          - text: 办公室
-      - generic [ref=f10e122]:
-        - generic [ref=f10e123] [cursor=pointer]:
-          - img "user" [ref=f10e125]
-          - generic [ref=f10e128]:
-            - generic [ref=f10e129]: 管理员
-            - generic [ref=f10e130]: 管理员
-        - button "切换主题" [ref=f10e131] [cursor=pointer]:
-          - img "sun" [ref=f10e132]
-    - main [ref=f10e135]:
-      - generic [ref=f10e136]:
-        - generic [ref=f10e137]:
-          - generic [ref=f10e138]:
-            - button "返回办公室" [ref=f10e139] [cursor=pointer]:
-              - img "arrow-left" [ref=f10e141]
-            - generic [ref=f10e144]: 数
-            - generic [ref=f10e146]:
-              - generic [ref=f10e147]: 数字员工
-              - generic [ref=f10e148]: 数字员工
-          - generic [ref=f10e149]: 空闲
-        - generic [ref=f10e155]:
-          - generic [ref=f10e156]:
-            - heading "与 数字员工 开始对话" [level=4] [ref=f10e157]
-            - generic [ref=f10e159]:
-              - button "用一句话介绍你自己" [active] [ref=f10e160]
-              - button "你擅长处理哪些工作？" [ref=f10e161]
-              - button "帮我列一份工作计划" [ref=f10e162]
-          - generic [ref=f10e163]: 发布后的数字员工由 AgentScope 运行时驱动
-        - generic [ref=f10e166]:
-          - textbox "向 数字员工 发送消息…（Enter 发送，Shift+Enter 换行）" [ref=f10e167]: 用一句话介绍你自己
-          - button [ref=f10e170] [cursor=pointer]:
-            - img "arrow-up" [ref=f10e172]
+    - button "Open Next.js Dev Tools" [ref=f10e88] [cursor=pointer]
+    - alert [ref=f10e92]
+    - generic [ref=f10e94]:
+        - complementary [ref=f10e95]:
+            - link "RabbitWork 数字员工平台" [ref=f10e96] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=f10e102]:
+                    - generic [ref=f10e103]: RabbitWork
+                    - generic [ref=f10e104]: 数字员工平台
+            - navigation [ref=f10e105]:
+                - link [ref=f10e106] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=f10e108]
+                    - text: 我的数字员工
+                - link [ref=f10e111] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=f10e113]
+                    - text: 我的团队
+                - link [ref=f10e116] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=f10e119]
+                    - text: 办公室
+            - generic [ref=f10e122]:
+                - generic [ref=f10e123] [cursor=pointer]:
+                    - img "user" [ref=f10e125]
+                    - generic [ref=f10e128]:
+                        - generic [ref=f10e129]: 管理员
+                        - generic [ref=f10e130]: 管理员
+                - button "切换主题" [ref=f10e131] [cursor=pointer]:
+                    - img "sun" [ref=f10e132]
+        - main [ref=f10e135]:
+            - generic [ref=f10e136]:
+                - generic [ref=f10e137]:
+                    - generic [ref=f10e138]:
+                        - button "返回办公室" [ref=f10e139] [cursor=pointer]:
+                            - img "arrow-left" [ref=f10e141]
+                        - generic [ref=f10e144]: 数
+                        - generic [ref=f10e146]:
+                            - generic [ref=f10e147]: 数字员工
+                            - generic [ref=f10e148]: 数字员工
+                    - generic [ref=f10e149]: 空闲
+                - generic [ref=f10e155]:
+                    - generic [ref=f10e156]:
+                        - heading "与 数字员工 开始对话" [level=4] [ref=f10e157]
+                        - generic [ref=f10e159]:
+                            - button "用一句话介绍你自己" [active] [ref=f10e160]
+                            - button "你擅长处理哪些工作？" [ref=f10e161]
+                            - button "帮我列一份工作计划" [ref=f10e162]
+                    - generic [ref=f10e163]: 发布后的数字员工由 AgentScope 运行时驱动
+                - generic [ref=f10e166]:
+                    - textbox "向 数字员工 发送消息…（Enter 发送，Shift+Enter 换行）" [ref=f10e167]: 用一句话介绍你自己
+                    - button [ref=f10e170] [cursor=pointer]:
+                        - img "arrow-up" [ref=f10e172]

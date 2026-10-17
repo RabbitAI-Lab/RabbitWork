@@ -17,13 +17,13 @@ pnpm dev        # http://localhost:3601 · 自动起 embedded PG(6441)+ migrate 
 
 ## AgentScope 运行面配置(apps/web/.env)
 
-| 变量 | 说明 |
-| --- | --- |
-| `AGENTSCOPE_MODE` | `mock`(默认,内置脚本回复,CI 用)/ `real`(连真实实例) |
-| `AGENTSCOPE_BASE_URL` | 实例地址(自部署 2.0.10 托管控制台版) |
-| `AGENTSCOPE_USERNAME` / `PASSWORD` | 服务账号(JWT 自动登录,7 天有效期内缓存) |
-| `AGENTSCOPE_TENANT` / `NAMESPACE` | 多租户作用域(实例为 multi 模式,agent 需在对应 namespace) |
-| `AGENTSCOPE_FALLBACK_AGENT_ID` | 回退 agent:新建 agent 卡 provisioning 时兜底(实例需控制台完成运行时配置) |
+| 变量                               | 说明                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| `AGENTSCOPE_MODE`                  | `mock`(默认,内置脚本回复,CI 用)/ `real`(连真实实例)                      |
+| `AGENTSCOPE_BASE_URL`              | 实例地址(自部署 2.0.10 托管控制台版)                                     |
+| `AGENTSCOPE_USERNAME` / `PASSWORD` | 服务账号(JWT 自动登录,7 天有效期内缓存)                                  |
+| `AGENTSCOPE_TENANT` / `NAMESPACE`  | 多租户作用域(实例为 multi 模式,agent 需在对应 namespace)                 |
+| `AGENTSCOPE_FALLBACK_AGENT_ID`     | 回退 agent:新建 agent 卡 provisioning 时兜底(实例需控制台完成运行时配置) |
 
 **已实测冻结的契约**(2026-10-17,详见 `packages/agentscope/src/`):
 登录 `POST /api/auth/login`;建 agent `POST /api/v1/agents`;对话 `POST /api/v1/chats`(**不带消息建空 chat**)+ `POST /api/v1/chats/{id}/turns`(turn 响应含 `eventStreamUrl`);事件回放 `GET /api/v1/sessions/{sessionId}/events?chatId=…`;事件信封 `item.delta / item.completed(final_output) / usage.recorded / run.ended`。

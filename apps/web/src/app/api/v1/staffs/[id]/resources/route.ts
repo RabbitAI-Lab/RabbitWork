@@ -55,10 +55,16 @@ export async function PUT(req: Request, ctx: Ctx) {
     const orgId = defaultOrgId();
     const [skills, kbs] = await Promise.all([
       input.skillIds.length
-        ? prisma.skillDefinition.findMany({ where: { id: { in: input.skillIds }, orgId, deletedAt: null }, select: { id: true } })
+        ? prisma.skillDefinition.findMany({
+            where: { id: { in: input.skillIds }, orgId, deletedAt: null },
+            select: { id: true },
+          })
         : Promise.resolve([] as Array<{ id: string }>),
       input.knowledgeBaseIds.length
-        ? prisma.knowledgeBase.findMany({ where: { id: { in: input.knowledgeBaseIds }, orgId, deletedAt: null }, select: { id: true } })
+        ? prisma.knowledgeBase.findMany({
+            where: { id: { in: input.knowledgeBaseIds }, orgId, deletedAt: null },
+            select: { id: true },
+          })
         : Promise.resolve([] as Array<{ id: string }>),
     ]);
     if (skills.length !== input.skillIds.length || kbs.length !== input.knowledgeBaseIds.length) {
@@ -75,12 +81,17 @@ export async function PUT(req: Request, ctx: Ctx) {
         ...input.skillIds.map((rid) => `SKILL:${rid}`),
         ...input.knowledgeBaseIds.map((rid) => `KNOWLEDGE:${rid}`),
       ]);
-      const toDelete = existing.filter((b) => !wanted.has(`${b.resourceType}:${b.resourceId}`)).map((b) => b.id);
-      const toCreate = [...wanted].filter((key) => !existingKeys.has(key)).map((key) => {
-        const [resourceType, resourceId] = key.split(":") as ["SKILL" | "KNOWLEDGE", string];
-        return { employeeId: id, resourceType, resourceId };
-      });
-      if (toDelete.length) await tx.employeeResourceBinding.deleteMany({ where: { id: { in: toDelete } } });
+      const toDelete = existing
+        .filter((b) => !wanted.has(`${b.resourceType}:${b.resourceId}`))
+        .map((b) => b.id);
+      const toCreate = [...wanted]
+        .filter((key) => !existingKeys.has(key))
+        .map((key) => {
+          const [resourceType, resourceId] = key.split(":") as ["SKILL" | "KNOWLEDGE", string];
+          return { employeeId: id, resourceType, resourceId };
+        });
+      if (toDelete.length)
+        await tx.employeeResourceBinding.deleteMany({ where: { id: { in: toDelete } } });
       if (toCreate.length) await tx.employeeResourceBinding.createMany({ data: toCreate });
     });
 

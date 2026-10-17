@@ -1,91 +1,91 @@
 - generic [active] [ref=e1]:
-  - button "Open Next.js Dev Tools" [ref=e55] [cursor=pointer]
-  - alert [ref=e59]
-  - generic [ref=e165]:
-    - complementary [ref=e166]:
-      - link "RabbitWork 数字员工平台" [ref=e167] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=e173]:
-          - generic [ref=e174]: RabbitWork
-          - generic [ref=e175]: 数字员工平台
-      - navigation [ref=e176]:
-        - link [ref=e177] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=e179]
-          - text: 我的数字员工
-        - link [ref=e183] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=e185]
-          - text: 我的团队
-        - link [ref=e188] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=e190]
-          - text: 办公室
-      - generic [ref=e194] [cursor=pointer]:
-        - img "user" [ref=e196]
-        - generic [ref=e199]:
-          - generic [ref=e200]: 管理员
-          - generic [ref=e201]: 管理员
-    - main [ref=e202]:
-      - generic [ref=e203]:
-        - generic [ref=e204]:
-          - generic [ref=e205]:
-            - heading "我的数字员工" [level=1] [ref=e206]
-            - paragraph [ref=e207]: 管理你的数字员工档案,点击卡片查看详情
-          - button "plus 新建员工" [ref=e208] [cursor=pointer]:
-            - img "plus" [ref=e210]
-            - generic [ref=e214]: 新建员工
-        - generic [ref=e215]:
-          - generic [ref=e216]:
-            - img "team" [ref=e218]
-            - generic [ref=e221]:
-              - generic [ref=e222]: "1"
-              - generic [ref=e223]: 员工总数
-          - generic [ref=e224]:
-            - img "rocket" [ref=e226]
-            - generic [ref=e229]:
-              - generic [ref=e230]: "1"
-              - generic [ref=e231]: 在岗员工
-          - generic [ref=e232]:
-            - img "edit" [ref=e234]
-            - generic [ref=e237]:
-              - generic [ref=e238]: "0"
-              - generic [ref=e239]: 草稿
-        - generic [ref=e240]:
-          - radiogroup "segmented control" [ref=e241]:
-            - generic [ref=e242]:
-              - generic [ref=e243] [cursor=pointer]:
-                - radio "全部 (1)" [checked]
-                - generic "全部 (1)" [ref=e244]
-              - generic [ref=e245] [cursor=pointer]:
-                - radio "在岗 (1)"
-                - generic "在岗 (1)" [ref=e246]
-              - generic [ref=e247] [cursor=pointer]:
-                - radio "草稿 (0)"
-                - generic "草稿 (0)" [ref=e248]
-              - generic [ref=e249] [cursor=pointer]:
-                - radio "下线 (0)"
-                - generic "下线 (0)" [ref=e250]
-          - generic [ref=e251]:
-            - img "search" [ref=e253]
-            - textbox "搜索姓名 / 岗位 / 工号" [ref=e256]
-        - generic [ref=e260] [cursor=pointer]:
-          - generic [ref=e261]:
-            - generic [ref=e262]:
-              - generic [ref=e263]: 小
-              - generic [ref=e265]:
-                - generic [ref=e266]: 小钱
-                - generic "前端开发 · STAFF-20261017-R84G" [ref=e267]
-            - generic [ref=e268]: 在岗
-          - paragraph [ref=e270]: 前端开发
-          - generic [ref=e271]:
-            - generic [ref=e272]: 组织内
-            - generic [ref=e273]: 发布于 2026-10-17
-          - generic [ref=e274]:
-            - button "send 发起对话" [ref=e275]:
-              - img "send" [ref=e277]
-              - generic [ref=e280]: 发起对话
-            - button [ref=e281]:
-              - img "edit" [ref=e283]
-            - button [ref=e286]:
-              - img "delete" [ref=e288]
+    - button "Open Next.js Dev Tools" [ref=e55] [cursor=pointer]
+    - alert [ref=e59]
+    - generic [ref=e165]:
+        - complementary [ref=e166]:
+            - link "RabbitWork 数字员工平台" [ref=e167] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=e173]:
+                    - generic [ref=e174]: RabbitWork
+                    - generic [ref=e175]: 数字员工平台
+            - navigation [ref=e176]:
+                - link [ref=e177] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=e179]
+                    - text: 我的数字员工
+                - link [ref=e183] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=e185]
+                    - text: 我的团队
+                - link [ref=e188] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=e190]
+                    - text: 办公室
+            - generic [ref=e194] [cursor=pointer]:
+                - img "user" [ref=e196]
+                - generic [ref=e199]:
+                    - generic [ref=e200]: 管理员
+                    - generic [ref=e201]: 管理员
+        - main [ref=e202]:
+            - generic [ref=e203]:
+                - generic [ref=e204]:
+                    - generic [ref=e205]:
+                        - heading "我的数字员工" [level=1] [ref=e206]
+                        - paragraph [ref=e207]: 管理你的数字员工档案,点击卡片查看详情
+                    - button "plus 新建员工" [ref=e208] [cursor=pointer]:
+                        - img "plus" [ref=e210]
+                        - generic [ref=e214]: 新建员工
+                - generic [ref=e215]:
+                    - generic [ref=e216]:
+                        - img "team" [ref=e218]
+                        - generic [ref=e221]:
+                            - generic [ref=e222]: "1"
+                            - generic [ref=e223]: 员工总数
+                    - generic [ref=e224]:
+                        - img "rocket" [ref=e226]
+                        - generic [ref=e229]:
+                            - generic [ref=e230]: "1"
+                            - generic [ref=e231]: 在岗员工
+                    - generic [ref=e232]:
+                        - img "edit" [ref=e234]
+                        - generic [ref=e237]:
+                            - generic [ref=e238]: "0"
+                            - generic [ref=e239]: 草稿
+                - generic [ref=e240]:
+                    - radiogroup "segmented control" [ref=e241]:
+                        - generic [ref=e242]:
+                            - generic [ref=e243] [cursor=pointer]:
+                                - radio "全部 (1)" [checked]
+                                - generic "全部 (1)" [ref=e244]
+                            - generic [ref=e245] [cursor=pointer]:
+                                - radio "在岗 (1)"
+                                - generic "在岗 (1)" [ref=e246]
+                            - generic [ref=e247] [cursor=pointer]:
+                                - radio "草稿 (0)"
+                                - generic "草稿 (0)" [ref=e248]
+                            - generic [ref=e249] [cursor=pointer]:
+                                - radio "下线 (0)"
+                                - generic "下线 (0)" [ref=e250]
+                    - generic [ref=e251]:
+                        - img "search" [ref=e253]
+                        - textbox "搜索姓名 / 岗位 / 工号" [ref=e256]
+                - generic [ref=e260] [cursor=pointer]:
+                    - generic [ref=e261]:
+                        - generic [ref=e262]:
+                            - generic [ref=e263]: 小
+                            - generic [ref=e265]:
+                                - generic [ref=e266]: 小钱
+                                - generic "前端开发 · STAFF-20261017-R84G" [ref=e267]
+                        - generic [ref=e268]: 在岗
+                    - paragraph [ref=e270]: 前端开发
+                    - generic [ref=e271]:
+                        - generic [ref=e272]: 组织内
+                        - generic [ref=e273]: 发布于 2026-10-17
+                    - generic [ref=e274]:
+                        - button "send 发起对话" [ref=e275]:
+                            - img "send" [ref=e277]
+                            - generic [ref=e280]: 发起对话
+                        - button [ref=e281]:
+                            - img "edit" [ref=e283]
+                        - button [ref=e286]:
+                            - img "delete" [ref=e288]

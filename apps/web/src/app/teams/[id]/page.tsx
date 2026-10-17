@@ -2,8 +2,27 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { App, Avatar, Button, Empty, Form, Input, Modal, Popconfirm, Select, Skeleton, Tag } from "antd";
-import { ArrowLeftOutlined, CrownOutlined, PlusOutlined, DeleteOutlined, UserAddOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  App,
+  Avatar,
+  Button,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Select,
+  Skeleton,
+  Tag,
+} from "antd";
+import {
+  ArrowLeftOutlined,
+  CrownOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  UserAddOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { staffApi, teamApi } from "@rabbit/api-client";
@@ -16,8 +35,15 @@ export default function TeamDetailPage() {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
 
-  const detail = useQuery({ queryKey: ["team", id], queryFn: () => teamApi.detail(id), retry: false });
-  const staffs = useQuery({ queryKey: ["staffs"], queryFn: () => staffApi.list({ pageSize: 100 }) });
+  const detail = useQuery({
+    queryKey: ["team", id],
+    queryFn: () => teamApi.detail(id),
+    retry: false,
+  });
+  const staffs = useQuery({
+    queryKey: ["staffs"],
+    queryFn: () => staffApi.list({ pageSize: 100 }),
+  });
 
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -56,7 +82,8 @@ export default function TeamDetailPage() {
     },
   });
   const addMember = useMutation({
-    mutationFn: (input: { employeeId: string; role: "LEADER" | "MEMBER" }) => teamApi.addMember(id, input),
+    mutationFn: (input: { employeeId: string; role: "LEADER" | "MEMBER" }) =>
+      teamApi.addMember(id, input),
     onSuccess: (d) => {
       message.success(d.members.length > 0 ? "成员已加入" : "已加入");
       setAddOpen(false);
@@ -76,7 +103,9 @@ export default function TeamDetailPage() {
 
   const team = detail.data;
   const memberIds = new Set((team?.members ?? []).map((m) => m.employeeId));
-  const candidates = (staffs.data?.items ?? []).filter((s) => s.status === "PUBLISHED" && !memberIds.has(s.id));
+  const candidates = (staffs.data?.items ?? []).filter(
+    (s) => s.status === "PUBLISHED" && !memberIds.has(s.id),
+  );
 
   return (
     <AppShell active="teams">
@@ -103,18 +132,25 @@ export default function TeamDetailPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h1 className="font-display text-xl font-semibold tracking-tight text-rw-fg">{team.name}</h1>
+                    <h1 className="font-display text-xl font-semibold tracking-tight text-rw-fg">
+                      {team.name}
+                    </h1>
                     {team.leaderName && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-rw-warning-subtle px-2.5 py-1 text-xs font-medium text-rw-warning">
                         <CrownOutlined />
                         TL · {team.leaderName}
                       </span>
                     )}
-                    <Tag bordered={false} className="!m-0 !rounded-full !bg-rw-success-subtle !text-rw-success">
+                    <Tag
+                      bordered={false}
+                      className="!m-0 !rounded-full !bg-rw-success-subtle !text-rw-success"
+                    >
                       {team.memberCount} 名成员
                     </Tag>
                   </div>
-                  {team.description && <p className="mt-2 text-sm text-rw-fg-muted">{team.description}</p>}
+                  {team.description && (
+                    <p className="mt-2 text-sm text-rw-fg-muted">{team.description}</p>
+                  )}
                   {team.goal && (
                     <p className="mt-1.5 text-[13px] text-rw-fg-subtle">
                       <span className="font-medium text-rw-fg-muted">目标:</span>
@@ -126,7 +162,12 @@ export default function TeamDetailPage() {
                   <Button icon={<EditOutlined />} onClick={() => setEditOpen(true)}>
                     编辑
                   </Button>
-                  <Popconfirm title="删除该团队?" okText="删除" cancelText="取消" onConfirm={() => removeTeam.mutate()}>
+                  <Popconfirm
+                    title="删除该团队?"
+                    okText="删除"
+                    cancelText="取消"
+                    onConfirm={() => removeTeam.mutate()}
+                  >
                     <Button danger icon={<DeleteOutlined />} />
                   </Popconfirm>
                 </div>
@@ -144,15 +185,22 @@ export default function TeamDetailPage() {
                   onClick={() => setAddOpen(true)}
                   disabled={candidates.length === 0}
                   data-testid="team-add-member-btn"
-                                 >
+                >
                   添加成员
                 </Button>
               </div>
 
               {team.members.length === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="还没有成员,添加第一位数字员工" className="!my-8" />
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="还没有成员,添加第一位数字员工"
+                  className="!my-8"
+                />
               ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" data-testid="team-member-list">
+                <div
+                  className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                  data-testid="team-member-list"
+                >
                   {team.members.map((m, i) => (
                     <div
                       key={m.employeeId}
@@ -167,14 +215,18 @@ export default function TeamDetailPage() {
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="truncate text-sm font-medium text-rw-fg">{m.employeeName}</span>
+                          <span className="truncate text-sm font-medium text-rw-fg">
+                            {m.employeeName}
+                          </span>
                           {m.role === "LEADER" ? (
                             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rw-warning-subtle px-2 py-0.5 text-[11px] font-medium text-rw-warning">
                               <CrownOutlined />
                               项目领导
                             </span>
                           ) : (
-                            <span className="shrink-0 rounded-full bg-rw-muted-subtle px-2 py-0.5 text-[11px] text-rw-fg-muted">成员</span>
+                            <span className="shrink-0 rounded-full bg-rw-muted-subtle px-2 py-0.5 text-[11px] text-rw-fg-muted">
+                              成员
+                            </span>
                           )}
                         </div>
                         <div className="mt-0.5 truncate text-xs tabular-nums text-rw-fg-subtle">
@@ -195,7 +247,8 @@ export default function TeamDetailPage() {
               )}
 
               <p className="mt-4 rounded-rw-md bg-rw-muted-subtle px-3.5 py-2.5 text-xs leading-relaxed text-rw-fg-subtle">
-                提示:每队一名项目领导(TL);团队级协作运行时(AgentScope teams 任务分派/竞标)将在 S6+ 接入,当前为组织管理层。
+                提示:每队一名项目领导(TL);团队级协作运行时(AgentScope teams 任务分派/竞标)将在 S6+
+                接入,当前为组织管理层。
               </p>
             </div>
 
@@ -210,8 +263,17 @@ export default function TeamDetailPage() {
               confirmLoading={update.isPending}
               destroyOnHidden
             >
-              <Form form={editForm} layout="vertical" requiredMark={false} onFinish={(v) => update.mutate(v)}>
-                <Form.Item name="name" label="团队名称" rules={[{ required: true, message: "请输入团队名称" }]}>
+              <Form
+                form={editForm}
+                layout="vertical"
+                requiredMark={false}
+                onFinish={(v) => update.mutate(v)}
+              >
+                <Form.Item
+                  name="name"
+                  label="团队名称"
+                  rules={[{ required: true, message: "请输入团队名称" }]}
+                >
                   <Input maxLength={128} />
                 </Form.Item>
                 <Form.Item name="description" label="团队简介(可选)">
@@ -225,7 +287,12 @@ export default function TeamDetailPage() {
 
             {/* 添加成员 */}
             <Modal
-              title={<span className="flex items-center gap-2"><PlusOutlined className="text-rw-accent" />添加成员</span>}
+              title={
+                <span className="flex items-center gap-2">
+                  <PlusOutlined className="text-rw-accent" />
+                  添加成员
+                </span>
+              }
               open={addOpen}
               onCancel={() => setAddOpen(false)}
               onOk={() => addForm.submit()}
@@ -241,16 +308,28 @@ export default function TeamDetailPage() {
                 initialValues={{ role: "MEMBER" }}
                 onFinish={(v) => addMember.mutate(v)}
               >
-                <Form.Item name="employeeId" label="数字员工" rules={[{ required: true, message: "请选择员工" }]}>
+                <Form.Item
+                  name="employeeId"
+                  label="数字员工"
+                  rules={[{ required: true, message: "请选择员工" }]}
+                >
                   <Select
                     data-testid="team-member-select"
                     placeholder="选择已发布的数字员工"
                     showSearch
                     optionFilterProp="label"
-                    options={candidates.map((s) => ({ value: s.id, label: `${s.name}(${s.title})` }))}
+                    options={candidates.map((s) => ({
+                      value: s.id,
+                      label: `${s.name}(${s.title})`,
+                    }))}
                   />
                 </Form.Item>
-                <Form.Item name="role" label="角色" className="!mb-0" extra="项目领导(TL)每队仅一名,重复设置将自动替换">
+                <Form.Item
+                  name="role"
+                  label="角色"
+                  className="!mb-0"
+                  extra="项目领导(TL)每队仅一名,重复设置将自动替换"
+                >
                   <Select
                     options={[
                       { value: "MEMBER", label: "成员" },

@@ -26,7 +26,10 @@ export async function PUT(req: Request, ctx: Ctx) {
       select: { name: true },
     });
     if (occupied) {
-      throw new DomainError(ErrCode.STAFF_STATE_INVALID, `${input.floor}F-${String(input.seat).padStart(2, "0")} 已被 ${occupied.name} 占用`);
+      throw new DomainError(
+        ErrCode.STAFF_STATE_INVALID,
+        `${input.floor}F-${String(input.seat).padStart(2, "0")} 已被 ${occupied.name} 占用`,
+      );
     }
 
     const updated = await prisma.digitalEmployee.update({

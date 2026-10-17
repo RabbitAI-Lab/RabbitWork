@@ -1,75 +1,75 @@
 - generic [active] [ref=f16e1]:
-  - button "Open Next.js Dev Tools" [ref=f16e109] [cursor=pointer]
-  - alert [ref=f16e113]
-  - generic [ref=f16e115]:
-    - complementary [ref=f16e116]:
-      - link "RabbitWork 数字员工平台" [ref=f16e117] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=f16e123]:
-          - generic [ref=f16e124]: RabbitWork
-          - generic [ref=f16e125]: 数字员工平台
-      - navigation [ref=f16e126]:
-        - link [ref=f16e127] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=f16e129]
-          - text: 我的数字员工
-        - link [ref=f16e132] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=f16e134]
-          - text: 我的团队
-        - link [ref=f16e137] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=f16e140]
-          - text: 办公室
-      - generic [ref=f16e143]:
-        - generic [ref=f16e144] [cursor=pointer]:
-          - img "user" [ref=f16e146]
-          - generic [ref=f16e149]:
-            - generic [ref=f16e150]: ...
-            - generic [ref=f16e151]: 成员
-        - button "切换主题" [ref=f16e152] [cursor=pointer]:
-          - img "sun" [ref=f16e153]
-    - main [ref=f16e156]:
-      - generic [ref=f16e157]:
-        - generic [ref=f16e158]:
-          - generic [ref=f16e159]:
-            - heading "办公室" [level=1] [ref=f16e160]
-            - paragraph [ref=f16e161]: 数字员工的日常工位 · 点击小人可发起对话
-          - button [disabled] [ref=f16e162]:
-            - img "reload" [ref=f16e163]
-            - text: 刷新
-        - generic [ref=f16e166]:
-          - generic [ref=f16e167]:
-            - generic [ref=f16e168]: 在班员工
-            - strong [ref=f16e169]: "0"
-            - generic [ref=f16e170]: 正在工位待命
-          - generic [ref=f16e172]:
-            - generic [ref=f16e173]: 离岗员工
-            - strong [ref=f16e174]: "0"
-            - generic [ref=f16e175]: 草稿或已下线
-          - generic [ref=f16e177]:
-            - generic [ref=f16e178]: 最近会话
-            - strong [ref=f16e179]: "0"
-            - generic [ref=f16e180]: 累计发起的对话
-          - generic [ref=f16e181]:
-            - generic [ref=f16e182]: 空余工位
-            - strong [ref=f16e183]: "0"
-            - generic [ref=f16e184]: 虚位以待新同事
-        - generic [ref=f16e185]:
-          - region "办公室场景" [ref=f16e186]:
-            - paragraph [ref=f16e197]: 工位加载中…
-          - complementary [ref=f16e198]:
-            - generic [ref=f16e199]:
-              - heading "最近会话" [level=2] [ref=f16e200]
-              - generic [ref=f16e201]:
-                - paragraph [ref=f16e202]: 还没有对话
-                - button "去员工列表发起" [ref=f16e203] [cursor=pointer]
-            - generic [ref=f16e204]:
-              - heading "员工花名册" [level=2] [ref=f16e205]
-              - paragraph [ref=f16e206]: 暂无在册员工
-            - generic [ref=f16e207]:
-              - heading "图例" [level=2] [ref=f16e208]
-              - list [ref=f16e209]:
-                - listitem [ref=f16e210]: 在班：已发布，随时可以发起对话
-                - listitem [ref=f16e212]: 离岗：草稿/下线，需要先发布
-                - listitem [ref=f16e214]: 虚位以待：点击空工位可创建新员工
+    - button "Open Next.js Dev Tools" [ref=f16e109] [cursor=pointer]
+    - alert [ref=f16e113]
+    - generic [ref=f16e115]:
+        - complementary [ref=f16e116]:
+            - link "RabbitWork 数字员工平台" [ref=f16e117] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=f16e123]:
+                    - generic [ref=f16e124]: RabbitWork
+                    - generic [ref=f16e125]: 数字员工平台
+            - navigation [ref=f16e126]:
+                - link [ref=f16e127] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=f16e129]
+                    - text: 我的数字员工
+                - link [ref=f16e132] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=f16e134]
+                    - text: 我的团队
+                - link [ref=f16e137] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=f16e140]
+                    - text: 办公室
+            - generic [ref=f16e143]:
+                - generic [ref=f16e144] [cursor=pointer]:
+                    - img "user" [ref=f16e146]
+                    - generic [ref=f16e149]:
+                        - generic [ref=f16e150]: ...
+                        - generic [ref=f16e151]: 成员
+                - button "切换主题" [ref=f16e152] [cursor=pointer]:
+                    - img "sun" [ref=f16e153]
+        - main [ref=f16e156]:
+            - generic [ref=f16e157]:
+                - generic [ref=f16e158]:
+                    - generic [ref=f16e159]:
+                        - heading "办公室" [level=1] [ref=f16e160]
+                        - paragraph [ref=f16e161]: 数字员工的日常工位 · 点击小人可发起对话
+                    - button [disabled] [ref=f16e162]:
+                        - img "reload" [ref=f16e163]
+                        - text: 刷新
+                - generic [ref=f16e166]:
+                    - generic [ref=f16e167]:
+                        - generic [ref=f16e168]: 在班员工
+                        - strong [ref=f16e169]: "0"
+                        - generic [ref=f16e170]: 正在工位待命
+                    - generic [ref=f16e172]:
+                        - generic [ref=f16e173]: 离岗员工
+                        - strong [ref=f16e174]: "0"
+                        - generic [ref=f16e175]: 草稿或已下线
+                    - generic [ref=f16e177]:
+                        - generic [ref=f16e178]: 最近会话
+                        - strong [ref=f16e179]: "0"
+                        - generic [ref=f16e180]: 累计发起的对话
+                    - generic [ref=f16e181]:
+                        - generic [ref=f16e182]: 空余工位
+                        - strong [ref=f16e183]: "0"
+                        - generic [ref=f16e184]: 虚位以待新同事
+                - generic [ref=f16e185]:
+                    - region "办公室场景" [ref=f16e186]:
+                        - paragraph [ref=f16e197]: 工位加载中…
+                    - complementary [ref=f16e198]:
+                        - generic [ref=f16e199]:
+                            - heading "最近会话" [level=2] [ref=f16e200]
+                            - generic [ref=f16e201]:
+                                - paragraph [ref=f16e202]: 还没有对话
+                                - button "去员工列表发起" [ref=f16e203] [cursor=pointer]
+                        - generic [ref=f16e204]:
+                            - heading "员工花名册" [level=2] [ref=f16e205]
+                            - paragraph [ref=f16e206]: 暂无在册员工
+                        - generic [ref=f16e207]:
+                            - heading "图例" [level=2] [ref=f16e208]
+                            - list [ref=f16e209]:
+                                - listitem [ref=f16e210]: 在班：已发布，随时可以发起对话
+                                - listitem [ref=f16e212]: 离岗：草稿/下线，需要先发布
+                                - listitem [ref=f16e214]: 虚位以待：点击空工位可创建新员工

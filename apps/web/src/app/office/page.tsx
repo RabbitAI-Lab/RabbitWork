@@ -3,7 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { App, Button, Modal } from "antd";
-import { ReloadOutlined, MessageOutlined, EditOutlined, SwapOutlined, UserAddOutlined } from "@ant-design/icons";
+import {
+  ReloadOutlined,
+  MessageOutlined,
+  EditOutlined,
+  SwapOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AppShell } from "@/components/AppShell";
 import { chatApi, staffApi } from "@rabbit/api-client";
@@ -11,7 +17,16 @@ import { OFFICE_FLOOR_COUNT, OFFICE_SEATS_PER_FLOOR, type StaffDto } from "@rabb
 import "./office.css";
 
 /** 员工衣色（姓名哈希，与详情页 Hero 工位照同源） */
-const TONE_COLORS = ["#0f766e", "#2f6fd0", "#a85d32", "#6f7b42", "#33507a", "#3d6b4f", "#b08325", "#2c3e6b"] as const;
+const TONE_COLORS = [
+  "#0f766e",
+  "#2f6fd0",
+  "#a85d32",
+  "#6f7b42",
+  "#33507a",
+  "#3d6b4f",
+  "#b08325",
+  "#2c3e6b",
+] as const;
 
 function toneColor(name: string): string {
   let h = 0;
@@ -42,11 +57,17 @@ export default function OfficePage() {
   const [emote, setEmote] = useState<{ staffId: string; key: EmoteKey } | null>(null);
   const emoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const staffs = useQuery({ queryKey: ["staffs"], queryFn: () => staffApi.list({ pageSize: 100 }) });
+  const staffs = useQuery({
+    queryKey: ["staffs"],
+    queryFn: () => staffApi.list({ pageSize: 100 }),
+  });
   const all = staffs.data?.items ?? [];
   const seated = all.filter((s) => s.deskFloor != null && s.deskSeat != null);
   const waiting = all.filter((s) => s.deskFloor == null || s.deskSeat == null);
-  const bySeat = useMemo(() => new Map(seated.map((s) => [seatKey(s.deskFloor!, s.deskSeat!), s])), [seated]);
+  const bySeat = useMemo(
+    () => new Map(seated.map((s) => [seatKey(s.deskFloor!, s.deskSeat!), s])),
+    [seated],
+  );
   const floorCount = (f: number) => seated.filter((s) => s.deskFloor === f).length;
 
   // 点击工位:复用该员工最近会话,没有则新建
@@ -61,9 +82,12 @@ export default function OfficePage() {
   });
 
   const assignDesk = useMutation({
-    mutationFn: ({ staffId, f, seat }: { staffId: string; f: number; seat: number }) => staffApi.assignDesk(staffId, { floor: f, seat }),
+    mutationFn: ({ staffId, f, seat }: { staffId: string; f: number; seat: number }) =>
+      staffApi.assignDesk(staffId, { floor: f, seat }),
     onSuccess: (staff) => {
-      message.success(`${staff.name} 已就座 ${staff.deskFloor}F-${String(staff.deskSeat).padStart(2, "0")}`);
+      message.success(
+        `${staff.name} 已就座 ${staff.deskFloor}F-${String(staff.deskSeat).padStart(2, "0")}`,
+      );
       setPicker({ staff: null });
       if (staff.deskFloor) setFloor(staff.deskFloor);
       void queryClient.invalidateQueries({ queryKey: ["staffs"] });
@@ -88,7 +112,12 @@ export default function OfficePage() {
     };
   }, [menuStaff]);
 
-  useEffect(() => () => { if (emoteTimerRef.current) clearTimeout(emoteTimerRef.current); }, []);
+  useEffect(
+    () => () => {
+      if (emoteTimerRef.current) clearTimeout(emoteTimerRef.current);
+    },
+    [],
+  );
 
   function playEmote(staffId: string, key: EmoteKey) {
     setEmote({ staffId, key });
@@ -104,12 +133,19 @@ export default function OfficePage() {
         {/* 页头 */}
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">办公室</h1>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">
+              办公室
+            </h1>
             <p className="text-rw-fg-subtle mt-1 text-sm">
               楼层平面 · 每层 {OFFICE_SEATS_PER_FLOOR} 个工位 · 点击工位可发起对话或更换座位
             </p>
           </div>
-          <Button icon={<ReloadOutlined />} onClick={refresh} loading={staffs.isFetching} data-testid="office-refresh">
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={refresh}
+            loading={staffs.isFetching}
+            data-testid="office-refresh"
+          >
             刷新
           </Button>
         </div>
@@ -117,36 +153,46 @@ export default function OfficePage() {
         <div className="flex items-start gap-5">
           {/* 左：立体办公楼 + 待安排 */}
           <aside className="w-56 shrink-0 space-y-4">
-            <div className="border-rw-border bg-rw-card rounded-rw-md border p-4" data-testid="office-floors">
-              <div className="text-rw-fg-muted mb-3 text-xs font-medium">办公楼 · 点击楼层查看平面</div>
+            <div
+              className="border-rw-border bg-rw-card rounded-rw-md border p-4"
+              data-testid="office-floors"
+            >
+              <div className="text-rw-fg-muted mb-3 text-xs font-medium">
+                办公楼 · 点击楼层查看平面
+              </div>
               <div className="iso-building">
                 <div className="iso-roof" aria-hidden="true" />
-                {(Array.from({ length: OFFICE_FLOOR_COUNT }, (_, i) => i + 1) as number[]).map((f) => {
-                  const active = f === floor;
-                  const used = floorCount(f);
-                  return (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setFloor(f)}
-                      data-testid={`office-floor-${f}`}
-                      aria-current={active ? "true" : undefined}
-                      aria-label={`${f}F，${used} / ${OFFICE_SEATS_PER_FLOOR} 工位在用`}
-                      className={`iso-floor-btn ${active ? "is-active" : ""} ${used > 0 ? "" : "opacity-80"}`}
-                    >
-                      <span className="iso-floor-label">
-                        <span className="floor-no">{f}F</span>
-                        <span className="floor-count">
-                          {used}/{OFFICE_SEATS_PER_FLOOR}
+                {(Array.from({ length: OFFICE_FLOOR_COUNT }, (_, i) => i + 1) as number[]).map(
+                  (f) => {
+                    const active = f === floor;
+                    const used = floorCount(f);
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setFloor(f)}
+                        data-testid={`office-floor-${f}`}
+                        aria-current={active ? "true" : undefined}
+                        aria-label={`${f}F，${used} / ${OFFICE_SEATS_PER_FLOOR} 工位在用`}
+                        className={`iso-floor-btn ${active ? "is-active" : ""} ${used > 0 ? "" : "opacity-80"}`}
+                      >
+                        <span className="iso-floor-label">
+                          <span className="floor-no">{f}F</span>
+                          <span className="floor-count">
+                            {used}/{OFFICE_SEATS_PER_FLOOR}
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </div>
 
-            <div className="border-rw-border bg-rw-card rounded-rw-md border p-3" data-testid="office-waiting">
+            <div
+              className="border-rw-border bg-rw-card rounded-rw-md border p-3"
+              data-testid="office-waiting"
+            >
               <div className="text-rw-fg-muted mb-2 flex items-center justify-between text-xs">
                 <span>待安排就座</span>
                 <span className="font-mono tabular-nums">{waiting.length}</span>
@@ -164,7 +210,9 @@ export default function OfficePage() {
                   >
                     <UserAddOutlined className="text-rw-accent shrink-0 text-xs" />
                     <span className="truncate">{s.name}</span>
-                    <span className="text-rw-fg-subtle ml-auto shrink-0 text-[11px]">{s.title}</span>
+                    <span className="text-rw-fg-subtle ml-auto shrink-0 text-[11px]">
+                      {s.title}
+                    </span>
                   </button>
                 ))
               )}
@@ -178,7 +226,9 @@ export default function OfficePage() {
             data-testid="office-floor-plan"
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-[15px] font-semibold text-rw-fg">{floor}F 楼层平面</h2>
+              <h2 className="font-display text-[15px] font-semibold text-rw-fg">
+                {floor}F 楼层平面
+              </h2>
               <span className="text-rw-fg-subtle font-mono text-xs tabular-nums">
                 {floorCount(floor)} / {OFFICE_SEATS_PER_FLOOR} 工位在用
               </span>
@@ -187,28 +237,32 @@ export default function OfficePage() {
               <p className="text-rw-fg-subtle py-16 text-center text-sm">楼层加载中…</p>
             ) : (
               <div className="iso-floor-plate grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3">
-                {(Array.from({ length: OFFICE_SEATS_PER_FLOOR }, (_, i) => i + 1) as number[]).map((seat) => {
-                  const staff = bySeat.get(seatKey(floor, seat));
-                  return (
-                    <SeatTile
-                      key={seat}
-                      seat={seat}
-                      staff={staff}
-                      menuOpen={staff ? menuStaff?.id === staff.id : false}
-                      emoteKey={staff && emote?.staffId === staff.id ? emote.key : null}
-                      chatPending={staff ? enterDesk.isPending && enterDesk.variables === staff.id : false}
-                      onOpenMenu={setMenuStaff}
-                      onStartChat={(s) => enterDesk.mutate(s.id)}
-                      onOpenProfile={(s) => router.push(`/staffs/${s.id}`)}
-                      onSwapDesk={(s) => {
-                        setMenuStaff(null);
-                        setPicker({ staff: s });
-                      }}
-                      onEmote={playEmote}
-                      onAssign={() => setPicker({ staff: null })}
-                    />
-                  );
-                })}
+                {(Array.from({ length: OFFICE_SEATS_PER_FLOOR }, (_, i) => i + 1) as number[]).map(
+                  (seat) => {
+                    const staff = bySeat.get(seatKey(floor, seat));
+                    return (
+                      <SeatTile
+                        key={seat}
+                        seat={seat}
+                        staff={staff}
+                        menuOpen={staff ? menuStaff?.id === staff.id : false}
+                        emoteKey={staff && emote?.staffId === staff.id ? emote.key : null}
+                        chatPending={
+                          staff ? enterDesk.isPending && enterDesk.variables === staff.id : false
+                        }
+                        onOpenMenu={setMenuStaff}
+                        onStartChat={(s) => enterDesk.mutate(s.id)}
+                        onOpenProfile={(s) => router.push(`/staffs/${s.id}`)}
+                        onSwapDesk={(s) => {
+                          setMenuStaff(null);
+                          setPicker({ staff: s });
+                        }}
+                        onEmote={playEmote}
+                        onAssign={() => setPicker({ staff: null })}
+                      />
+                    );
+                  },
+                )}
               </div>
             )}
           </section>
@@ -222,7 +276,7 @@ export default function OfficePage() {
           candidates={picker.staff ? null : waiting}
           bySeat={bySeat}
           onClose={() => setPicker(null)}
-        onPick={(staffId, f, seat) => assignDesk.mutate({ staffId, f, seat })}
+          onPick={(staffId, f, seat) => assignDesk.mutate({ staffId, f, seat })}
           loading={assignDesk.isPending}
         />
       )}
@@ -257,7 +311,13 @@ function SeatTile({
   onAssign: () => void;
 }) {
   const active = staff?.status === "PUBLISHED";
-  const anim = !staff ? "" : !active ? "agent-away" : emoteKey ? `agent-emote-${emoteKey}` : "agent-idle";
+  const anim = !staff
+    ? ""
+    : !active
+      ? "agent-away"
+      : emoteKey
+        ? `agent-emote-${emoteKey}`
+        : "agent-idle";
   return (
     <div
       className={`iso-pad animate-fade-up ${menuOpen ? "z-20" : ""} ${staff ? "" : "is-empty"}`}
@@ -270,14 +330,22 @@ function SeatTile({
           {String(seat).padStart(2, "0")}
         </span>
         {active && (
-          <span className="bg-rw-success absolute right-2 top-2 z-[2] h-1.5 w-1.5 animate-pulse-dot rounded-full" aria-label="在岗" />
+          <span
+            className="bg-rw-success absolute right-2 top-2 z-[2] h-1.5 w-1.5 animate-pulse-dot rounded-full"
+            aria-label="在岗"
+          />
         )}
 
         {staff ? (
           <div className="rw-seat-wrap">
             <div
               className="desk-furniture rw-seat"
-              style={{ "--agent-tone": toneColor(staff.name), "--agent-anim-delay": `${(seat * 0.61) % 4}s` } as CSSProperties}
+              style={
+                {
+                  "--agent-tone": toneColor(staff.name),
+                  "--agent-anim-delay": `${(seat * 0.61) % 4}s`,
+                } as CSSProperties
+              }
               aria-hidden="true"
             >
               <span className="desk-chair" />
@@ -328,7 +396,9 @@ function SeatTile({
         {staff && (
           <div className="flex items-center justify-between gap-1 px-1 pb-0.5">
             <span className="truncate text-[12px] font-medium text-rw-fg">{staff.name}</span>
-            <span className="text-rw-fg-subtle shrink-0 text-[10px]">{active ? staff.title.slice(0, 4) : "离岗"}</span>
+            <span className="text-rw-fg-subtle shrink-0 text-[10px]">
+              {active ? staff.title.slice(0, 4) : "离岗"}
+            </span>
           </div>
         )}
       </div>
@@ -349,7 +419,12 @@ function SeatTile({
             <span>{staff.title}</span>
           </div>
           {active && (
-            <button type="button" className="desk-menu-btn" disabled={chatPending} onClick={() => onStartChat(staff)}>
+            <button
+              type="button"
+              className="desk-menu-btn"
+              disabled={chatPending}
+              onClick={() => onStartChat(staff)}
+            >
               <MessageOutlined />
               {chatPending ? "进入中…" : "发起对话"}
             </button>
@@ -367,7 +442,12 @@ function SeatTile({
               <div className="desk-menu-emotes-title">表情动作</div>
               <div className="desk-emote-grid">
                 {(Object.keys(EMOTES) as EmoteKey[]).map((key) => (
-                  <button type="button" key={key} className="desk-emote-chip" onClick={() => onEmote(staff.id, key)}>
+                  <button
+                    type="button"
+                    key={key}
+                    className="desk-emote-chip"
+                    onClick={() => onEmote(staff.id, key)}
+                  >
                     {EMOTES[key].emoji} {EMOTES[key].label}
                   </button>
                 ))}
@@ -439,7 +519,9 @@ function DeskPickerModal({
                 type="button"
                 onClick={() => setFloor(f)}
                 className={`cursor-pointer rounded-rw-sm px-3 py-1 font-mono text-xs transition-colors duration-[140ms] ease-out ${
-                  f === floor ? "bg-rw-accent-subtle font-medium text-rw-accent" : "text-rw-fg-muted hover:bg-rw-muted-subtle"
+                  f === floor
+                    ? "bg-rw-accent-subtle font-medium text-rw-accent"
+                    : "text-rw-fg-muted hover:bg-rw-muted-subtle"
                 }`}
               >
                 {f}F
@@ -447,32 +529,34 @@ function DeskPickerModal({
             ))}
           </div>
           <div className="grid grid-cols-5 gap-2" data-testid="desk-picker-grid">
-            {(Array.from({ length: OFFICE_SEATS_PER_FLOOR }, (_, i) => i + 1) as number[]).map((seat) => {
-              const occupant = bySeat.get(seatKey(floor, seat));
-              const isSelf = occupant?.id === target.id;
-              const free = !occupant;
-              return (
-                <button
-                  key={seat}
-                  type="button"
-                  disabled={!free && !isSelf}
-                  onClick={() => onPick(target.id, floor, seat)}
-                  data-testid={`desk-pick-${floor}f-${seat}`}
-                  className={`rounded-rw-sm border px-1 py-2 text-center font-mono text-xs tabular-nums transition-all duration-[140ms] ease-out ${
-                    isSelf
-                      ? "border-rw-accent bg-rw-accent-subtle font-semibold text-rw-accent"
-                      : free
-                        ? "border-rw-border hover:border-rw-accent hover:bg-rw-accent-subtle text-rw-fg-muted cursor-pointer"
-                        : "border-rw-border bg-rw-muted-subtle text-rw-fg-subtle cursor-not-allowed"
-                  }`}
-                >
-                  {String(seat).padStart(2, "0")}
-                  <span className="mt-0.5 block truncate text-[10px] font-sans">
-                    {isSelf ? "当前" : occupant ? occupant.name : "空位"}
-                  </span>
-                </button>
-              );
-            })}
+            {(Array.from({ length: OFFICE_SEATS_PER_FLOOR }, (_, i) => i + 1) as number[]).map(
+              (seat) => {
+                const occupant = bySeat.get(seatKey(floor, seat));
+                const isSelf = occupant?.id === target.id;
+                const free = !occupant;
+                return (
+                  <button
+                    key={seat}
+                    type="button"
+                    disabled={!free && !isSelf}
+                    onClick={() => onPick(target.id, floor, seat)}
+                    data-testid={`desk-pick-${floor}f-${seat}`}
+                    className={`rounded-rw-sm border px-1 py-2 text-center font-mono text-xs tabular-nums transition-all duration-[140ms] ease-out ${
+                      isSelf
+                        ? "border-rw-accent bg-rw-accent-subtle font-semibold text-rw-accent"
+                        : free
+                          ? "border-rw-border hover:border-rw-accent hover:bg-rw-accent-subtle text-rw-fg-muted cursor-pointer"
+                          : "border-rw-border bg-rw-muted-subtle text-rw-fg-subtle cursor-not-allowed"
+                    }`}
+                  >
+                    {String(seat).padStart(2, "0")}
+                    <span className="mt-0.5 block truncate text-[10px] font-sans">
+                      {isSelf ? "当前" : occupant ? occupant.name : "空位"}
+                    </span>
+                  </button>
+                );
+              },
+            )}
           </div>
           <p className="text-rw-fg-subtle mt-3 text-center font-mono text-[11px]">
             {loading ? "分配中…" : "灰色为已占用 · 点击空位确认"}

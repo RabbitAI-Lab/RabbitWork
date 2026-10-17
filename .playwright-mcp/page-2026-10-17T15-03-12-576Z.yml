@@ -1,140 +1,140 @@
 - generic [ref=e1]:
-  - generic [ref=e54] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=e55]
-    - generic [ref=e291]:
-      - button "Open issues overlay" [ref=e292]:
-        - generic [ref=e293]:
-          - generic [aria-hidden] [ref=e294]: "0"
-          - generic [ref=e295]: "1"
-        - generic [ref=e296]: Issue
-      - button "Collapse issues badge" [ref=e297]
-  - alert [ref=e59]
-  - generic [ref=e165]:
-    - complementary [ref=e166]:
-      - link "RabbitWork 数字员工平台" [ref=e167] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=e173]:
-          - generic [ref=e174]: RabbitWork
-          - generic [ref=e175]: 数字员工平台
-      - navigation [ref=e176]:
-        - link [ref=e177] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=e179]
-          - text: 我的数字员工
-        - link [ref=e183] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=e185]
-          - text: 我的团队
-        - link [ref=e188] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=e190]
-          - text: 办公室
-      - generic [ref=e194] [cursor=pointer]:
-        - img "user" [ref=e196]
-        - generic [ref=e199]:
-          - generic [ref=e200]: 管理员
-          - generic [ref=e201]: 管理员
-    - main [ref=e202]:
-      - generic [ref=e203]:
-        - generic [ref=e204]:
-          - generic [ref=e205]:
-            - heading "我的数字员工" [level=1] [ref=e206]
-            - paragraph [ref=e207]: 管理你的数字员工档案,点击卡片查看详情
-          - button "plus 新建员工" [ref=e208] [cursor=pointer]:
-            - img "plus" [ref=e210]
-            - generic [ref=e214]: 新建员工
-        - generic [ref=e215]:
-          - generic [ref=e216]:
-            - img "team" [ref=e218]
-            - generic [ref=e221]:
-              - generic [ref=e222]: "1"
-              - generic [ref=e223]: 员工总数
-          - generic [ref=e224]:
-            - img "rocket" [ref=e226]
-            - generic [ref=e229]:
-              - generic [ref=e230]: "1"
-              - generic [ref=e231]: 在岗员工
-          - generic [ref=e232]:
-            - img "edit" [ref=e234]
-            - generic [ref=e237]:
-              - generic [ref=e238]: "0"
-              - generic [ref=e239]: 草稿
-        - generic [ref=e240]:
-          - radiogroup "segmented control" [ref=e241]:
-            - generic [ref=e242]:
-              - generic [ref=e243] [cursor=pointer]:
-                - radio "全部 (1)" [checked]
-                - generic "全部 (1)" [ref=e244]
-              - generic [ref=e245] [cursor=pointer]:
-                - radio "在岗 (1)"
-                - generic "在岗 (1)" [ref=e246]
-              - generic [ref=e247] [cursor=pointer]:
-                - radio "草稿 (0)"
-                - generic "草稿 (0)" [ref=e248]
-              - generic [ref=e249] [cursor=pointer]:
-                - radio "下线 (0)"
-                - generic "下线 (0)" [ref=e250]
-          - generic [ref=e251]:
-            - img "search" [ref=e253]
-            - textbox "搜索姓名 / 岗位 / 工号" [ref=e256]
-        - generic [ref=e260] [cursor=pointer]:
-          - generic [ref=e261]:
-            - generic [ref=e262]:
-              - generic [ref=e263]: 小
-              - generic [ref=e265]:
-                - generic [ref=e266]: 小钱
-                - generic "前端开发 · STAFF-20261017-R84G" [ref=e267]
-            - generic [ref=e268]: 在岗
-          - paragraph [ref=e270]: 前端开发
-          - generic [ref=e271]:
-            - generic [ref=e272]: 组织内
-            - generic [ref=e273]: 发布于 2026-10-17
-          - generic [ref=e274]:
-            - button "send 发起对话" [ref=e275]:
-              - img "send" [ref=e277]
-              - generic [ref=e280]: 发起对话
-            - button [ref=e281]:
-              - img "edit" [ref=e283]
-            - button [ref=e286]:
-              - img "delete" [ref=e288]
-  - generic [ref=e300]:
-    - dialog "edit 新建数字员工":
-      - generic [ref=e301]:
-        - button "Close" [ref=e302] [cursor=pointer]:
-          - generic "Close" [ref=e303]:
-            - img "close" [ref=e304]
-        - generic [ref=e309]:
-          - img "edit" [ref=e310]
-          - text: 新建数字员工
-        - generic [ref=e314]:
-          - generic [ref=e315]:
-            - generic [ref=e317]:
-              - generic "姓名" [ref=e319]
-              - textbox "姓名" [ref=e323]:
-                - /placeholder: 如：小兔
-            - generic [ref=e325]:
-              - generic "岗位" [ref=e327]
-              - textbox "岗位" [ref=e331]:
-                - /placeholder: 如：售前咨询顾问
-          - generic [ref=e333]:
-            - generic "人设（System Prompt）" [ref=e335]
-            - generic [ref=e336]:
-              - generic [ref=e339]:
-                - textbox "人设（System Prompt）" [ref=e340]:
-                  - /placeholder: "你是……\n- 说话风格：亲切、专业\n- 擅长：产品介绍、需求梳理\n- 回答习惯：先给结论，再给依据"
-                - generic: 0 / 20000
-              - generic [ref=e341]: 描述这位数字员工的性格、专长与说话风格——越具体越好
-          - generic [ref=e344]:
-            - generic "职责边界（可选）" [ref=e346]
-            - generic [ref=e347]:
-              - textbox "职责边界（可选）" [ref=e350]:
-                - /placeholder: 不承诺具体价格与合同条款；遇到投诉建议转人工。
-              - generic [ref=e351]: 不回答的问题范围、转人工条件等
-          - generic [ref=e354]:
-            - generic "可见性" [ref=e356]
-            - generic [ref=e362] [cursor=pointer]:
-              - combobox "可见性" [ref=e364]
-              - generic "私有（仅创建者）" [ref=e365]
-        - generic [ref=e366]:
-          - button "取 消" [ref=e367] [cursor=pointer]
-          - button "创 建" [ref=e369] [cursor=pointer]
+    - generic [ref=e54] [cursor=pointer]:
+        - button "Open Next.js Dev Tools" [ref=e55]
+        - generic [ref=e291]:
+            - button "Open issues overlay" [ref=e292]:
+                - generic [ref=e293]:
+                    - generic [aria-hidden] [ref=e294]: "0"
+                    - generic [ref=e295]: "1"
+                - generic [ref=e296]: Issue
+            - button "Collapse issues badge" [ref=e297]
+    - alert [ref=e59]
+    - generic [ref=e165]:
+        - complementary [ref=e166]:
+            - link "RabbitWork 数字员工平台" [ref=e167] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=e173]:
+                    - generic [ref=e174]: RabbitWork
+                    - generic [ref=e175]: 数字员工平台
+            - navigation [ref=e176]:
+                - link [ref=e177] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=e179]
+                    - text: 我的数字员工
+                - link [ref=e183] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=e185]
+                    - text: 我的团队
+                - link [ref=e188] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=e190]
+                    - text: 办公室
+            - generic [ref=e194] [cursor=pointer]:
+                - img "user" [ref=e196]
+                - generic [ref=e199]:
+                    - generic [ref=e200]: 管理员
+                    - generic [ref=e201]: 管理员
+        - main [ref=e202]:
+            - generic [ref=e203]:
+                - generic [ref=e204]:
+                    - generic [ref=e205]:
+                        - heading "我的数字员工" [level=1] [ref=e206]
+                        - paragraph [ref=e207]: 管理你的数字员工档案,点击卡片查看详情
+                    - button "plus 新建员工" [ref=e208] [cursor=pointer]:
+                        - img "plus" [ref=e210]
+                        - generic [ref=e214]: 新建员工
+                - generic [ref=e215]:
+                    - generic [ref=e216]:
+                        - img "team" [ref=e218]
+                        - generic [ref=e221]:
+                            - generic [ref=e222]: "1"
+                            - generic [ref=e223]: 员工总数
+                    - generic [ref=e224]:
+                        - img "rocket" [ref=e226]
+                        - generic [ref=e229]:
+                            - generic [ref=e230]: "1"
+                            - generic [ref=e231]: 在岗员工
+                    - generic [ref=e232]:
+                        - img "edit" [ref=e234]
+                        - generic [ref=e237]:
+                            - generic [ref=e238]: "0"
+                            - generic [ref=e239]: 草稿
+                - generic [ref=e240]:
+                    - radiogroup "segmented control" [ref=e241]:
+                        - generic [ref=e242]:
+                            - generic [ref=e243] [cursor=pointer]:
+                                - radio "全部 (1)" [checked]
+                                - generic "全部 (1)" [ref=e244]
+                            - generic [ref=e245] [cursor=pointer]:
+                                - radio "在岗 (1)"
+                                - generic "在岗 (1)" [ref=e246]
+                            - generic [ref=e247] [cursor=pointer]:
+                                - radio "草稿 (0)"
+                                - generic "草稿 (0)" [ref=e248]
+                            - generic [ref=e249] [cursor=pointer]:
+                                - radio "下线 (0)"
+                                - generic "下线 (0)" [ref=e250]
+                    - generic [ref=e251]:
+                        - img "search" [ref=e253]
+                        - textbox "搜索姓名 / 岗位 / 工号" [ref=e256]
+                - generic [ref=e260] [cursor=pointer]:
+                    - generic [ref=e261]:
+                        - generic [ref=e262]:
+                            - generic [ref=e263]: 小
+                            - generic [ref=e265]:
+                                - generic [ref=e266]: 小钱
+                                - generic "前端开发 · STAFF-20261017-R84G" [ref=e267]
+                        - generic [ref=e268]: 在岗
+                    - paragraph [ref=e270]: 前端开发
+                    - generic [ref=e271]:
+                        - generic [ref=e272]: 组织内
+                        - generic [ref=e273]: 发布于 2026-10-17
+                    - generic [ref=e274]:
+                        - button "send 发起对话" [ref=e275]:
+                            - img "send" [ref=e277]
+                            - generic [ref=e280]: 发起对话
+                        - button [ref=e281]:
+                            - img "edit" [ref=e283]
+                        - button [ref=e286]:
+                            - img "delete" [ref=e288]
+    - generic [ref=e300]:
+        - dialog "edit 新建数字员工":
+            - generic [ref=e301]:
+                - button "Close" [ref=e302] [cursor=pointer]:
+                    - generic "Close" [ref=e303]:
+                        - img "close" [ref=e304]
+                - generic [ref=e309]:
+                    - img "edit" [ref=e310]
+                    - text: 新建数字员工
+                - generic [ref=e314]:
+                    - generic [ref=e315]:
+                        - generic [ref=e317]:
+                            - generic "姓名" [ref=e319]
+                            - textbox "姓名" [ref=e323]:
+                                - /placeholder: 如：小兔
+                        - generic [ref=e325]:
+                            - generic "岗位" [ref=e327]
+                            - textbox "岗位" [ref=e331]:
+                                - /placeholder: 如：售前咨询顾问
+                    - generic [ref=e333]:
+                        - generic "人设（System Prompt）" [ref=e335]
+                        - generic [ref=e336]:
+                            - generic [ref=e339]:
+                                - textbox "人设（System Prompt）" [ref=e340]:
+                                    - /placeholder: "你是……\n- 说话风格：亲切、专业\n- 擅长：产品介绍、需求梳理\n- 回答习惯：先给结论，再给依据"
+                                - generic: 0 / 20000
+                            - generic [ref=e341]: 描述这位数字员工的性格、专长与说话风格——越具体越好
+                    - generic [ref=e344]:
+                        - generic "职责边界（可选）" [ref=e346]
+                        - generic [ref=e347]:
+                            - textbox "职责边界（可选）" [ref=e350]:
+                                - /placeholder: 不承诺具体价格与合同条款；遇到投诉建议转人工。
+                            - generic [ref=e351]: 不回答的问题范围、转人工条件等
+                    - generic [ref=e354]:
+                        - generic "可见性" [ref=e356]
+                        - generic [ref=e362] [cursor=pointer]:
+                            - combobox "可见性" [ref=e364]
+                            - generic "私有（仅创建者）" [ref=e365]
+                - generic [ref=e366]:
+                    - button "取 消" [ref=e367] [cursor=pointer]
+                    - button "创 建" [ref=e369] [cursor=pointer]

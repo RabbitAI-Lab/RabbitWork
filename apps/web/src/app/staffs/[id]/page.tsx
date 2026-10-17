@@ -22,7 +22,16 @@ import type { StaffUpdateInput } from "@rabbit/shared";
 import "../../office/office.css";
 
 /** 员工衣色（与办公室工位同源：姓名哈希取色） */
-const TONE_COLORS = ["#0f766e", "#2f6fd0", "#a85d32", "#6f7b42", "#33507a", "#3d6b4f", "#b08325", "#2c3e6b"] as const;
+const TONE_COLORS = [
+  "#0f766e",
+  "#2f6fd0",
+  "#a85d32",
+  "#6f7b42",
+  "#33507a",
+  "#3d6b4f",
+  "#b08325",
+  "#2c3e6b",
+] as const;
 
 function toneColor(name: string): string {
   let h = 0;
@@ -91,7 +100,11 @@ export default function StaffDetailPage() {
   const publish = useMutation({
     mutationFn: () => staffApi.publish(id),
     onSuccess: (s) => {
-      message.success(s.usedFallback ? `已发布（共享运行时 Agent 兜底）` : `已发布（AgentScope：${s.agentStatus}）`);
+      message.success(
+        s.usedFallback
+          ? `已发布（共享运行时 Agent 兜底）`
+          : `已发布（AgentScope：${s.agentStatus}）`,
+      );
       invalidate();
     },
     onError: (e) => message.error(e instanceof Error ? e.message : "发布失败"),
@@ -143,11 +156,18 @@ export default function StaffDetailPage() {
                 <div className="flex shrink-0 flex-col items-center gap-3">
                   <div
                     className="desk-furniture hero-desk"
-                    style={{ "--agent-tone": toneColor(staff.name), "--agent-anim-delay": "0.6s" } as CSSProperties}
+                    style={
+                      {
+                        "--agent-tone": toneColor(staff.name),
+                        "--agent-anim-delay": "0.6s",
+                      } as CSSProperties
+                    }
                     aria-hidden="true"
                   >
                     <span className="desk-chair" />
-                    <span className={`desk-agent ${staff.status === "PUBLISHED" ? "agent-idle" : "agent-away"}`}>
+                    <span
+                      className={`desk-agent ${staff.status === "PUBLISHED" ? "agent-idle" : "agent-away"}`}
+                    >
                       <span className="agent-hair" />
                       <span className="agent-head">
                         <span className="agent-eye agent-eye-left" />
@@ -160,7 +180,9 @@ export default function StaffDetailPage() {
                         <span className="agent-arm agent-arm-left" />
                         <span className="agent-arm agent-arm-right" />
                       </span>
-                      {staff.status !== "PUBLISHED" && <span className="agent-emote-bubble agent-zzz">💤</span>}
+                      {staff.status !== "PUBLISHED" && (
+                        <span className="agent-emote-bubble agent-zzz">💤</span>
+                      )}
                     </span>
                     <span className="desk-top" />
                     <span className="desk-keyboard" />
@@ -184,7 +206,13 @@ export default function StaffDetailPage() {
                         去对话
                       </Button>
                     ) : (
-                      <Button type="primary" ghost icon={<RocketOutlined />} loading={publish.isPending} onClick={() => publish.mutate()}>
+                      <Button
+                        type="primary"
+                        ghost
+                        icon={<RocketOutlined />}
+                        loading={publish.isPending}
+                        onClick={() => publish.mutate()}
+                      >
                         发布上岗
                       </Button>
                     )}
@@ -197,7 +225,9 @@ export default function StaffDetailPage() {
                 {/* 档案信息列 */}
                 <div className="flex min-w-[280px] flex-1 flex-col gap-3">
                   <div className="flex flex-wrap items-end gap-2.5">
-                    <h1 className="font-display text-[22px] font-semibold leading-none tracking-tight text-rw-fg">{staff.name}</h1>
+                    <h1 className="font-display text-[22px] font-semibold leading-none tracking-tight text-rw-fg">
+                      {staff.name}
+                    </h1>
                     <span className="text-[13px] leading-none text-rw-fg-muted">{staff.title}</span>
                     <StatusPill status={staff.status as "PUBLISHED" | "DRAFT" | "OFFLINE"} />
                   </div>
@@ -209,9 +239,17 @@ export default function StaffDetailPage() {
                         工位 {staff.deskFloor}F-{String(staff.deskSeat).padStart(2, "0")}
                       </span>
                     )}
-                    <span>{staff.visibility === "ORG" ? "组织内" : staff.visibility === "GALLERY" ? "广场" : "私有"}</span>
+                    <span>
+                      {staff.visibility === "ORG"
+                        ? "组织内"
+                        : staff.visibility === "GALLERY"
+                          ? "广场"
+                          : "私有"}
+                    </span>
                     <span className="tabular-nums">创建于 {staff.createdAt.slice(0, 10)}</span>
-                    {staff.publishedAt && <span className="tabular-nums">上岗于 {staff.publishedAt.slice(0, 10)}</span>}
+                    {staff.publishedAt && (
+                      <span className="tabular-nums">上岗于 {staff.publishedAt.slice(0, 10)}</span>
+                    )}
                     {staff.asAgentId && (
                       <span className="rounded-rw-sm bg-rw-accent-subtle px-2 py-0.5 font-mono text-[11px] text-rw-accent">
                         {staff.asAgentKey ?? staff.asAgentId}
@@ -219,7 +257,10 @@ export default function StaffDetailPage() {
                     )}
                   </div>
 
-                  <p className="m-0 line-clamp-2 max-w-[680px] text-[13px] leading-[22px] text-rw-fg-muted" data-testid="staff-persona-summary">
+                  <p
+                    className="m-0 line-clamp-2 max-w-[680px] text-[13px] leading-[22px] text-rw-fg-muted"
+                    data-testid="staff-persona-summary"
+                  >
                     {staff.personaPrompt}
                   </p>
 
@@ -228,13 +269,21 @@ export default function StaffDetailPage() {
                     <HeroMetric label="会话" value={s?.conversationCount ?? 0} />
                     <HeroMetric label="运行" value={s?.runTotal ?? 0} />
                     <HeroMetric label="成功率" value={successRate ?? 0} suffix="%" accent />
-                    <HeroMetric label="失败/打断" value={(s?.runFailed ?? 0) + (s?.runInterrupted ?? 0)} />
+                    <HeroMetric
+                      label="失败/打断"
+                      value={(s?.runFailed ?? 0) + (s?.runInterrupted ?? 0)}
+                    />
                   </div>
                 </div>
 
                 {/* 危险操作 */}
                 <div className="flex shrink-0 flex-col justify-start">
-                  <Popconfirm title="删除该员工？" okText="删除" cancelText="取消" onConfirm={() => remove.mutate()}>
+                  <Popconfirm
+                    title="删除该员工？"
+                    okText="删除"
+                    cancelText="取消"
+                    onConfirm={() => remove.mutate()}
+                  >
                     <Button danger icon={<DeleteOutlined />} aria-label="删除" />
                   </Popconfirm>
                 </div>
@@ -251,20 +300,34 @@ export default function StaffDetailPage() {
                   label: "工作数据",
                   children: (
                     <div className="border-rw-border bg-rw-card animate-fade-up rounded-rw-md border p-6">
-                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="staff-stats">
+                      <div
+                        className="grid grid-cols-2 gap-3 md:grid-cols-4"
+                        data-testid="staff-stats"
+                      >
                         <StatCard label="会话数" value={s ? String(s.conversationCount) : "—"} />
                         <StatCard label="运行次数" value={s ? String(s.runTotal) : "—"} />
-                        <StatCard label="成功次数" value={s ? String(s.runSucceeded) : "—"} accent />
-                        <StatCard label="失败 / 打断" value={s ? `${s.runFailed} / ${s.runInterrupted}` : "—"} />
+                        <StatCard
+                          label="成功次数"
+                          value={s ? String(s.runSucceeded) : "—"}
+                          accent
+                        />
+                        <StatCard
+                          label="失败 / 打断"
+                          value={s ? `${s.runFailed} / ${s.runInterrupted}` : "—"}
+                        />
                       </div>
                       <div className="bg-rw-muted-subtle text-rw-fg-muted mt-4 grid gap-3 rounded-rw-md p-4 text-xs sm:grid-cols-3">
                         <div className="flex items-center justify-between">
                           <span>输入 token</span>
-                          <span className="font-mono font-medium text-rw-fg tabular-nums">{s ? s.tokenIn.toLocaleString() : "—"}</span>
+                          <span className="font-mono font-medium text-rw-fg tabular-nums">
+                            {s ? s.tokenIn.toLocaleString() : "—"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>输出 token</span>
-                          <span className="font-mono font-medium text-rw-fg tabular-nums">{s ? s.tokenOut.toLocaleString() : "—"}</span>
+                          <span className="font-mono font-medium text-rw-fg tabular-nums">
+                            {s ? s.tokenOut.toLocaleString() : "—"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>最近活跃</span>
@@ -304,7 +367,11 @@ export default function StaffDetailPage() {
                     <div className="border-rw-border bg-rw-card animate-fade-up rounded-rw-md border p-6">
                       <h2 className="text-rw-fg mb-4 text-[15px] font-semibold">会话记录</h2>
                       {(conversations.data?.items.length ?? 0) === 0 ? (
-                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="还没有对话" className="!my-6" />
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="还没有对话"
+                          className="!my-6"
+                        />
                       ) : (
                         <div className="space-y-2.5">
                           {conversations.data?.items.map((c, i) => (
@@ -318,14 +385,18 @@ export default function StaffDetailPage() {
                             >
                               <MessageOutlined className="text-rw-fg-subtle shrink-0" />
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-medium text-rw-fg">{c.title}</div>
+                                <div className="truncate text-sm font-medium text-rw-fg">
+                                  {c.title}
+                                </div>
                                 <div className="text-rw-fg-subtle mt-0.5 text-xs tabular-nums">
                                   最近消息 {c.lastMessageAt?.slice(0, 16).replace("T", " ") ?? "—"}
                                 </div>
                               </div>
                               <span
                                 className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${
-                                  c.status === "ACTIVE" ? "bg-rw-accent-subtle text-rw-accent" : "bg-rw-muted-subtle text-rw-fg-subtle"
+                                  c.status === "ACTIVE"
+                                    ? "bg-rw-accent-subtle text-rw-accent"
+                                    : "bg-rw-muted-subtle text-rw-fg-subtle"
                                 }`}
                               >
                                 {c.status === "ACTIVE" ? "进行中" : "空闲"}
@@ -352,16 +423,33 @@ export default function StaffDetailPage() {
               destroyOnHidden
               width={560}
             >
-              <Form form={form} layout="vertical" requiredMark={false} onFinish={(v) => update.mutate(v)}>
+              <Form
+                form={form}
+                layout="vertical"
+                requiredMark={false}
+                onFinish={(v) => update.mutate(v)}
+              >
                 <div className="grid grid-cols-2 gap-x-4">
-                  <Form.Item name="name" label="姓名" rules={[{ required: true, message: "请输入姓名" }]}>
+                  <Form.Item
+                    name="name"
+                    label="姓名"
+                    rules={[{ required: true, message: "请输入姓名" }]}
+                  >
                     <Input maxLength={128} />
                   </Form.Item>
-                  <Form.Item name="title" label="岗位" rules={[{ required: true, message: "请输入岗位" }]}>
+                  <Form.Item
+                    name="title"
+                    label="岗位"
+                    rules={[{ required: true, message: "请输入岗位" }]}
+                  >
                     <Input maxLength={128} />
                   </Form.Item>
                 </div>
-                <Form.Item name="personaPrompt" label="人设（System Prompt）" rules={[{ required: true, message: "请输入人设" }]}>
+                <Form.Item
+                  name="personaPrompt"
+                  label="人设（System Prompt）"
+                  rules={[{ required: true, message: "请输入人设" }]}
+                >
                   <Input.TextArea rows={6} showCount maxLength={20000} />
                 </Form.Item>
                 <Form.Item name="boundary" label="职责边界（可选）">
@@ -386,10 +474,22 @@ export default function StaffDetailPage() {
   );
 }
 
-function HeroMetric({ label, value, suffix, accent }: { label: string; value: number; suffix?: string; accent?: boolean }) {
+function HeroMetric({
+  label,
+  value,
+  suffix,
+  accent,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+  accent?: boolean;
+}) {
   return (
     <div className="bg-rw-muted-subtle flex flex-1 items-end gap-1.5 rounded-rw-md px-4 py-2">
-      <strong className={`font-display text-[16px] font-semibold leading-none tabular-nums ${accent ? "text-rw-success" : "text-rw-fg"}`}>
+      <strong
+        className={`font-display text-[16px] font-semibold leading-none tabular-nums ${accent ? "text-rw-success" : "text-rw-fg"}`}
+      >
         <CountNumber target={value} />
         {suffix}
       </strong>
@@ -401,7 +501,11 @@ function HeroMetric({ label, value, suffix, accent }: { label: string; value: nu
 function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="bg-rw-muted-subtle rounded-rw-sm px-3.5 py-3">
-      <div className={`font-display text-lg font-semibold leading-tight tabular-nums ${accent ? "text-rw-success" : "text-rw-fg"}`}>{value}</div>
+      <div
+        className={`font-display text-lg font-semibold leading-tight tabular-nums ${accent ? "text-rw-success" : "text-rw-fg"}`}
+      >
+        {value}
+      </div>
       <div className="text-rw-fg-subtle mt-0.5 text-[11px]">{label}</div>
     </div>
   );

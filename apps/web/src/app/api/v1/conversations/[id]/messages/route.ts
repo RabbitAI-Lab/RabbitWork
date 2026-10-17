@@ -31,7 +31,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const activeRun = await prisma.runRecord.findFirst({
       where: { conversationId: id, status: { in: ["STARTED", "STREAMING"] } },
     });
-    if (activeRun) throw new DomainError(ErrCode.RUN_CONFLICT, "当前会话有正在进行的回复，请稍候或先打断");
+    if (activeRun)
+      throw new DomainError(ErrCode.RUN_CONFLICT, "当前会话有正在进行的回复，请稍候或先打断");
 
     // 用户消息镜像（seq 单调递增）
     const last = await prisma.messageMirror.findFirst({
@@ -64,7 +65,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
           asRuntimeSessionId: handle.runtimeSessionId,
           lastMessageAt: new Date(),
           status: "ACTIVE",
-          title: shouldRetitle(conversation.title, content) ? retitle(staff.name, content) : conversation.title,
+          title: shouldRetitle(conversation.title, content)
+            ? retitle(staff.name, content)
+            : conversation.title,
         },
       }),
     ]);

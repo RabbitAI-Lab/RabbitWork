@@ -17,10 +17,34 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export type MenuKey = "office" | "staffs" | "teams";
 
-const MENUS: Array<{ key: MenuKey; href: string; label: string; icon: React.ReactNode; match: RegExp }> = [
-  { key: "staffs", href: "/staffs", label: "我的数字员工", icon: <AppstoreOutlined />, match: /^\/staffs(\/|$)/ },
-  { key: "teams", href: "/teams", label: "我的团队", icon: <TeamOutlined />, match: /^\/teams(\/|$)/ },
-  { key: "office", href: "/office", label: "办公室", icon: <HomeOutlined />, match: /^\/(office|chat|conversations)(\/|$)/ },
+const MENUS: Array<{
+  key: MenuKey;
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  match: RegExp;
+}> = [
+  {
+    key: "staffs",
+    href: "/staffs",
+    label: "我的数字员工",
+    icon: <AppstoreOutlined />,
+    match: /^\/staffs(\/|$)/,
+  },
+  {
+    key: "teams",
+    href: "/teams",
+    label: "我的团队",
+    icon: <TeamOutlined />,
+    match: /^\/teams(\/|$)/,
+  },
+  {
+    key: "office",
+    href: "/office",
+    label: "办公室",
+    icon: <HomeOutlined />,
+    match: /^\/(office|chat|conversations)(\/|$)/,
+  },
 ];
 
 /** 应用外壳（DS v2.1 MASTER §5.1）：侧栏 + 内容区；语义 token、激活指示条、主题切换。 */
@@ -41,10 +65,16 @@ export function AppShell({ children, active }: { children: React.ReactNode; acti
     <div className="relative flex h-screen overflow-hidden bg-rw-bg" data-testid="app-shell">
       {/* 左侧菜单栏（玻璃质感 + 语义 token） */}
       <aside className="glass z-10 flex w-60 shrink-0 flex-col border-r border-rw-border">
-        <Link href="/office" className="flex items-center gap-3 px-5 pb-5 pt-6" data-testid="app-brand">
+        <Link
+          href="/office"
+          className="flex items-center gap-3 px-5 pb-5 pt-6"
+          data-testid="app-brand"
+        >
           <BrandMark size={32} />
           <span className="flex flex-col leading-tight">
-            <span className="font-display text-[15px] font-semibold tracking-tight text-rw-fg">RabbitWork</span>
+            <span className="font-display text-[15px] font-semibold tracking-tight text-rw-fg">
+              RabbitWork
+            </span>
             <span className="text-[11px] text-rw-fg-subtle">数字员工平台</span>
           </span>
         </Link>
@@ -92,10 +122,18 @@ export function AppShell({ children, active }: { children: React.ReactNode; acti
               className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-rw-md px-2 py-1.5 transition-colors duration-[140ms] ease-out hover:bg-rw-muted-subtle"
               data-testid="app-user"
             >
-              <Avatar size={30} icon={<UserOutlined className="text-xs" />} className="avatar-accent !flex items-center justify-center" />
+              <Avatar
+                size={30}
+                icon={<UserOutlined className="text-xs" />}
+                className="avatar-accent !flex items-center justify-center"
+              />
               <span className="flex min-w-0 flex-col leading-tight">
-                <span className="truncate text-[13px] font-medium text-rw-fg">{me.data?.name ?? "..."}</span>
-                <span className="text-[11px] text-rw-fg-subtle">{me.data?.role === "ADMIN" ? "管理员" : "成员"}</span>
+                <span className="truncate text-[13px] font-medium text-rw-fg">
+                  {me.data?.name ?? "..."}
+                </span>
+                <span className="text-[11px] text-rw-fg-subtle">
+                  {me.data?.role === "ADMIN" ? "管理员" : "成员"}
+                </span>
               </span>
             </span>
           </Dropdown>

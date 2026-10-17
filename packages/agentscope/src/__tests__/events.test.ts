@@ -30,7 +30,12 @@ const completedNotFinal: AsRawEvent = {
         run_id: "run-1",
         item_id: "item-1",
         message_id: "msg-1",
-        item: { id: "item-1", role: "ASSISTANT", type: "message", content: [{ text: "我是XAgent", type: "text" }] },
+        item: {
+          id: "item-1",
+          role: "ASSISTANT",
+          type: "message",
+          content: [{ text: "我是XAgent", type: "text" }],
+        },
       },
     },
   },
@@ -78,14 +83,21 @@ const runEnded: AsRawEvent = {
   seq: 41,
   eventType: "run.ended",
   frameworkMeta: {
-    public_event: { type: "run.ended", payload: { run_id: "run-1", status: "completed", reason: "MODEL_STOP" } },
+    public_event: {
+      type: "run.ended",
+      payload: { run_id: "run-1", status: "completed", reason: "MODEL_STOP" },
+    },
   },
 };
 
 describe("normalizeEvent", () => {
   it("item.delta → delta（提取 text 分片）", () => {
     expect(normalizeEvent(delta)).toEqual([
-      { type: "delta", text: "我是", _meta: { runId: "run-1", turnId: "turn-1", itemId: "item-1", seq: 37 } },
+      {
+        type: "delta",
+        text: "我是",
+        _meta: { runId: "run-1", turnId: "turn-1", itemId: "item-1", seq: 37 },
+      },
     ]);
   });
 
@@ -93,11 +105,19 @@ describe("normalizeEvent", () => {
     expect(normalizeEvent(completedNotFinal)).toEqual([]);
     const out = normalizeEvent(completedFinal);
     expect(out).toHaveLength(1);
-    expect(out[0]).toMatchObject({ type: "message_completed", text: "我是XAgent，数字员工。", messageId: "msg-1" });
+    expect(out[0]).toMatchObject({
+      type: "message_completed",
+      text: "我是XAgent，数字员工。",
+      messageId: "msg-1",
+    });
   });
 
   it("usage.recorded → usage；run.ended → run_ended", () => {
-    expect(normalizeEvent(usage)[0]).toMatchObject({ type: "usage", model: "glm-5.3", totalTokens: 125 });
+    expect(normalizeEvent(usage)[0]).toMatchObject({
+      type: "usage",
+      model: "glm-5.3",
+      totalTokens: 125,
+    });
     expect(normalizeEvent(runEnded)[0]).toMatchObject({ type: "run_ended", status: "completed" });
   });
 
@@ -108,7 +128,10 @@ describe("normalizeEvent", () => {
       frameworkMeta: {
         public_event: {
           type: "item.completed",
-          payload: { final_output: true, item: { id: "t", role: "ASSISTANT", type: "tool_call", content: [] } },
+          payload: {
+            final_output: true,
+            item: { id: "t", role: "ASSISTANT", type: "tool_call", content: [] },
+          },
         },
       },
     };
@@ -136,7 +159,12 @@ describe("summarizeRun", () => {
     const failed: AsRawEvent = {
       seq: 60,
       eventType: "run.ended",
-      frameworkMeta: { public_event: { type: "run.ended", payload: { run_id: "r", status: "failed", reason: "X" } } },
+      frameworkMeta: {
+        public_event: {
+          type: "run.ended",
+          payload: { run_id: "r", status: "failed", reason: "X" },
+        },
+      },
     };
     const s = summarizeRun(normalizeEvent(failed));
     expect(s.status).toBe("FAILED");

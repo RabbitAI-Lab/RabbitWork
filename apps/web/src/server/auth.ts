@@ -1,7 +1,14 @@
 /** 认证：scrypt 口令 + HMAC 会话 cookie（SYS-001 最小实现）。 */
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { DomainError, ErrCode, SESSION_COOKIE, signSession, verifySession, type SessionClaims } from "@rabbit/shared";
+import {
+  DomainError,
+  ErrCode,
+  SESSION_COOKIE,
+  signSession,
+  verifySession,
+  type SessionClaims,
+} from "@rabbit/shared";
 
 const DEFAULT_ORG_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -58,7 +65,9 @@ export async function requirePermission(permission: string): Promise<SessionClai
   const allowed =
     user.role === "ADMIN" ||
     (user.role === "MEMBER" &&
-      (permission.endsWith(":READ") || permission === "ORG_CHAT:CREATE" || permission === "ORG_CHAT:SEND"));
+      (permission.endsWith(":READ") ||
+        permission === "ORG_CHAT:CREATE" ||
+        permission === "ORG_CHAT:SEND"));
   if (!allowed) throw new DomainError(ErrCode.FORBIDDEN, `无权限点 ${permission}`);
   return user;
 }

@@ -1,91 +1,91 @@
 - generic [active] [ref=f7e1]:
-  - button "Open Next.js Dev Tools" [ref=f7e117] [cursor=pointer]
-  - alert [ref=f7e121]
-  - generic [ref=f7e123]:
-    - complementary [ref=f7e124]:
-      - link "RabbitWork 数字员工平台" [ref=f7e125] [cursor=pointer]:
-        - /url: /office
-        - generic [ref=f7e131]:
-          - generic [ref=f7e132]: RabbitWork
-          - generic [ref=f7e133]: 数字员工平台
-      - navigation [ref=f7e134]:
-        - link [ref=f7e135] [cursor=pointer]:
-          - /url: /staffs
-          - img "appstore" [ref=f7e138]
-          - text: 我的数字员工
-        - link [ref=f7e141] [cursor=pointer]:
-          - /url: /teams
-          - img "team" [ref=f7e143]
-          - text: 我的团队
-        - link [ref=f7e146] [cursor=pointer]:
-          - /url: /office
-          - img "home" [ref=f7e148]
-          - text: 办公室
-      - generic [ref=f7e151]:
-        - generic [ref=f7e152] [cursor=pointer]:
-          - img "user" [ref=f7e154]
-          - generic [ref=f7e157]:
-            - generic [ref=f7e158]: ...
-            - generic [ref=f7e159]: 成员
-        - button "切换主题" [ref=f7e160] [cursor=pointer]:
-          - img "sun" [ref=f7e161]
-    - main [ref=f7e164]:
-      - generic [ref=f7e165]:
-        - generic [ref=f7e166]:
-          - generic [ref=f7e167]:
-            - heading "我的数字员工" [level=1] [ref=f7e168]
-            - paragraph [ref=f7e169]: 管理你的数字员工档案,点击卡片查看详情
-          - button "plus 新建员工" [ref=f7e170] [cursor=pointer]:
-            - img "plus" [ref=f7e172]
-            - generic [ref=f7e176]: 新建员工
-        - generic [ref=f7e177]:
-          - generic [ref=f7e178]:
-            - img "team" [ref=f7e180]
-            - generic [ref=f7e183]:
-              - generic [ref=f7e184]: "0"
-              - generic [ref=f7e185]: 员工总数
-          - generic [ref=f7e186]:
-            - img "rocket" [ref=f7e188]
-            - generic [ref=f7e191]:
-              - generic [ref=f7e192]: "0"
-              - generic [ref=f7e193]: 在岗员工
-          - generic [ref=f7e194]:
-            - img "edit" [ref=f7e196]
-            - generic [ref=f7e199]:
-              - generic [ref=f7e200]: "0"
-              - generic [ref=f7e201]: 草稿
-        - generic [ref=f7e202]:
-          - radiogroup "segmented control" [ref=f7e203]:
-            - generic [ref=f7e204]:
-              - generic [ref=f7e205] [cursor=pointer]:
-                - radio "全部 (0)" [checked]
-                - generic "全部 (0)" [ref=f7e206]
-              - generic [ref=f7e207] [cursor=pointer]:
-                - radio "在岗 (0)"
-                - generic "在岗 (0)" [ref=f7e208]
-              - generic [ref=f7e209] [cursor=pointer]:
-                - radio "草稿 (0)"
-                - generic "草稿 (0)" [ref=f7e210]
-              - generic [ref=f7e211] [cursor=pointer]:
-                - radio "下线 (0)"
-                - generic "下线 (0)" [ref=f7e212]
-          - generic [ref=f7e213]:
-            - img "search" [ref=f7e215]
-            - textbox "搜索姓名 / 岗位 / 工号" [ref=f7e218]
-        - generic [ref=f7e221]:
-          - generic [ref=f7e226]:
-            - heading [level=3] [ref=f7e227]
-            - list [ref=f7e228]:
-              - listitem [ref=f7e229]
-              - listitem [ref=f7e230]
-          - generic [ref=f7e235]:
-            - heading [level=3] [ref=f7e236]
-            - list [ref=f7e237]:
-              - listitem [ref=f7e238]
-              - listitem [ref=f7e239]
-          - generic [ref=f7e244]:
-            - heading [level=3] [ref=f7e245]
-            - list [ref=f7e246]:
-              - listitem [ref=f7e247]
-              - listitem [ref=f7e248]
-  - tooltip "切换亮色" [ref=f7e251]
+    - button "Open Next.js Dev Tools" [ref=f7e117] [cursor=pointer]
+    - alert [ref=f7e121]
+    - generic [ref=f7e123]:
+        - complementary [ref=f7e124]:
+            - link "RabbitWork 数字员工平台" [ref=f7e125] [cursor=pointer]:
+                - /url: /office
+                - generic [ref=f7e131]:
+                    - generic [ref=f7e132]: RabbitWork
+                    - generic [ref=f7e133]: 数字员工平台
+            - navigation [ref=f7e134]:
+                - link [ref=f7e135] [cursor=pointer]:
+                    - /url: /staffs
+                    - img "appstore" [ref=f7e138]
+                    - text: 我的数字员工
+                - link [ref=f7e141] [cursor=pointer]:
+                    - /url: /teams
+                    - img "team" [ref=f7e143]
+                    - text: 我的团队
+                - link [ref=f7e146] [cursor=pointer]:
+                    - /url: /office
+                    - img "home" [ref=f7e148]
+                    - text: 办公室
+            - generic [ref=f7e151]:
+                - generic [ref=f7e152] [cursor=pointer]:
+                    - img "user" [ref=f7e154]
+                    - generic [ref=f7e157]:
+                        - generic [ref=f7e158]: ...
+                        - generic [ref=f7e159]: 成员
+                - button "切换主题" [ref=f7e160] [cursor=pointer]:
+                    - img "sun" [ref=f7e161]
+        - main [ref=f7e164]:
+            - generic [ref=f7e165]:
+                - generic [ref=f7e166]:
+                    - generic [ref=f7e167]:
+                        - heading "我的数字员工" [level=1] [ref=f7e168]
+                        - paragraph [ref=f7e169]: 管理你的数字员工档案,点击卡片查看详情
+                    - button "plus 新建员工" [ref=f7e170] [cursor=pointer]:
+                        - img "plus" [ref=f7e172]
+                        - generic [ref=f7e176]: 新建员工
+                - generic [ref=f7e177]:
+                    - generic [ref=f7e178]:
+                        - img "team" [ref=f7e180]
+                        - generic [ref=f7e183]:
+                            - generic [ref=f7e184]: "0"
+                            - generic [ref=f7e185]: 员工总数
+                    - generic [ref=f7e186]:
+                        - img "rocket" [ref=f7e188]
+                        - generic [ref=f7e191]:
+                            - generic [ref=f7e192]: "0"
+                            - generic [ref=f7e193]: 在岗员工
+                    - generic [ref=f7e194]:
+                        - img "edit" [ref=f7e196]
+                        - generic [ref=f7e199]:
+                            - generic [ref=f7e200]: "0"
+                            - generic [ref=f7e201]: 草稿
+                - generic [ref=f7e202]:
+                    - radiogroup "segmented control" [ref=f7e203]:
+                        - generic [ref=f7e204]:
+                            - generic [ref=f7e205] [cursor=pointer]:
+                                - radio "全部 (0)" [checked]
+                                - generic "全部 (0)" [ref=f7e206]
+                            - generic [ref=f7e207] [cursor=pointer]:
+                                - radio "在岗 (0)"
+                                - generic "在岗 (0)" [ref=f7e208]
+                            - generic [ref=f7e209] [cursor=pointer]:
+                                - radio "草稿 (0)"
+                                - generic "草稿 (0)" [ref=f7e210]
+                            - generic [ref=f7e211] [cursor=pointer]:
+                                - radio "下线 (0)"
+                                - generic "下线 (0)" [ref=f7e212]
+                    - generic [ref=f7e213]:
+                        - img "search" [ref=f7e215]
+                        - textbox "搜索姓名 / 岗位 / 工号" [ref=f7e218]
+                - generic [ref=f7e221]:
+                    - generic [ref=f7e226]:
+                        - heading [level=3] [ref=f7e227]
+                        - list [ref=f7e228]:
+                            - listitem [ref=f7e229]
+                            - listitem [ref=f7e230]
+                    - generic [ref=f7e235]:
+                        - heading [level=3] [ref=f7e236]
+                        - list [ref=f7e237]:
+                            - listitem [ref=f7e238]
+                            - listitem [ref=f7e239]
+                    - generic [ref=f7e244]:
+                        - heading [level=3] [ref=f7e245]
+                        - list [ref=f7e246]:
+                            - listitem [ref=f7e247]
+                            - listitem [ref=f7e248]
+    - tooltip "切换亮色" [ref=f7e251]

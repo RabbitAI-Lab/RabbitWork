@@ -3,7 +3,10 @@ import { Prisma } from "@prisma/client";
 import type { TeamDetailDto, TeamDto, TeamMemberDto } from "@rabbit/shared";
 
 export const MEMBERS_INCLUDE = {
-  members: { include: { employee: true }, orderBy: [{ role: "asc" }, { createdAt: "asc" }] as const },
+  members: {
+    include: { employee: true },
+    orderBy: [{ role: "asc" }, { createdAt: "asc" }] as const,
+  },
 } satisfies Prisma.TeamInclude;
 
 type TeamWithMembers = Prisma.TeamGetPayload<{ include: typeof MEMBERS_INCLUDE }>;

@@ -14,7 +14,9 @@ export async function POST(req: Request, ctx: Ctx) {
   try {
     await requirePermission("ORG_TEAM:UPDATE");
     const { id } = await ctx.params;
-    const team = await prisma.team.findFirst({ where: { id, orgId: defaultOrgId(), deletedAt: null } });
+    const team = await prisma.team.findFirst({
+      where: { id, orgId: defaultOrgId(), deletedAt: null },
+    });
     if (!team) throw new DomainError(ErrCode.NOT_FOUND, "团队不存在");
     const input = await parseBody(req, teamMemberAddInput);
 
@@ -28,7 +30,10 @@ export async function POST(req: Request, ctx: Ctx) {
 
     await prisma.$transaction(async (tx) => {
       if (input.role === "LEADER") {
-        await tx.teamMember.updateMany({ where: { teamId: id, role: "LEADER" }, data: { role: "MEMBER" } });
+        await tx.teamMember.updateMany({
+          where: { teamId: id, role: "LEADER" },
+          data: { role: "MEMBER" },
+        });
       }
       await tx.teamMember.upsert({
         where: { teamId_employeeId: { teamId: id, employeeId: input.employeeId } },

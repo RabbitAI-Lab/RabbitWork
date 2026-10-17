@@ -36,7 +36,9 @@
   font-size: 13px;
   line-height: 20px;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .office-refresh-btn:hover:not(:disabled) {
@@ -166,12 +168,14 @@
   border-radius: 10px;
   background: linear-gradient(165deg, #cfe6ee 0%, #b7d9e8 55%, #a9cfdc 100%);
   border: 3px solid #f7f3ea;
-  box-shadow: inset 0 0 0 1px rgba(31, 62, 71, 0.12), 0 2px 6px rgba(37, 32, 24, 0.06);
+  box-shadow:
+    inset 0 0 0 1px rgba(31, 62, 71, 0.12),
+    0 2px 6px rgba(37, 32, 24, 0.06);
 }
 
 .wall-window::before,
 .wall-window::after {
-  content: '';
+  content: "";
   position: absolute;
   background: rgba(247, 243, 234, 0.9);
 }
@@ -252,7 +256,7 @@
 
 .wall-plant::before {
   /* 盆 */
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -266,7 +270,7 @@
 
 .wall-plant::after {
   /* 叶簇 */
-  content: '';
+  content: "";
   position: absolute;
   bottom: 14px;
   left: 50%;
@@ -275,7 +279,9 @@
   margin-left: -17px;
   border-radius: 50% 50% 46% 46%;
   background: radial-gradient(circle at 34% 30%, #7d9b5a, #5c7a44 75%);
-  box-shadow: -8px 4px 0 -6px #6f8b4e, 8px 5px 0 -6px #66844a;
+  box-shadow:
+    -8px 4px 0 -6px #6f8b4e,
+    8px 5px 0 -6px #66844a;
 }
 
 .wall-plant-left {
@@ -453,7 +459,11 @@
   height: 44px;
   margin-left: -30px;
   border-radius: 20px 20px 14px 14px;
-  background: linear-gradient(180deg, var(--agent-tone, #0f766e), color-mix(in srgb, var(--agent-tone, #0f766e) 78%, #241f18));
+  background: linear-gradient(
+    180deg,
+    var(--agent-tone, #0f766e),
+    color-mix(in srgb, var(--agent-tone, #0f766e) 78%, #241f18)
+  );
   box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.08);
   z-index: 1;
 }
@@ -500,7 +510,9 @@
   box-shadow: none;
   background: transparent;
   font-size: 16px;
-  animation: emote-pop 0.3s ease, zzz-float 2.6s ease-in-out infinite;
+  animation:
+    emote-pop 0.3s ease,
+    zzz-float 2.6s ease-in-out infinite;
 }
 
 /* ---- 基础状态动画 ---- */
@@ -588,7 +600,9 @@
 /* ---- keyframes ---- */
 
 @keyframes agent-blink {
-  0%, 93%, 100% {
+  0%,
+  93%,
+  100% {
     transform: scaleY(1);
   }
   95.5% {
@@ -597,7 +611,8 @@
 }
 
 @keyframes agent-breathe {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -606,7 +621,9 @@
 }
 
 @keyframes agent-glance {
-  0%, 22%, 100% {
+  0%,
+  22%,
+  100% {
     transform: translateX(0) rotate(0deg);
   }
   8% {
@@ -642,7 +659,8 @@
 }
 
 @keyframes agent-nod {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   30% {
@@ -681,7 +699,8 @@
 }
 
 @keyframes emote-jump {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scaleY(1);
   }
   30% {
@@ -716,7 +735,8 @@
 }
 
 @keyframes zzz-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(-50%) translateY(0);
     opacity: 0.85;
   }
@@ -725,7 +745,6 @@
     opacity: 0.5;
   }
 }
-
 
 /* 桌面 */
 
@@ -792,7 +811,7 @@
 
 .desk-monitor::before {
   /* 支架 */
-  content: '';
+  content: "";
   position: absolute;
   bottom: -12px;
   left: 50%;
@@ -805,7 +824,7 @@
 
 .desk-monitor::after {
   /* 底座 */
-  content: '';
+  content: "";
   position: absolute;
   bottom: -17px;
   left: 50%;
@@ -823,7 +842,13 @@
   right: 6px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(126, 217, 201, 0.75), rgba(255, 214, 130, 0.5), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(126, 217, 201, 0.75),
+    rgba(255, 214, 130, 0.5),
+    transparent
+  );
   filter: blur(0.4px);
   animation: monitor-breathe 2.4s ease-in-out infinite;
 }
@@ -868,7 +893,7 @@
 }
 
 .desk-mug::before {
-  content: '';
+  content: "";
   position: absolute;
   right: -5px;
   top: 3px;
@@ -970,7 +995,11 @@
 }
 
 .desk-unit-hover .agent-body {
-  background: linear-gradient(180deg, var(--agent-tone, #0f766e), color-mix(in srgb, var(--agent-tone, #0f766e) 86%, #241f18));
+  background: linear-gradient(
+    180deg,
+    var(--agent-tone, #0f766e),
+    color-mix(in srgb, var(--agent-tone, #0f766e) 86%, #241f18)
+  );
 }
 
 .desk-unit-open .desk-bubble {
@@ -1060,7 +1089,9 @@
   font-size: 13px;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .desk-menu-btn:hover {
@@ -1107,7 +1138,9 @@
   font-size: 12px;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
 
 .desk-emote-chip:hover {
@@ -1189,7 +1222,7 @@
 }
 
 .empty-desk-monitor::before {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -10px;
   left: 50%;
@@ -1523,7 +1556,9 @@
       transparent 32px 38px
     ),
     var(--rw-card);
-  transition: filter var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-spring);
+  transition:
+    filter var(--t-base) var(--ease-out),
+    transform var(--t-base) var(--ease-spring);
   text-align: left;
 }
 .iso-floor-btn:hover {
@@ -1533,7 +1568,9 @@
 /* 当前层：翠绿描边 + 亮灯 + 左侧指示 */
 .iso-floor-btn.is-active {
   border-color: var(--rw-accent);
-  box-shadow: 0 0 0 1px var(--rw-accent), 0 4px 14px var(--rw-ring);
+  box-shadow:
+    0 0 0 1px var(--rw-accent),
+    0 4px 14px var(--rw-ring);
   background:
     repeating-linear-gradient(
       90deg,
@@ -1634,8 +1671,16 @@
   position: absolute;
   inset: 6px var(--pd) 0 0;
   background:
-    repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--rw-border) 55%, transparent) 31px 32px),
-    repeating-linear-gradient(90deg, transparent 0 47px, color-mix(in srgb, var(--rw-border) 55%, transparent) 47px 48px),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 31px,
+      color-mix(in srgb, var(--rw-border) 55%, transparent) 31px 32px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 47px,
+      color-mix(in srgb, var(--rw-border) 55%, transparent) 47px 48px
+    ),
     var(--rw-muted-subtle);
   border: 1px solid var(--rw-border);
   border-radius: 6px;
@@ -1654,7 +1699,9 @@
   background: var(--rw-card);
   border: 1px solid var(--rw-border-strong);
   border-radius: 6px;
-  transition: transform var(--t-base) var(--ease-spring), box-shadow var(--t-base) var(--ease-out),
+  transition:
+    transform var(--t-base) var(--ease-spring),
+    box-shadow var(--t-base) var(--ease-out),
     border-color var(--t-base) var(--ease-out);
 }
 /* 顶面（菱形台面） */
@@ -1672,7 +1719,9 @@
   transform: skewX(-8deg);
   transform-origin: bottom left;
   pointer-events: none;
-  transition: background var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out);
+  transition:
+    background var(--t-base) var(--ease-out),
+    border-color var(--t-base) var(--ease-out);
 }
 /* 右侧面 */
 .iso-pad::after {
@@ -1689,7 +1738,9 @@
   transform: skewY(-8deg);
   transform-origin: top left;
   pointer-events: none;
-  transition: background var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out);
+  transition:
+    background var(--t-base) var(--ease-out),
+    border-color var(--t-base) var(--ease-out);
 }
 .iso-pad:hover .pad-body {
   transform: translateY(-3px);
@@ -1738,8 +1789,16 @@
   inset: -14px;
   transform: translateZ(-14px);
   background:
-    repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--rw-border) 70%, transparent) 27px 28px),
-    repeating-linear-gradient(90deg, transparent 0 27px, color-mix(in srgb, var(--rw-border) 70%, transparent) 27px 28px),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 27px,
+      color-mix(in srgb, var(--rw-border) 70%, transparent) 27px 28px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 27px,
+      color-mix(in srgb, var(--rw-border) 70%, transparent) 27px 28px
+    ),
     color-mix(in srgb, var(--rw-muted-subtle) 82%, var(--rw-fg) 18%);
   border: 1px solid var(--rw-border-strong);
   box-shadow: 0 22px 34px -18px color-mix(in srgb, var(--rw-fg) 38%, transparent);
@@ -1901,8 +1960,16 @@
   position: absolute;
   inset: 0;
   background:
-    repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--rw-border) 65%, transparent) 39px 40px),
-    repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--rw-border) 65%, transparent) 39px 40px),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 39px,
+      color-mix(in srgb, var(--rw-border) 65%, transparent) 39px 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 39px,
+      color-mix(in srgb, var(--rw-border) 65%, transparent) 39px 40px
+    ),
     color-mix(in srgb, var(--rw-muted-subtle) 88%, var(--rw-fg) 12%);
   border: 1px solid var(--rw-border-strong);
   box-shadow: 26px 26px 40px -22px color-mix(in srgb, var(--rw-fg) 45%, transparent);
@@ -1916,7 +1983,11 @@
   height: 132px;
   transform-origin: top;
   transform: rotateX(-90deg);
-  background: linear-gradient(180deg, var(--rw-card), color-mix(in srgb, var(--rw-card) 94%, var(--rw-fg) 6%));
+  background: linear-gradient(
+    180deg,
+    var(--rw-card),
+    color-mix(in srgb, var(--rw-card) 94%, var(--rw-fg) 6%)
+  );
   border-bottom: 4px solid color-mix(in srgb, var(--rw-border-strong) 80%, var(--rw-fg) 20%);
 }
 /* 西墙（沿地板左边缘立起） */
@@ -1928,7 +1999,11 @@
   height: 100%;
   transform-origin: left;
   transform: rotateY(90deg);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--rw-card) 94%, var(--rw-fg) 6%), var(--rw-card));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--rw-card) 94%, var(--rw-fg) 6%),
+    var(--rw-card)
+  );
   border-right: 4px solid color-mix(in srgb, var(--rw-border-strong) 80%, var(--rw-fg) 20%);
 }
 /* 墙面挂件（复用 StaffDeck 绘制） */

@@ -29,7 +29,8 @@ async function seedResources() {
       name: "需求澄清访谈",
       description: "通过五问法澄清模糊需求，输出结构化需求摘要",
       kind: "PROMPT",
-      promptTemplate: "针对用户描述的需求，依次澄清：目标用户、使用场景、成功标准、边界约束、优先级，然后输出需求摘要。",
+      promptTemplate:
+        "针对用户描述的需求，依次澄清：目标用户、使用场景、成功标准、边界约束、优先级，然后输出需求摘要。",
     },
   ];
   for (const s of skills) {
@@ -45,7 +46,9 @@ async function seedResources() {
     { name: "前端规范库", description: "设计系统 v2.1 与编码规范文档" },
   ];
   for (const k of kbs) {
-    const existing = await prisma.knowledgeBase.findFirst({ where: { orgId: DEFAULT_ORG_ID, name: k.name } });
+    const existing = await prisma.knowledgeBase.findFirst({
+      where: { orgId: DEFAULT_ORG_ID, name: k.name },
+    });
     if (!existing) {
       await prisma.knowledgeBase.create({ data: { orgId: DEFAULT_ORG_ID, ...k } });
     }

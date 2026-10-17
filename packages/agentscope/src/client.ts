@@ -47,7 +47,11 @@ export class AgentScopeClient {
 
   // ───── 底层请求 ─────
 
-  private async fetchRaw(path: string, init: RequestInit = {}, timeoutMs?: number): Promise<Response> {
+  private async fetchRaw(
+    path: string,
+    init: RequestInit = {},
+    timeoutMs?: number,
+  ): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs ?? this.opts.timeoutMs);
     try {
@@ -108,7 +112,8 @@ export class AgentScopeClient {
         ...(input.description ? { description: input.description } : {}),
       }),
     });
-    if (!data.agent?.id) throw new AgentScopeError(500, JSON.stringify(data), "AgentScope 建档无返回 id");
+    if (!data.agent?.id)
+      throw new AgentScopeError(500, JSON.stringify(data), "AgentScope 建档无返回 id");
     return data.agent;
   }
 
@@ -227,7 +232,11 @@ function chatHandleOf(data: Record<string, unknown>): ChatHandle {
   const sessionId = str(chat.sessionId) ?? str(data.sessionId);
   const runtimeSessionId = str(chat.runtimeSessionId) ?? str(data.runtimeSessionId);
   if (!chatId || !sessionId || !runtimeSessionId) {
-    throw new AgentScopeError(500, JSON.stringify(data).slice(0, 500), "AgentScope chat 响应缺少关键字段");
+    throw new AgentScopeError(
+      500,
+      JSON.stringify(data).slice(0, 500),
+      "AgentScope chat 响应缺少关键字段",
+    );
   }
   return {
     chatId,

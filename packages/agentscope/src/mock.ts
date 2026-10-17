@@ -114,7 +114,12 @@ export class MockAgentScope {
         frameworkMeta: {
           public_event: {
             type: "item.delta",
-            payload: { run_id: runId, turn_id: turnId, item_id: itemId, content: [{ text, type: "text" }] },
+            payload: {
+              run_id: runId,
+              turn_id: turnId,
+              item_id: itemId,
+              content: [{ text, type: "text" }],
+            },
           },
         },
       });
@@ -169,7 +174,10 @@ export class MockAgentScope {
       seq: ++this.seq,
       eventType: "run.ended",
       frameworkMeta: {
-        public_event: { type: "run.ended", payload: { run_id: runId, turn_id: turnId, status: "completed", reason: "MODEL_STOP" } },
+        public_event: {
+          type: "run.ended",
+          payload: { run_id: runId, turn_id: turnId, status: "completed", reason: "MODEL_STOP" },
+        },
       },
     });
   }

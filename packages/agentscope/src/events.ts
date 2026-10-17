@@ -78,7 +78,12 @@ export function normalizeEvent(raw: AsRawEvent): NormalizedEvent[] {
         return [{ type: "error", message: `运行失败（${p.reason ?? "unknown"}）`, _meta: meta }];
       }
       return [
-        { type: "run_ended", status: p.status ?? "completed", reason: p.reason ?? null, _meta: meta },
+        {
+          type: "run_ended",
+          status: p.status ?? "completed",
+          reason: p.reason ?? null,
+          _meta: meta,
+        },
       ];
     }
     default: {

@@ -1,22 +1,22 @@
 - generic [ref=e3]:
-  - generic [ref=e4]:
-    - heading "RabbitWork 数字员工平台" [level=1] [ref=e10]
-    - paragraph [ref=e11]: 将岗位经验固化为可持续上岗的数字员工
-  - generic [ref=e13]:
-    - generic [ref=e15]:
-      - generic [ref=e16]: 邮箱
-      - generic [ref=e22]:
-        - img "mail" [ref=e24]
-        - textbox "邮箱" [ref=e27]:
-          - /placeholder: admin@rabbitwork.local
-          - text: admin@rabbitwork.local
-    - generic [ref=e29]:
-      - generic [ref=e30]: 密码
-      - generic [ref=e36]:
-        - img "lock" [ref=e38]
-        - textbox "密码" [ref=e41]:
-          - /placeholder: rabbit123
-          - text: rabbit123
-        - img "eye-invisible" [ref=e43] [cursor=pointer]
-    - button "登 录" [ref=e47] [cursor=pointer]
-  - paragraph [ref=e49]: 种子账号 admin@rabbitwork.local · rabbit123
+    - generic [ref=e4]:
+        - heading "RabbitWork 数字员工平台" [level=1] [ref=e10]
+        - paragraph [ref=e11]: 将岗位经验固化为可持续上岗的数字员工
+    - generic [ref=e13]:
+        - generic [ref=e15]:
+            - generic [ref=e16]: 邮箱
+            - generic [ref=e22]:
+                - img "mail" [ref=e24]
+                - textbox "邮箱" [ref=e27]:
+                    - /placeholder: admin@rabbitwork.local
+                    - text: admin@rabbitwork.local
+        - generic [ref=e29]:
+            - generic [ref=e30]: 密码
+            - generic [ref=e36]:
+                - img "lock" [ref=e38]
+                - textbox "密码" [ref=e41]:
+                    - /placeholder: rabbit123
+                    - text: rabbit123
+                - img "eye-invisible" [ref=e43] [cursor=pointer]
+        - button "登 录" [ref=e47] [cursor=pointer]
+    - paragraph [ref=e49]: 种子账号 admin@rabbitwork.local · rabbit123

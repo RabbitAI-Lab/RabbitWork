@@ -1,51 +1,51 @@
 - generic [ref=f11e3]:
-  - complementary [ref=f11e4]:
-    - link "RabbitWork 数字员工平台" [ref=f11e5] [cursor=pointer]:
-      - /url: /office
-      - generic [ref=f11e11]:
-        - generic [ref=f11e12]: RabbitWork
-        - generic [ref=f11e13]: 数字员工平台
-    - navigation [ref=f11e14]:
-      - link [ref=f11e15] [cursor=pointer]:
-        - /url: /staffs
-        - img "appstore" [ref=f11e17]
-        - text: 我的数字员工
-      - link [ref=f11e20] [cursor=pointer]:
-        - /url: /teams
-        - img "team" [ref=f11e22]
-        - text: 我的团队
-      - link [ref=f11e25] [cursor=pointer]:
-        - /url: /office
-        - img "home" [ref=f11e28]
-        - text: 办公室
-    - generic [ref=f11e31]:
-      - generic [ref=f11e32] [cursor=pointer]:
-        - img "user" [ref=f11e34]
-        - generic [ref=f11e37]:
-          - generic [ref=f11e38]: ...
-          - generic [ref=f11e39]: 成员
-      - button "切换主题" [ref=f11e40] [cursor=pointer]:
-        - img "moon" [ref=f11e41]
-  - main [ref=f11e44]:
-    - generic [ref=f11e45]:
-      - generic [ref=f11e46]:
-        - generic [ref=f11e47]:
-          - button "返回办公室" [ref=f11e48]:
-            - img "arrow-left" [ref=f11e50]
-          - generic [ref=f11e53]: 数
-          - generic [ref=f11e55]:
-            - generic [ref=f11e56]: 数字员工
-            - generic [ref=f11e57]: 数字员工
-        - generic [ref=f11e58]: 空闲
-      - generic [ref=f11e64]:
-        - generic [ref=f11e65]:
-          - heading "与 数字员工 开始对话" [level=4] [ref=f11e66]
-          - generic [ref=f11e68]:
-            - button "用一句话介绍你自己" [ref=f11e69]
-            - button "你擅长处理哪些工作？" [ref=f11e70]
-            - button "帮我列一份工作计划" [ref=f11e71]
-        - text: 发布后的数字员工由 AgentScope 运行时驱动
-      - generic [ref=f11e74]:
-        - textbox "向 数字员工 发送消息…（Enter 发送，Shift+Enter 换行）" [ref=f11e75]
-        - button [ref=f11e78]:
-          - img "arrow-up" [ref=f11e80]
+    - complementary [ref=f11e4]:
+        - link "RabbitWork 数字员工平台" [ref=f11e5] [cursor=pointer]:
+            - /url: /office
+            - generic [ref=f11e11]:
+                - generic [ref=f11e12]: RabbitWork
+                - generic [ref=f11e13]: 数字员工平台
+        - navigation [ref=f11e14]:
+            - link [ref=f11e15] [cursor=pointer]:
+                - /url: /staffs
+                - img "appstore" [ref=f11e17]
+                - text: 我的数字员工
+            - link [ref=f11e20] [cursor=pointer]:
+                - /url: /teams
+                - img "team" [ref=f11e22]
+                - text: 我的团队
+            - link [ref=f11e25] [cursor=pointer]:
+                - /url: /office
+                - img "home" [ref=f11e28]
+                - text: 办公室
+        - generic [ref=f11e31]:
+            - generic [ref=f11e32] [cursor=pointer]:
+                - img "user" [ref=f11e34]
+                - generic [ref=f11e37]:
+                    - generic [ref=f11e38]: ...
+                    - generic [ref=f11e39]: 成员
+            - button "切换主题" [ref=f11e40] [cursor=pointer]:
+                - img "moon" [ref=f11e41]
+    - main [ref=f11e44]:
+        - generic [ref=f11e45]:
+            - generic [ref=f11e46]:
+                - generic [ref=f11e47]:
+                    - button "返回办公室" [ref=f11e48]:
+                        - img "arrow-left" [ref=f11e50]
+                    - generic [ref=f11e53]: 数
+                    - generic [ref=f11e55]:
+                        - generic [ref=f11e56]: 数字员工
+                        - generic [ref=f11e57]: 数字员工
+                - generic [ref=f11e58]: 空闲
+            - generic [ref=f11e64]:
+                - generic [ref=f11e65]:
+                    - heading "与 数字员工 开始对话" [level=4] [ref=f11e66]
+                    - generic [ref=f11e68]:
+                        - button "用一句话介绍你自己" [ref=f11e69]
+                        - button "你擅长处理哪些工作？" [ref=f11e70]
+                        - button "帮我列一份工作计划" [ref=f11e71]
+                - text: 发布后的数字员工由 AgentScope 运行时驱动
+            - generic [ref=f11e74]:
+                - textbox "向 数字员工 发送消息…（Enter 发送，Shift+Enter 换行）" [ref=f11e75]
+                - button [ref=f11e78]:
+                    - img "arrow-up" [ref=f11e80]

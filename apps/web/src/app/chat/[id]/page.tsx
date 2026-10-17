@@ -160,12 +160,20 @@ export default function ChatPage() {
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-display truncate text-[15px] font-semibold text-rw-fg">{employeeName}</span>
-              <span className="text-rw-fg-subtle truncate text-xs">{employee?.title ?? "数字员工"}</span>
+              <span className="font-display truncate text-[15px] font-semibold text-rw-fg">
+                {employeeName}
+              </span>
+              <span className="text-rw-fg-subtle truncate text-xs">
+                {employee?.title ?? "数字员工"}
+              </span>
             </div>
           </div>
           <span data-testid="chat-status">
-            <StatusPill custom={streaming ? { label: "回复中…", tone: "success" } : { label: "空闲", tone: "muted" }} />
+            <StatusPill
+              custom={
+                streaming ? { label: "回复中…", tone: "success" } : { label: "空闲", tone: "muted" }
+              }
+            />
           </span>
           <button
             type="button"
@@ -178,7 +186,10 @@ export default function ChatPage() {
         </div>
 
         {/* 消息区（沉浸式无框） */}
-        <div className="scroll-slim flex-1 space-y-4 overflow-y-auto pb-6" data-testid="chat-messages">
+        <div
+          className="scroll-slim flex-1 space-y-4 overflow-y-auto pb-6"
+          data-testid="chat-messages"
+        >
           {messages.length === 0 && !streamingText && !streaming && (
             <div className="flex h-full min-h-[320px] items-center justify-center py-10">
               <Welcome
@@ -187,8 +198,16 @@ export default function ChatPage() {
                     <span className="text-xl font-medium">{employeeName.slice(0, 1)}</span>
                   </Avatar>
                 }
-                title={<span className="font-display text-base font-semibold text-rw-fg">与 {employeeName} 开始对话</span>}
-                description={<span className="text-rw-fg-subtle text-[13px]">发布后的数字员工由 AgentScope 运行时驱动</span>}
+                title={
+                  <span className="font-display text-base font-semibold text-rw-fg">
+                    与 {employeeName} 开始对话
+                  </span>
+                }
+                description={
+                  <span className="text-rw-fg-subtle text-[13px]">
+                    发布后的数字员工由 AgentScope 运行时驱动
+                  </span>
+                }
                 extra={
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {SUGGESTIONS.map((s) => (
@@ -208,7 +227,13 @@ export default function ChatPage() {
           )}
 
           {messages.map((m) => (
-            <MessageBubble key={m.id} role={m.role} content={m.content} usage={m.tokenUsage as TokenUsage | null} name={employeeName} />
+            <MessageBubble
+              key={m.id}
+              role={m.role}
+              content={m.content}
+              usage={m.tokenUsage as TokenUsage | null}
+              name={employeeName}
+            />
           ))}
 
           {streaming && !streamingText && (
@@ -223,15 +248,21 @@ export default function ChatPage() {
               loading
             />
           )}
-          {streamingText && <MessageBubble role="ASSISTANT" content={streamingText} streaming name={employeeName} />}
+          {streamingText && (
+            <MessageBubble role="ASSISTANT" content={streamingText} streaming name={employeeName} />
+          )}
           <div ref={bottomRef} />
         </div>
 
         {/* 输入区（底部悬浮卡） */}
         <div className="pb-5">
           {lastUsage && (
-            <div className="text-rw-fg-subtle mb-2 text-center font-mono text-[11px]" data-testid="chat-usage">
-              {lastUsage.model} · 输入 {lastUsage.input ?? "-"} / 输出 {lastUsage.output ?? "-"} tokens
+            <div
+              className="text-rw-fg-subtle mb-2 text-center font-mono text-[11px]"
+              data-testid="chat-usage"
+            >
+              {lastUsage.model} · 输入 {lastUsage.input ?? "-"} / 输出 {lastUsage.output ?? "-"}{" "}
+              tokens
             </div>
           )}
           <Sender
@@ -267,7 +298,9 @@ export default function ChatPage() {
               )
             }
           />
-          <div className="text-rw-fg-subtle mt-2 text-center font-mono text-[11px]">⌘↵ 发送 · Shift+↵ 换行</div>
+          <div className="text-rw-fg-subtle mt-2 text-center font-mono text-[11px]">
+            ⌘↵ 发送 · Shift+↵ 换行
+          </div>
         </div>
       </div>
     </AppShell>
@@ -294,7 +327,10 @@ function MessageBubble({
       placement={isUser ? "end" : "start"}
       avatar={
         isUser ? undefined : (
-          <Avatar size={28} className="avatar-accent !mt-0.5 !flex !shrink-0 !items-center !justify-center">
+          <Avatar
+            size={28}
+            className="avatar-accent !mt-0.5 !flex !shrink-0 !items-center !justify-center"
+          >
             <span className="text-xs">{avatarName}</span>
           </Avatar>
         )
@@ -302,7 +338,9 @@ function MessageBubble({
       content={
         <>
           <span className="whitespace-pre-wrap">{content}</span>
-          {streaming && <span className="text-rw-accent animate-blink ml-0.5 font-semibold">▍</span>}
+          {streaming && (
+            <span className="text-rw-accent animate-blink ml-0.5 font-semibold">▍</span>
+          )}
           {usage?.total != null && (
             <div className="text-rw-fg-subtle mt-1 font-mono text-[11px]">
               {usage.model} · {usage.input ?? "-"} 输入 / {usage.output ?? "-"} 输出 tokens

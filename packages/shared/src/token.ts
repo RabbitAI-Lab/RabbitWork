@@ -40,13 +40,22 @@ function b64urlDecode(text: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-export async function signSession(claims: Omit<SessionClaims, "exp">, secret: string): Promise<string> {
-  const payload: SessionClaims = { ...claims, exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SEC };
+export async function signSession(
+  claims: Omit<SessionClaims, "exp">,
+  secret: string,
+): Promise<string> {
+  const payload: SessionClaims = {
+    ...claims,
+    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SEC,
+  };
   const body = b64url(JSON.stringify(payload));
   return `${body}.${await hmac(secret, body)}`;
 }
 
-export async function verifySession(token: string | undefined, secret: string): Promise<SessionClaims | null> {
+export async function verifySession(
+  token: string | undefined,
+  secret: string,
+): Promise<SessionClaims | null> {
   if (!token) return null;
   const [body, sig] = token.split(".");
   if (!body || !sig) return null;

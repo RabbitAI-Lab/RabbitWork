@@ -1,4 +1,9 @@
-import { normalizeEvent, summarizeRun, type NormalizedEvent, type RunSummary } from "@rabbit/agentscope";
+import {
+  normalizeEvent,
+  summarizeRun,
+  type NormalizedEvent,
+  type RunSummary,
+} from "@rabbit/agentscope";
 import type { AsRawEvent, ChatEvent } from "@rabbit/agentscope";
 import { DomainError, ErrCode } from "@rabbit/shared";
 import { prisma } from "@/server/db";
@@ -67,7 +72,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
           const provider = getAgentScope();
 
           // ── 基线：拉全量回放，锁定当前 run，补发其历史事件（断线重连场景） ──
-          const initial = await provider.fetchEvents(conversation.asSessionId, conversation.asChatId);
+          const initial = await provider.fetchEvents(
+            conversation.asSessionId,
+            conversation.asChatId,
+          );
           let lastSeq = initial.reduce((m, e) => Math.max(m, e.seq ?? 0), -1);
           let currentRunId = run?.asRunId ?? lastRunIdOf(initial);
           const acc: NormalizedEvent[] = [];
@@ -75,7 +83,15 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
             if (!currentRunId || runIdOf(raw) === currentRunId) acc.push(...normalizeEvent(raw));
           }
           for (const e of acc) send(publicOf(e));
-          if (acc.length > 0) await persist(id, conversation.employeeId, conversation.orgId, summarizeRun(acc), acc, run?.id);
+          if (acc.length > 0)
+            await persist(
+              id,
+              conversation.employeeId,
+              conversation.orgId,
+              summarizeRun(acc),
+              acc,
+              run?.id,
+            );
 
           // ── 轮询直至当前 run 终态 ──
           const deadline = Date.now() + RUN_TIMEOUT_MS;
@@ -89,13 +105,19 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
               ? await prisma.runRecord.findUnique({ where: { id: run.id } })
               : null;
             if (runNow && (runNow.status === "INTERRUPTED" || runNow.status === "FAILED")) {
-              send({ type: runNow.status === "INTERRUPTED" ? "interrupted" : "error", ...(runNow.status === "INTERRUPTED" ? {} : { message: runNow.error ?? "运行失败" }) } as ChatEvent);
+              send({
+                type: runNow.status === "INTERRUPTED" ? "interrupted" : "error",
+                ...(runNow.status === "INTERRUPTED" ? {} : { message: runNow.error ?? "运行失败" }),
+              } as ChatEvent);
               send({ type: "done" });
               close();
               return;
             }
 
-            const raws = await provider.fetchEvents(conversation.asSessionId, conversation.asChatId);
+            const raws = await provider.fetchEvents(
+              conversation.asSessionId,
+              conversation.asChatId,
+            );
             const fresh = raws.filter((e) => (e.seq ?? 0) > lastSeq);
             lastSeq = raws.reduce((m, e) => Math.max(m, e.seq ?? 0), lastSeq);
             const evts = fresh
@@ -177,7 +199,10 @@ async function persist(
 ) {
   void _acc;
   if (runId) {
-    const terminal = summary.status === "SUCCEEDED" || summary.status === "FAILED" || summary.status === "INTERRUPTED";
+    const terminal =
+      summary.status === "SUCCEEDED" ||
+      summary.status === "FAILED" ||
+      summary.status === "INTERRUPTED";
     const run = await prisma.runRecord.findUnique({ where: { id: runId } });
     if (run && run.status !== "INTERRUPTED") {
       await prisma.runRecord.update({
