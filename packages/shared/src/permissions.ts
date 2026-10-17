@@ -42,6 +42,9 @@ export const PERMISSIONS = [
   "ORG_TEAM:CREATE",
   "ORG_TEAM:UPDATE",
   "ORG_TEAM:DELETE",
+  // resource 域（技能/知识库等员工可配置资源）
+  "ORG_RESOURCE:READ",
+  "ORG_RESOURCE:WRITE",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

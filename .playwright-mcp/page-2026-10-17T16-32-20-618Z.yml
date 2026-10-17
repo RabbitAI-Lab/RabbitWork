@@ -1,0 +1,38 @@
+- generic [ref=f18e3]:
+  - complementary [ref=f18e4]:
+    - link "RabbitWork 数字员工平台" [ref=f18e5] [cursor=pointer]:
+      - /url: /office
+      - generic [ref=f18e11]:
+        - generic [ref=f18e12]: RabbitWork
+        - generic [ref=f18e13]: 数字员工平台
+    - navigation [ref=f18e14]:
+      - link [ref=f18e15] [cursor=pointer]:
+        - /url: /staffs
+        - img "appstore" [ref=f18e18]
+        - text: 我的数字员工
+      - link [ref=f18e21] [cursor=pointer]:
+        - /url: /teams
+        - img "team" [ref=f18e23]
+        - text: 我的团队
+      - link [ref=f18e26] [cursor=pointer]:
+        - /url: /office
+        - img "home" [ref=f18e28]
+        - text: 办公室
+    - generic [ref=f18e31]:
+      - generic [ref=f18e32] [cursor=pointer]:
+        - img "user" [ref=f18e34]
+        - generic [ref=f18e37]:
+          - generic [ref=f18e38]: ...
+          - generic [ref=f18e39]: 成员
+      - button "切换主题" [ref=f18e40] [cursor=pointer]:
+        - img "moon" [ref=f18e41]
+  - main [ref=f18e44]:
+    - generic [ref=f18e45]:
+      - generic:
+        - generic:
+          - heading [level=3]
+          - list:
+            - listitem
+            - listitem
+            - listitem
+            - listitem

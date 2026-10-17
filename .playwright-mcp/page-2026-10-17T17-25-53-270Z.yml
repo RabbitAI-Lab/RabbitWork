@@ -1,0 +1,170 @@
+- generic [active] [ref=f36e1]:
+  - button "Open Next.js Dev Tools" [ref=f36e79] [cursor=pointer]
+  - alert [ref=f36e83]
+  - generic [ref=f36e85]:
+    - complementary [ref=f36e86]:
+      - link "RabbitWork 数字员工平台" [ref=f36e87] [cursor=pointer]:
+        - /url: /office
+        - generic [ref=f36e93]:
+          - generic [ref=f36e94]: RabbitWork
+          - generic [ref=f36e95]: 数字员工平台
+      - navigation [ref=f36e96]:
+        - link [ref=f36e97] [cursor=pointer]:
+          - /url: /staffs
+          - img "appstore" [ref=f36e99]
+          - text: 我的数字员工
+        - link [ref=f36e102] [cursor=pointer]:
+          - /url: /teams
+          - img "team" [ref=f36e104]
+          - text: 我的团队
+        - link [ref=f36e107] [cursor=pointer]:
+          - /url: /office
+          - img "home" [ref=f36e110]
+          - text: 办公室
+      - generic [ref=f36e113]:
+        - generic [ref=f36e114] [cursor=pointer]:
+          - img "user" [ref=f36e116]
+          - generic [ref=f36e119]:
+            - generic [ref=f36e120]: 管理员
+            - generic [ref=f36e121]: 管理员
+        - button "切换主题" [ref=f36e122] [cursor=pointer]:
+          - img "sun" [ref=f36e123]
+    - main [ref=f36e126]:
+      - generic [ref=f36e127]:
+        - generic [ref=f36e128]:
+          - generic [ref=f36e129]:
+            - heading "办公室" [level=1] [ref=f36e130]
+            - paragraph [ref=f36e131]: 楼层平面 · 每层 20 个工位 · 点击工位可发起对话或更换座位
+          - button "reload 刷新" [ref=f36e132] [cursor=pointer]:
+            - img "reload" [ref=f36e134]
+            - generic [ref=f36e137]: 刷新
+        - generic [ref=f36e138]:
+          - complementary [ref=f36e139]:
+            - generic [ref=f36e140]:
+              - generic [ref=f36e141]: 办公楼 · 点击楼层查看平面
+              - generic [ref=f36e142]:
+                - button "1F，1 / 20 工位在用" [ref=f36e144] [cursor=pointer]:
+                  - generic:
+                    - generic: 1F
+                    - generic: 1/20
+                - button "2F，0 / 20 工位在用" [ref=f36e145] [cursor=pointer]:
+                  - generic:
+                    - generic: 2F
+                    - generic: 0/20
+                - button "3F，0 / 20 工位在用" [ref=f36e146] [cursor=pointer]:
+                  - generic:
+                    - generic: 3F
+                    - generic: 0/20
+            - generic [ref=f36e147]:
+              - generic [ref=f36e148]:
+                - generic [ref=f36e149]: 待安排就座
+                - generic [ref=f36e150]: "0"
+              - paragraph [ref=f36e151]: 全员就座 🎉
+          - region "1F 楼层平面" [ref=f36e152]:
+            - generic [ref=f36e153]:
+              - heading "1F 楼层平面" [level=2] [ref=f36e154]
+              - generic [ref=f36e155]: 1 / 20 工位在用
+            - generic [ref=f36e156]:
+              - generic [ref=f36e157]:
+                - generic [ref=f36e158]:
+                  - generic [ref=f36e159]: "01"
+                  - generic "在岗" [ref=f36e160]
+                  - generic [ref=f36e182]:
+                    - generic [ref=f36e183]: 小钱
+                    - generic [ref=f36e184]: 前端开发
+                - button "小钱 的工位 1F-1" [ref=f36e185] [cursor=pointer]
+              - generic [ref=f36e187]:
+                - generic [ref=f36e188]: "02"
+                - button "安排员工就座 工位 2" [ref=f36e190] [cursor=pointer]:
+                  - img "user-add" [ref=f36e191]
+                  - generic [ref=f36e194]: 虚位以待
+              - generic [ref=f36e196]:
+                - generic [ref=f36e197]: "03"
+                - button "安排员工就座 工位 3" [ref=f36e199] [cursor=pointer]:
+                  - img "user-add" [ref=f36e200]
+                  - generic [ref=f36e203]: 虚位以待
+              - generic [ref=f36e205]:
+                - generic [ref=f36e206]: "04"
+                - button "安排员工就座 工位 4" [ref=f36e208] [cursor=pointer]:
+                  - img "user-add" [ref=f36e209]
+                  - generic [ref=f36e212]: 虚位以待
+              - generic [ref=f36e214]:
+                - generic [ref=f36e215]: "05"
+                - button "安排员工就座 工位 5" [ref=f36e217] [cursor=pointer]:
+                  - img "user-add" [ref=f36e218]
+                  - generic [ref=f36e221]: 虚位以待
+              - generic [ref=f36e223]:
+                - generic [ref=f36e224]: "06"
+                - button "安排员工就座 工位 6" [ref=f36e226] [cursor=pointer]:
+                  - img "user-add" [ref=f36e227]
+                  - generic [ref=f36e230]: 虚位以待
+              - generic [ref=f36e232]:
+                - generic [ref=f36e233]: "07"
+                - button "安排员工就座 工位 7" [ref=f36e235] [cursor=pointer]:
+                  - img "user-add" [ref=f36e236]
+                  - generic [ref=f36e239]: 虚位以待
+              - generic [ref=f36e241]:
+                - generic [ref=f36e242]: "08"
+                - button "安排员工就座 工位 8" [ref=f36e244] [cursor=pointer]:
+                  - img "user-add" [ref=f36e245]
+                  - generic [ref=f36e248]: 虚位以待
+              - generic [ref=f36e250]:
+                - generic [ref=f36e251]: "09"
+                - button "安排员工就座 工位 9" [ref=f36e253] [cursor=pointer]:
+                  - img "user-add" [ref=f36e254]
+                  - generic [ref=f36e257]: 虚位以待
+              - generic [ref=f36e259]:
+                - generic [ref=f36e260]: "10"
+                - button "安排员工就座 工位 10" [ref=f36e262] [cursor=pointer]:
+                  - img "user-add" [ref=f36e263]
+                  - generic [ref=f36e266]: 虚位以待
+              - generic [ref=f36e268]:
+                - generic [ref=f36e269]: "11"
+                - button "安排员工就座 工位 11" [ref=f36e271] [cursor=pointer]:
+                  - img "user-add" [ref=f36e272]
+                  - generic [ref=f36e275]: 虚位以待
+              - generic [ref=f36e277]:
+                - generic [ref=f36e278]: "12"
+                - button "安排员工就座 工位 12" [ref=f36e280] [cursor=pointer]:
+                  - img "user-add" [ref=f36e281]
+                  - generic [ref=f36e284]: 虚位以待
+              - generic [ref=f36e286]:
+                - generic [ref=f36e287]: "13"
+                - button "安排员工就座 工位 13" [ref=f36e289] [cursor=pointer]:
+                  - img "user-add" [ref=f36e290]
+                  - generic [ref=f36e293]: 虚位以待
+              - generic [ref=f36e295]:
+                - generic [ref=f36e296]: "14"
+                - button "安排员工就座 工位 14" [ref=f36e298] [cursor=pointer]:
+                  - img "user-add" [ref=f36e299]
+                  - generic [ref=f36e302]: 虚位以待
+              - generic [ref=f36e304]:
+                - generic [ref=f36e305]: "15"
+                - button "安排员工就座 工位 15" [ref=f36e307] [cursor=pointer]:
+                  - img "user-add" [ref=f36e308]
+                  - generic [ref=f36e311]: 虚位以待
+              - generic [ref=f36e313]:
+                - generic [ref=f36e314]: "16"
+                - button "安排员工就座 工位 16" [ref=f36e316] [cursor=pointer]:
+                  - img "user-add" [ref=f36e317]
+                  - generic [ref=f36e320]: 虚位以待
+              - generic [ref=f36e322]:
+                - generic [ref=f36e323]: "17"
+                - button "安排员工就座 工位 17" [ref=f36e325] [cursor=pointer]:
+                  - img "user-add" [ref=f36e326]
+                  - generic [ref=f36e329]: 虚位以待
+              - generic [ref=f36e331]:
+                - generic [ref=f36e332]: "18"
+                - button "安排员工就座 工位 18" [ref=f36e334] [cursor=pointer]:
+                  - img "user-add" [ref=f36e335]
+                  - generic [ref=f36e338]: 虚位以待
+              - generic [ref=f36e340]:
+                - generic [ref=f36e341]: "19"
+                - button "安排员工就座 工位 19" [ref=f36e343] [cursor=pointer]:
+                  - img "user-add" [ref=f36e344]
+                  - generic [ref=f36e347]: 虚位以待
+              - generic [ref=f36e349]:
+                - generic [ref=f36e350]: "20"
+                - button "安排员工就座 工位 20" [ref=f36e352] [cursor=pointer]:
+                  - img "user-add" [ref=f36e353]
+                  - generic [ref=f36e356]: 虚位以待

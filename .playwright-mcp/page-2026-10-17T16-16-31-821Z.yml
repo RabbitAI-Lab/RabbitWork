@@ -1,0 +1,54 @@
+- generic [ref=f12e3]:
+  - complementary [ref=f12e4]:
+    - link "RabbitWork 数字员工平台" [ref=f12e5] [cursor=pointer]:
+      - /url: /office
+      - generic [ref=f12e11]:
+        - generic [ref=f12e12]: RabbitWork
+        - generic [ref=f12e13]: 数字员工平台
+    - navigation [ref=f12e14]:
+      - link [ref=f12e15] [cursor=pointer]:
+        - /url: /staffs
+        - img "appstore" [ref=f12e17]
+        - text: 我的数字员工
+      - link [ref=f12e20] [cursor=pointer]:
+        - /url: /teams
+        - img "team" [ref=f12e22]
+        - text: 我的团队
+      - link [ref=f12e25] [cursor=pointer]:
+        - /url: /office
+        - img "home" [ref=f12e28]
+        - text: 办公室
+    - generic [ref=f12e31]:
+      - generic [ref=f12e32] [cursor=pointer]:
+        - img "user" [ref=f12e34]
+        - generic [ref=f12e37]:
+          - generic [ref=f12e38]: ...
+          - generic [ref=f12e39]: 成员
+      - button "切换主题" [ref=f12e40] [cursor=pointer]:
+        - img "moon" [ref=f12e41]
+  - main [ref=f12e44]:
+    - generic [ref=f12e45]:
+      - generic [ref=f12e46]:
+        - generic [ref=f12e47]: 数
+        - generic [ref=f12e50]:
+          - generic [ref=f12e51]: 数字员工
+          - generic [ref=f12e52]: 数字员工
+        - generic [ref=f12e53]: 空闲
+        - button "返回办公室" [ref=f12e56] [cursor=pointer]:
+          - img "arrow-left" [ref=f12e57]
+      - generic [ref=f12e62]:
+        - generic [ref=f12e63]: 数
+        - generic [ref=f12e66]:
+          - generic [ref=f12e67]:
+            - heading "与 数字员工 开始对话" [level=4] [ref=f12e68]
+            - generic [ref=f12e71]:
+              - button "用一句话介绍你自己" [ref=f12e72]
+              - button "你擅长处理哪些工作？" [ref=f12e73]
+              - button "帮我列一份工作计划" [ref=f12e74]
+          - generic [ref=f12e75]: 发布后的数字员工由 AgentScope 运行时驱动
+      - generic [ref=f12e76]:
+        - generic [ref=f12e78]:
+          - textbox "向 数字员工 发送消息…" [ref=f12e79]
+          - button "发送" [disabled] [ref=f12e81]:
+            - img "send" [ref=f12e82]
+        - generic [ref=f12e85]: ⌘↵ 发送 · Shift+↵ 换行

@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { App, Avatar, Button } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { App, Avatar } from "antd";
+import { ArrowLeftOutlined, SendOutlined, StopOutlined } from "@ant-design/icons";
 import { Bubble, Sender, Welcome } from "@ant-design/x";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -20,7 +20,7 @@ interface TokenUsage {
 
 const SUGGESTIONS = ["用一句话介绍你自己", "你擅长处理哪些工作？", "帮我列一份工作计划"];
 
-/** CHAT-001 对话工作台（DS v2.1 §4）：Ant Design X（Bubble/Sender/Welcome）+ SSE 流式渲染 + 打断。 */
+/** CHAT-001 对话工作台（DS v2.1 §4）：antdx Bubble/Sender/Welcome 形状接管 + 沉浸式布局 + SSE 流式。 */
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -145,41 +145,50 @@ export default function ChatPage() {
   const employee = detail.data?.employee;
   const employeeName = employee?.name ?? "数字员工";
 
+  const submit = () => {
+    const v = input.trim();
+    if (v && !send.isPending && !streaming) send.mutate(v);
+  };
+
   return (
     <AppShell active="office">
-      <div className="mx-auto flex h-full max-w-3xl flex-col px-4 py-4 sm:px-6" data-testid="chat-page">
-        {/* 会话头 */}
-        <div className="border-rw-border bg-rw-card mb-3 flex items-center justify-between rounded-rw-md border px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined className="text-rw-fg-subtle" />}
-              aria-label="返回办公室"
-              onClick={() => router.push("/office")}
-            />
-            <Avatar size={38} className="avatar-accent !flex !items-center !justify-center">
-              <span className="text-sm font-medium">{employeeName.slice(0, 1)}</span>
-            </Avatar>
-            <div>
-              <div className="text-[15px] font-semibold text-rw-fg">{employeeName}</div>
-              <div className="text-xs text-rw-fg-subtle">{employee?.title ?? "数字员工"}</div>
+      <div className="mx-auto flex h-full max-w-3xl flex-col px-4 sm:px-6" data-testid="chat-page">
+        {/* 会话头（一行紧凑） */}
+        <div className="flex items-center gap-3 py-4">
+          <Avatar size={34} className="avatar-accent !flex !items-center !justify-center">
+            <span className="text-sm font-medium">{employeeName.slice(0, 1)}</span>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-display truncate text-[15px] font-semibold text-rw-fg">{employeeName}</span>
+              <span className="text-rw-fg-subtle truncate text-xs">{employee?.title ?? "数字员工"}</span>
             </div>
           </div>
           <span data-testid="chat-status">
             <StatusPill custom={streaming ? { label: "回复中…", tone: "success" } : { label: "空闲", tone: "muted" }} />
           </span>
+          <button
+            type="button"
+            aria-label="返回办公室"
+            onClick={() => router.push("/office")}
+            className="text-rw-fg-subtle hover:text-rw-fg hover:bg-rw-muted-subtle flex h-8 w-8 cursor-pointer items-center justify-center rounded-rw-sm transition-colors duration-[140ms] ease-out"
+          >
+            <ArrowLeftOutlined />
+          </button>
         </div>
 
-        {/* 消息区 */}
-        <div
-          className="scroll-slim border-rw-border bg-rw-card/70 flex-1 space-y-4 overflow-y-auto rounded-rw-md border p-5"
-          data-testid="chat-messages"
-        >
+        {/* 消息区（沉浸式无框） */}
+        <div className="scroll-slim flex-1 space-y-4 overflow-y-auto pb-6" data-testid="chat-messages">
           {messages.length === 0 && !streamingText && !streaming && (
-            <div className="flex h-full items-center justify-center py-10">
+            <div className="flex h-full min-h-[320px] items-center justify-center py-10">
               <Welcome
-                title={`与 ${employeeName} 开始对话`}
-                description="发布后的数字员工由 AgentScope 运行时驱动"
+                icon={
+                  <Avatar size={56} className="avatar-accent !flex !items-center !justify-center">
+                    <span className="text-xl font-medium">{employeeName.slice(0, 1)}</span>
+                  </Avatar>
+                }
+                title={<span className="font-display text-base font-semibold text-rw-fg">与 {employeeName} 开始对话</span>}
+                description={<span className="text-rw-fg-subtle text-[13px]">发布后的数字员工由 AgentScope 运行时驱动</span>}
                 extra={
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {SUGGESTIONS.map((s) => (
@@ -218,26 +227,47 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* 输入区（Ant Design X Sender：Enter 发送 / loading 态停止按钮） */}
-        <div className="mt-3">
+        {/* 输入区（底部悬浮卡） */}
+        <div className="pb-5">
           {lastUsage && (
             <div className="text-rw-fg-subtle mb-2 text-center font-mono text-[11px]" data-testid="chat-usage">
               {lastUsage.model} · 输入 {lastUsage.input ?? "-"} / 输出 {lastUsage.output ?? "-"} tokens
             </div>
           )}
           <Sender
+            rootClassName="rw-sender"
             value={input}
             onChange={setInput}
-            onSubmit={(v) => {
-              const c = v.trim();
-              if (c && !send.isPending && !streaming) send.mutate(c);
-            }}
-            loading={streaming}
-            onCancel={() => interrupt.mutate()}
+            onSubmit={submit}
             disabled={send.isPending}
-            placeholder={`向 ${employeeName} 发送消息…（Enter 发送，Shift+Enter 换行）`}
+            placeholder={`向 ${employeeName} 发送消息…`}
             data-testid="chat-input"
+            suffix={() =>
+              streaming ? (
+                <button
+                  type="button"
+                  data-testid="chat-interrupt"
+                  aria-label="打断回复"
+                  className="rw-send-btn rw-stop-btn"
+                  onClick={() => interrupt.mutate()}
+                >
+                  <StopOutlined />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-testid="chat-send"
+                  aria-label="发送"
+                  className="rw-send-btn"
+                  disabled={!input.trim() || send.isPending}
+                  onClick={submit}
+                >
+                  <SendOutlined />
+                </button>
+              )
+            }
           />
+          <div className="text-rw-fg-subtle mt-2 text-center font-mono text-[11px]">⌘↵ 发送 · Shift+↵ 换行</div>
         </div>
       </div>
     </AppShell>
@@ -280,7 +310,7 @@ function MessageBubble({
           )}
         </>
       }
-      classNames={{ content: isUser ? "bubble-user" : "bubble-agent" }}
+      classNames={{ root: "bubble-row", content: isUser ? "bubble-user" : "bubble-agent" }}
       data-testid={isUser ? "bubble-user" : "bubble-assistant"}
     />
   );

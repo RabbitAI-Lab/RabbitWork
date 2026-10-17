@@ -42,10 +42,23 @@ export const staffDto = z.object({
   asAgentId: z.string().nullable(),
   asAgentKey: z.string().nullable(),
   publishedAt: z.string().nullable(),
+  deskFloor: z.number().int().nullable(),
+  deskSeat: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 export type StaffDto = z.infer<typeof staffDto>;
+
+/** 办公室楼层/工位常量（OFFICE-001：每层 20 工位，默认 3 层） */
+export const OFFICE_FLOOR_COUNT = 3;
+export const OFFICE_SEATS_PER_FLOOR = 20;
+
+/** 工位分配/切换（OFFICE-001） */
+export const deskAssignInput = z.object({
+  floor: z.number().int().min(1).max(9),
+  seat: z.number().int().min(1).max(OFFICE_SEATS_PER_FLOOR),
+});
+export type DeskAssignInput = z.infer<typeof deskAssignInput>;
 
 // ───── conversation / chat DTO ─────
 

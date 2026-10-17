@@ -1,5 +1,5 @@
 /** staff/chat/auth 域 API（前端唯一接口层，门禁 4）。 */
-import { del, get, patch, post } from "./client";
+import { del, get, patch, post, put } from "./client";
 import type {
   ConversationDto,
   LoginInput,
@@ -45,6 +45,8 @@ export const staffApi = {
     post<StaffDto & { agentStatus: string; usedFallback: boolean; version: number }>(
       `/api/v1/staffs/${id}/publish`,
     ),
+  assignDesk: (id: string, input: { floor: number; seat: number }) =>
+    put<StaffDto>(`/api/v1/staffs/${id}/desk`, input),
   stats: (id: string) =>
     get<{
       conversationCount: number;

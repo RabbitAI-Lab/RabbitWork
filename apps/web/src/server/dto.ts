@@ -19,6 +19,8 @@ export function toStaffDto(s: DigitalEmployee): StaffDto {
     asAgentId: s.asAgentId,
     asAgentKey: s.asAgentKey,
     publishedAt: s.publishedAt?.toISOString() ?? null,
+    deskFloor: s.deskFloor,
+    deskSeat: s.deskSeat,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
   };

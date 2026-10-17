@@ -1,0 +1,106 @@
+- generic [ref=f18e1]:
+  - button "Open Next.js Dev Tools" [ref=f18e51] [cursor=pointer]
+  - alert [ref=f18e55]
+  - generic [ref=f18e57]:
+    - complementary [ref=f18e58]:
+      - link "RabbitWork 数字员工平台" [ref=f18e59] [cursor=pointer]:
+        - /url: /office
+        - generic [ref=f18e65]:
+          - generic [ref=f18e66]: RabbitWork
+          - generic [ref=f18e67]: 数字员工平台
+      - navigation [ref=f18e68]:
+        - link [ref=f18e69] [cursor=pointer]:
+          - /url: /staffs
+          - img "appstore" [ref=f18e72]
+          - text: 我的数字员工
+        - link [ref=f18e75] [cursor=pointer]:
+          - /url: /teams
+          - img "team" [ref=f18e77]
+          - text: 我的团队
+        - link [ref=f18e80] [cursor=pointer]:
+          - /url: /office
+          - img "home" [ref=f18e82]
+          - text: 办公室
+      - generic [ref=f18e85]:
+        - generic [ref=f18e86] [cursor=pointer]:
+          - img "user" [ref=f18e88]
+          - generic [ref=f18e91]:
+            - generic [ref=f18e92]: 管理员
+            - generic [ref=f18e93]: 管理员
+        - button "切换主题" [ref=f18e94] [cursor=pointer]:
+          - img "sun" [ref=f18e95]
+    - main [ref=f18e98]:
+      - generic [ref=f18e99]:
+        - button "arrow-left 返回员工列表" [ref=f18e100] [cursor=pointer]:
+          - img "arrow-left" [ref=f18e102]
+          - generic [ref=f18e105]: 返回员工列表
+        - generic [ref=f18e107]:
+          - generic [ref=f18e108]:
+            - generic [ref=f18e129]: 小钱
+            - generic [ref=f18e130]:
+              - button "send 去对话" [ref=f18e131] [cursor=pointer]:
+                - img "send" [ref=f18e133]
+                - generic [ref=f18e136]: 去对话
+              - button "edit 编辑资料" [ref=f18e137] [cursor=pointer]:
+                - img "edit" [ref=f18e139]
+                - generic [ref=f18e142]: 编辑资料
+          - generic [ref=f18e143]:
+            - generic [ref=f18e144]:
+              - heading "小钱" [level=1] [ref=f18e145]
+              - generic [ref=f18e146]: 前端开发
+              - generic [ref=f18e147]: 在岗
+            - generic [ref=f18e149]:
+              - generic [ref=f18e150]: 工号 STAFF-20261017-R84G
+              - generic [ref=f18e151]: 组织内
+              - generic [ref=f18e152]: 创建于 2026-10-17
+              - generic [ref=f18e153]: 上岗于 2026-10-17
+              - generic [ref=f18e154]: staff-STAFF-20261017-R84G
+            - paragraph [ref=f18e155]: 前端开发
+            - generic [ref=f18e156]:
+              - generic [ref=f18e157]:
+                - strong [ref=f18e158]: "4"
+                - generic [ref=f18e159]: 会话
+              - generic [ref=f18e160]:
+                - strong [ref=f18e161]: "3"
+                - generic [ref=f18e162]: 运行
+              - generic [ref=f18e163]:
+                - strong [ref=f18e164]: 100%
+                - generic [ref=f18e165]: 成功率
+              - generic [ref=f18e166]:
+                - strong [ref=f18e167]: "0"
+                - generic [ref=f18e168]: 失败/打断
+          - button "删除" [ref=f18e170] [cursor=pointer]:
+            - img "delete" [ref=f18e172]
+        - generic [ref=f18e175]:
+          - tablist [ref=f18e176]:
+            - generic [ref=f18e178]:
+              - tab "工作数据" [ref=f18e180] [cursor=pointer]
+              - tab "会话记录" [active] [selected] [ref=f18e182] [cursor=pointer]
+          - tabpanel "会话记录" [ref=f18e215]:
+            - generic [ref=f18e216]:
+              - heading "会话记录" [level=2] [ref=f18e217]
+              - generic [ref=f18e218]:
+                - button "message 与 小钱 的对话 最近消息 — 进行中" [ref=f18e219]:
+                  - img "message" [ref=f18e220]
+                  - generic [ref=f18e223]:
+                    - generic [ref=f18e224]: 与 小钱 的对话
+                    - generic [ref=f18e225]: 最近消息 —
+                  - generic [ref=f18e226]: 进行中
+                - button "message 与 小钱 的对话 最近消息 — 进行中" [ref=f18e227]:
+                  - img "message" [ref=f18e228]
+                  - generic [ref=f18e231]:
+                    - generic [ref=f18e232]: 与 小钱 的对话
+                    - generic [ref=f18e233]: 最近消息 —
+                  - generic [ref=f18e234]: 进行中
+                - button "message 小钱·1 最近消息 2026-10-17 16:17 空闲" [ref=f18e235]:
+                  - img "message" [ref=f18e236]
+                  - generic [ref=f18e239]:
+                    - generic [ref=f18e240]: 小钱·1
+                    - generic [ref=f18e241]: 最近消息 2026-10-17 16:17
+                  - generic [ref=f18e242]: 空闲
+                - button "message 小钱·用一句话介绍你自己 最近消息 2026-10-17 15:03 空闲" [ref=f18e243]:
+                  - img "message" [ref=f18e244]
+                  - generic [ref=f18e247]:
+                    - generic [ref=f18e248]: 小钱·用一句话介绍你自己
+                    - generic [ref=f18e249]: 最近消息 2026-10-17 15:03
+                  - generic [ref=f18e250]: 空闲

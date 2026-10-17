@@ -125,6 +125,8 @@ model DigitalEmployee {
   asAgentKey    String?   @map("as_agent_key") @db.VarChar(128)
   asVersion     Int?      @map("as_version")
   publishedAt   DateTime? @map("published_at") @db.Timestamptz(3)
+  deskFloor     Int?      @map("desk_floor") // 办公室楼层（OFFICE-001：1 起）
+  deskSeat      Int?      @map("desk_seat") // 层内工位号（1-20）
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(3)
@@ -138,6 +140,7 @@ model DigitalEmployee {
   teamMemberships  TeamMember[]
 
   @@unique([orgId, code])
+  @@unique([orgId, deskFloor, deskSeat]) // 工位唯一（PG 默认 NULLS DISTINCT，未就座不受约束）
   @@index([orgId, deletedAt])
   @@index([status])
   @@map("digital_employees")
