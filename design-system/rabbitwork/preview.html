@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RabbitWork Design System v2 — Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     RabbitWork DS v2.1 — 语义 token 单源（亮/暗）+ 分层动效体系
+     现代工具感 × 高级编排：中性灰阶 + 运行绿 · 锐利圆角 4/8/12
+     动效四层：L1 交互反馈 · L2 状态过渡 · L3 编排揭示 · L4 环境氛围
+     ============================================================ */
+  :root {
+    --rw-bg: #FAFAFA;
+    --rw-card: #FFFFFF;
+    --rw-fg: #0F172A;
+    --rw-fg-muted: #64748B;
+    --rw-fg-subtle: #94A3B8;
+    --rw-border: #E4E8EE;
+    --rw-border-strong: #CBD5E1;
+    --rw-accent: #10B981;
+    --rw-accent-hover: #059669;
+    --rw-accent-fg: #FFFFFF;
+    --rw-accent-subtle: #ECFDF5;
+    --rw-success: #10B981;
+    --rw-success-subtle: #ECFDF5;
+    --rw-warning: #D97706;
+    --rw-warning-subtle: #FEF3E2;
+    --rw-danger: #DC2626;
+    --rw-danger-subtle: #FDECEC;
+    --rw-muted-subtle: #F1F5F9;
+    --rw-ring: rgba(16, 185, 129, 0.45);
+    --rw-shadow-float: 0 8px 24px rgba(15, 23, 42, 0.12);
+    /* 氛围层（仅 hero/空态背景，禁入按钮横幅） */
+    --rw-aurora-a: rgba(16, 185, 129, 0.07);
+    --rw-aurora-b: rgba(14, 165, 233, 0.05);
+    --font-display: "Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+    --font-body: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    /* 动效刻度 */
+    --t-fast: 140ms;
+    --t-base: 200ms;
+    --t-slow: 360ms;
+    --t-reveal: 520ms;
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+  }
+  .dark {
+    --rw-bg: #0B0F1A;
+    --rw-card: #111827;
+    --rw-fg: #F1F5F9;
+    --rw-fg-muted: #94A3B8;
+    --rw-fg-subtle: #5B6B82;
+    --rw-border: #1E293B;
+    --rw-border-strong: #334155;
+    --rw-accent: #34D399;
+    --rw-accent-hover: #6EE7B7;
+    --rw-accent-fg: #052E21;
+    --rw-accent-subtle: rgba(52, 211, 153, 0.12);
+    --rw-success: #34D399;
+    --rw-success-subtle: rgba(52, 211, 153, 0.12);
+    --rw-warning: #F59E0B;
+    --rw-warning-subtle: rgba(245, 158, 11, 0.14);
+    --rw-danger: #F87171;
+    --rw-danger-subtle: rgba(248, 113, 113, 0.12);
+    --rw-muted-subtle: rgba(148, 163, 184, 0.10);
+    --rw-ring: rgba(52, 211, 153, 0.5);
+    --rw-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --rw-aurora-a: rgba(52, 211, 153, 0.09);
+    --rw-aurora-b: rgba(56, 189, 248, 0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--rw-bg);
+    color: var(--rw-fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out);
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--rw-accent-subtle); color: var(--rw-accent-hover); }
+  :focus-visible { outline: 2px solid var(--rw-accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ═══ L4 环境氛围层：极光微光 + 噪点（fixed，pointer-events 穿透）═══ */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    overflow: hidden;
+  }
+  .aurora {
+    position: absolute; border-radius: 50%; filter: blur(90px);
+    animation: drift 46s var(--ease-out) infinite alternate;
+  }
+  .aurora.a1 { width: 640px; height: 640px; top: -280px; right: -160px; background: radial-gradient(circle, var(--rw-aurora-a) 0%, transparent 65%); }
+  .aurora.a2 { width: 520px; height: 520px; top: 120px; left: -220px; background: radial-gradient(circle, var(--rw-aurora-b) 0%, transparent 65%); animation-duration: 58s; animation-direction: alternate-reverse; }
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(-60px, 50px, 0) scale(1.12); }
+  }
+  .grain {
+    position: absolute; inset: 0; opacity: 0.5; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+  main, .topbar { position: relative; z-index: 1; }
+
+  /* ── 顶栏（玻璃拟态）─────────────────── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 16px;
+    height: 56px; padding: 0 28px;
+    background: color-mix(in srgb, var(--rw-bg) 78%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid var(--rw-border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+  .logo-mark {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--rw-accent), var(--rw-accent-hover));
+    box-shadow: 0 0 12px var(--rw-ring);
+    display: grid; place-items: center;
+    color: var(--rw-accent-fg); font-size: 12px; font-weight: 700;
+  }
+  .logo .ver { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-subtle); font-weight: 400; }
+  .topbar nav { display: flex; gap: 2px; margin-left: 12px; }
+  .topbar nav a {
+    font-size: 13px; color: var(--rw-fg-muted); text-decoration: none;
+    padding: 5px 10px; border-radius: var(--radius-sm);
+    transition: color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+  }
+  .topbar nav a:hover { color: var(--rw-fg); background: var(--rw-muted-subtle); }
+  .theme-toggle {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--rw-fg-muted);
+    background: var(--rw-card);
+    border: 1px solid var(--rw-border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px; cursor: pointer;
+    transition: border-color var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out), transform var(--t-fast) var(--ease-spring);
+  }
+  .theme-toggle:hover { border-color: var(--rw-border-strong); color: var(--rw-fg); }
+  .theme-toggle:active { transform: scale(0.96); }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 48px 28px 96px; }
+
+  /* ── 分区结构 ─────────────────────────── */
+  section { margin-top: 72px; scroll-margin-top: 72px; }
+  .sec-tag {
+    font-family: var(--font-mono); font-size: 12px; color: var(--rw-accent);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sec-tag::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, var(--rw-border), transparent); }
+  h2.sec-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 10px 0 6px; letter-spacing: -0.01em; }
+  .sec-desc { font-size: 13px; color: var(--rw-fg-muted); max-width: 660px; margin-bottom: 24px; }
+  .sec-desc b { color: var(--rw-fg); font-weight: 500; }
+
+  /* ═══ L3 编排揭示：区块入场 ═══ */
+  .reveal { opacity: 0; transform: translateY(18px); }
+  .reveal.in { animation: reveal-up var(--t-reveal) var(--ease-out) both; }
+  @keyframes reveal-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  /* ── Hero：编排式入场 ═══ L3 ═══ ────── */
+  .hero { margin-top: 44px; position: relative; }
+  .hero .kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--rw-accent);
+    border: 1px solid var(--rw-accent); border-radius: 999px;
+    padding: 4px 14px; margin-bottom: 22px;
+    background: var(--rw-accent-subtle);
+    opacity: 0; animation: hero-in var(--t-reveal) var(--ease-out) 0.05s both;
+  }
+  .hero .kicker .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--rw-accent); animation: pulse-dot 2.4s ease-in-out infinite; }
+  .hero h1 {
+    font-family: var(--font-display); font-size: 38px; font-weight: 600;
+    letter-spacing: -0.025em; line-height: 1.22;
+  }
+  .hero h1 .line { display: block; opacity: 0; animation: hero-in var(--t-reveal) var(--ease-out) both; }
+  .hero h1 .line:nth-child(2) { animation-delay: 110ms; }
+  .hero h1 em { font-style: normal; color: var(--rw-accent); position: relative; }
+  .hero h1 em::after {
+    content: ""; position: absolute; left: 0; bottom: 4px; height: 8px; width: 100%;
+    background: var(--rw-accent-subtle); z-index: -1; border-radius: 3px;
+    transform: scaleX(0); transform-origin: left;
+    animation: underline-in 480ms var(--ease-out) 520ms both;
+  }
+  @keyframes underline-in { to { transform: scaleX(1); } }
+  .hero p { margin-top: 16px; color: var(--rw-fg-muted); font-size: 15px; max-width: 580px; opacity: 0; animation: hero-in var(--t-reveal) var(--ease-out) 240ms both; }
+  .hero .meta { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px 24px; font-family: var(--font-mono); font-size: 12px; color: var(--rw-fg-subtle); opacity: 0; animation: hero-in var(--t-reveal) var(--ease-out) 360ms both; }
+  .hero .meta b { color: var(--rw-fg-muted); font-weight: 500; }
+  @keyframes hero-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  /* ── 色板 ═══ L2 hover ═══ ───────────── */
+  .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .swatch {
+    border: 1px solid var(--rw-border); border-radius: var(--radius-md);
+    background: var(--rw-card); overflow: hidden; position: relative;
+    transition: border-color var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-spring), box-shadow var(--t-base) var(--ease-out);
+  }
+  .swatch::before { /* 顶线高光：hover 质感 */
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rw-accent), transparent);
+    opacity: 0; transition: opacity var(--t-base) var(--ease-out);
+  }
+  .swatch:hover { border-color: var(--rw-border-strong); transform: translateY(-3px); box-shadow: var(--rw-shadow-float); }
+  .swatch:hover::before { opacity: 0.8; }
+  .swatch .chip { height: 56px; }
+  .swatch .info { padding: 10px 12px; display: grid; gap: 2px; }
+  .swatch .name { font-size: 13px; font-weight: 500; }
+  .swatch .name .role { color: var(--rw-fg-subtle); font-weight: 400; font-size: 12px; }
+  .swatch .varname { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-muted); }
+  .swatch .hex { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-subtle); }
+
+  /* ── 状态（在岗 dot 呼吸 = 语义化 L4）── */
+  .status-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .st-run { background: var(--rw-success-subtle); color: var(--rw-success); }
+  .st-run .dot { background: var(--rw-success); animation: pulse-dot 2.4s ease-in-out infinite; box-shadow: 0 0 0 0 var(--rw-ring); }
+  .st-draft { background: var(--rw-warning-subtle); color: var(--rw-warning); } .st-draft .dot { background: var(--rw-warning); }
+  .st-off { background: var(--rw-danger-subtle); color: var(--rw-danger); } .st-off .dot { background: var(--rw-danger); }
+  .st-off-duty { background: var(--rw-muted-subtle); color: var(--rw-fg-muted); } .st-off-duty .dot { background: var(--rw-fg-subtle); }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  .status-note { width: 100%; font-size: 12px; color: var(--rw-fg-subtle); margin-top: 6px; font-family: var(--font-mono); }
+
+  /* ── 字体阶梯 ─────────────────────────── */
+  .panel { border: 1px solid var(--rw-border); border-radius: var(--radius-md); background: var(--rw-card); padding: 24px; }
+  .type-scale { display: grid; gap: 18px; }
+  .type-row { display: flex; align-items: baseline; gap: 20px; border-bottom: 1px dashed var(--rw-border); padding-bottom: 16px; }
+  .type-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .type-label { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-subtle); width: 190px; flex-shrink: 0; }
+  .t-display { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; }
+  .t-h1 { font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .t-h2 { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+  .t-body { font-size: 13px; }
+  .t-caption { font-size: 12px; color: var(--rw-fg-muted); }
+  .t-mono { font-family: var(--font-mono); font-size: 13px; color: var(--rw-accent-hover); background: var(--rw-accent-subtle); padding: 2px 8px; border-radius: 4px; }
+
+  /* ── 组件：L1 交互反馈 ═══ ═══ ═══ ───── */
+  .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .comp-label { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-subtle); margin-bottom: 12px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    padding: 7px 16px; border-radius: var(--radius-sm);
+    border: 1px solid transparent; cursor: pointer;
+    transition: background var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-spring),
+                box-shadow var(--t-base) var(--ease-out);
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--rw-accent); color: var(--rw-accent-fg); }
+  .btn-primary:hover { background: var(--rw-accent-hover); box-shadow: 0 2px 12px var(--rw-ring); }
+  .btn-secondary { background: var(--rw-card); color: var(--rw-fg); border-color: var(--rw-border-strong); }
+  .btn-secondary:hover { border-color: var(--rw-fg-muted); }
+  .btn-ghost { background: transparent; color: var(--rw-fg-muted); }
+  .btn-ghost:hover { color: var(--rw-fg); background: var(--rw-muted-subtle); }
+  .btn-danger { background: transparent; color: var(--rw-danger); border-color: var(--rw-danger); }
+  .btn-danger:hover { background: var(--rw-danger-subtle); }
+  .btn:focus-visible { outline: 2px solid var(--rw-ring); outline-offset: 2px; }
+
+  .field { display: grid; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--rw-fg-muted); }
+  .input {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--rw-fg); background: var(--rw-bg);
+    border: 1px solid var(--rw-border-strong);
+    border-radius: var(--radius-sm); padding: 8px 12px;
+    transition: border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
+    width: 100%;
+  }
+  .input::placeholder { color: var(--rw-fg-subtle); }
+  .input:hover { border-color: var(--rw-fg-subtle); }
+  .input:focus { outline: none; border-color: var(--rw-accent); box-shadow: 0 0 0 3px var(--rw-ring); }
+  .input.mono { font-family: var(--font-mono); font-size: 12px; }
+
+  /* shimmer 骨架（加载态规范） */
+  .skeleton-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+  .sk { background: var(--rw-muted-subtle); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
+  .sk::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rw-card) 80%, transparent), transparent);
+    transform: translateX(-100%); animation: shimmer 1.6s infinite;
+  }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+
+  /* ── 页面小样：卡片墙 ═══ L3 错峰 + L2 hover ═══ */
+  .demo-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .demo-bar .stats { display: flex; gap: 24px; font-family: var(--font-mono); font-size: 12px; color: var(--rw-fg-muted); }
+  .demo-bar .stats b { color: var(--rw-fg); font-weight: 600; font-family: var(--font-display); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 860px) { .card-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 580px) { .card-grid { grid-template-columns: 1fr; } }
+  .staff-card {
+    background: var(--rw-card); border: 1px solid var(--rw-border);
+    border-radius: var(--radius-md); padding: 16px 18px;
+    cursor: pointer; position: relative;
+    transition: border-color var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-spring), box-shadow var(--t-base) var(--ease-out);
+    animation: fade-up 0.44s var(--ease-out) both;
+  }
+  .staff-card::before { /* hover 顶线流光 */
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rw-accent), transparent);
+    opacity: 0; transition: opacity var(--t-slow) var(--ease-out);
+  }
+  .staff-card:hover { border-color: var(--rw-accent); transform: translateY(-3px); box-shadow: var(--rw-shadow-float); }
+  .staff-card:hover::before { opacity: 1; }
+  .staff-card:active { transform: translateY(-1px) scale(0.995); }
+  .staff-card:nth-child(1) { animation-delay: 80ms; }
+  .staff-card:nth-child(2) { animation-delay: 160ms; }
+  .staff-card:nth-child(3) { animation-delay: 240ms; }
+  .staff-head { display: flex; align-items: center; gap: 11px; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: var(--radius-sm);
+    display: grid; place-items: center; flex-shrink: 0;
+    font-family: var(--font-display); font-weight: 600; font-size: 15px;
+    color: var(--rw-accent-fg); background: linear-gradient(135deg, var(--rw-accent), var(--rw-accent-hover));
+  }
+  .avatar.alt { background: var(--rw-muted-subtle); color: var(--rw-fg-muted); }
+  .staff-name { font-size: 14px; font-weight: 600; }
+  .staff-title { font-size: 12px; color: var(--rw-fg-subtle); font-family: var(--font-mono); }
+  .staff-card .status-pill { margin-left: auto; }
+  .staff-desc { margin-top: 12px; font-size: 12.5px; color: var(--rw-fg-muted); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color var(--t-base) var(--ease-out); }
+  .staff-card:hover .staff-desc { color: var(--rw-fg); }
+  .staff-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rw-border); display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--rw-fg-subtle); }
+  .staff-foot .tag { font-size: 11px; color: var(--rw-fg-muted); background: var(--rw-muted-subtle); border-radius: 4px; padding: 2px 8px; }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  /* ── 对话：Ant Design X ═══ 气泡 pop-in ═══ */
+  .chat-demo { display: grid; gap: 12px; }
+  .bubble { max-width: 76%; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.55; animation: bubble-in 0.36s var(--ease-spring) both; }
+  .bubble:nth-child(2) { animation-delay: 0.8s; }
+  .bubble-row:nth-child(3) .bubble { animation-delay: 1.6s; }
+  .bubble.user { justify-self: end; background: var(--rw-accent); color: var(--rw-accent-fg); border-bottom-right-radius: 2px; }
+  .bubble.agent { justify-self: start; background: var(--rw-card); border: 1px solid var(--rw-border); border-bottom-left-radius: 2px; }
+  @keyframes bubble-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .bubble-row { display: flex; gap: 10px; align-items: flex-start; }
+  .bubble-row .avatar { width: 28px; height: 28px; font-size: 12px; }
+  .typing { display: inline-flex; gap: 4px; align-items: center; height: 18px; }
+  .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--rw-fg-subtle); animation: blink 0.9s steps(2) infinite; }
+  .typing i:nth-child(2) { animation-delay: 150ms; }
+  .typing i:nth-child(3) { animation-delay: 300ms; }
+  @keyframes blink { 50% { opacity: 0.25; } }
+
+  .prompts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .prompt-chip {
+    font-size: 12px; color: var(--rw-fg-muted);
+    border: 1px solid var(--rw-border-strong); border-radius: var(--radius-sm);
+    background: var(--rw-card); padding: 5px 12px; cursor: pointer;
+    transition: all var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-spring);
+  }
+  .prompt-chip:hover { color: var(--rw-accent); border-color: var(--rw-accent); transform: translateY(-1px); }
+  .prompt-chip:active { transform: scale(0.95); }
+
+  .sender {
+    border: 1px solid var(--rw-border-strong); border-radius: var(--radius-sm);
+    background: var(--rw-card); margin-top: 16px;
+    transition: border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
+  }
+  .sender:focus-within { border-color: var(--rw-accent); box-shadow: 0 0 0 3px var(--rw-ring); }
+  .sender textarea {
+    width: 100%; border: none; resize: none; background: transparent; outline: none;
+    font-family: var(--font-body); font-size: 13px; color: var(--rw-fg);
+    padding: 10px 12px 4px; line-height: 1.6;
+  }
+  .sender textarea::placeholder { color: var(--rw-fg-subtle); }
+  .sender-bar { display: flex; align-items: center; gap: 8px; padding: 6px 8px 8px 12px; }
+  .sender-bar .hint { font-size: 11px; color: var(--rw-fg-subtle); font-family: var(--font-mono); }
+  .send-btn {
+    margin-left: auto; width: 28px; height: 28px; border-radius: var(--radius-sm);
+    background: var(--rw-accent); color: var(--rw-accent-fg); border: none; cursor: pointer;
+    display: grid; place-items: center; font-size: 13px;
+    transition: background var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-spring), box-shadow var(--t-base) var(--ease-out);
+  }
+  .send-btn:hover { background: var(--rw-accent-hover); box-shadow: 0 2px 10px var(--rw-ring); }
+  .send-btn:active { transform: scale(0.9); }
+
+  /* ── 形状/动效速览 ────────────────────── */
+  .shape-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .shape-item { text-align: center; }
+  .shape-box { height: 64px; background: var(--rw-muted-subtle); border: 1px solid var(--rw-border-strong); margin-bottom: 8px; transition: border-radius var(--t-slow) var(--ease-out), background var(--t-slow) var(--ease-out); }
+  .shape-item:hover .shape-box { border-radius: 0px; background: var(--rw-accent-subtle); }
+  .shape-item span { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-muted); }
+
+  .motion-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .motion-table th { font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-subtle); text-align: left; font-weight: 500; padding: 8px 12px; border-bottom: 1px solid var(--rw-border); }
+  .motion-table td { padding: 10px 12px; border-bottom: 1px solid var(--rw-border); color: var(--rw-fg-muted); }
+  .motion-table tr:last-child td { border-bottom: none; }
+  .motion-table td:first-child { font-family: var(--font-mono); color: var(--rw-accent); white-space: nowrap; }
+  .motion-table b { color: var(--rw-fg); font-weight: 500; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rw-border); font-family: var(--font-mono); font-size: 11px; color: var(--rw-fg-subtle); display: flex; justify-content: space-between; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="aurora a1"></div>
+    <div class="aurora a2"></div>
+    <div class="grain"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="logo"><span class="logo-mark">R</span>RabbitWork <span class="ver">DS v2.1</span></div>
+    <nav>
+      <a href="#colors">色彩</a>
+      <a href="#status">状态</a>
+      <a href="#type">字体</a>
+      <a href="#components">组件</a>
+      <a href="#page-demo">页面小样</a>
+      <a href="#chat">对话</a>
+      <a href="#motion">动效</a>
+    </nav>
+    <button class="theme-toggle" id="themeBtn" aria-label="切换亮暗主题">◐ theme: light</button>
+  </header>
+
+  <main>
+    <div class="hero">
+      <span class="kicker"><span class="pulse"></span>RabbitWork Design System · v2.1</span>
+      <h1>
+        <span class="line">中性灰阶为骨，</span>
+        <span class="line"><em>运行绿</em>为魂。</span>
+      </h1>
+      <p>面向数字员工平台的生产力界面 —— 编排式入场、语义化呼吸、玻璃质感与微光氛围。95% 中性色，单一强调色只做语义信号；亮暗双主题同源切换。</p>
+      <div class="meta">
+        <span><b>风格</b> Minimalism / Swiss · Tooling</span>
+        <span><b>强调</b> #10B981 → #34D399</span>
+        <span><b>圆角</b> 4 / 8 / 12</span>
+        <span><b>AI 组件</b> Ant Design X</span>
+        <span><b>动效</b> 四层体系 L1–L4</span>
+      </div>
+    </div>
+
+    <!-- 色彩 -->
+    <section id="colors" class="reveal">
+      <div class="sec-tag">01 / COLOR</div>
+      <h2 class="sec-title">语义色板 · 亮 / 暗双套</h2>
+      <p class="sec-desc">每个语义变量在 <b>.dark</b> 下自动切换。切换右上角主题按钮 —— 色块实时反映当前主题下的实际颜色；hover 色卡看浮起 + 顶线流光质感。</p>
+      <div class="swatch-grid" id="swatches"></div>
+    </section>
+
+    <!-- 状态 -->
+    <section id="status" class="reveal">
+      <div class="sec-tag">02 / STATUS</div>
+      <h2 class="sec-title">状态语义 · 与员工状态机对应</h2>
+      <p class="sec-desc">色彩只承载语义：<b>在岗状态的呼吸点是全系统唯一的常驻循环动效之一</b>（表示「活着」——语义化动效，非装饰）。</p>
+      <div class="panel">
+        <div class="status-row">
+          <span class="status-pill st-run"><span class="dot"></span>在岗 PUBLISHED</span>
+          <span class="status-pill st-draft"><span class="dot"></span>草稿 DRAFT</span>
+          <span class="status-pill st-off"><span class="dot"></span>下线 OFFLINE</span>
+          <span class="status-pill st-off-duty"><span class="dot"></span>禁用 DISABLED</span>
+        </div>
+        <div class="status-note">mapping: PUBLISHED→success(pulse) · DRAFT→warning · OFFLINE→danger · disabled→muted</div>
+      </div>
+    </section>
+
+    <!-- 字体 -->
+    <section id="type" class="reveal">
+      <div class="sec-tag">03 / TYPE</div>
+      <h2 class="sec-title">字体阶梯 · 双语分治</h2>
+      <p class="sec-desc">Space Grotesk 承担英文标题与数字的工程气质，正文 DM Sans，中文回退苹方/雅黑；工号与 ID 一律 JetBrains Mono，数字启用 tabular-nums。</p>
+      <div class="panel type-scale">
+        <div class="type-row"><span class="type-label">display · 30/600 · 英雄题</span><span class="t-display">数字员工平台</span></div>
+        <div class="type-row"><span class="type-label">h1 · 20/600 · 区块标题</span><span class="t-h1">我的数字员工</span></div>
+        <div class="type-row"><span class="type-label">h2 · 15/600 · 卡片标题</span><span class="t-h2">小钱 — 前端开发</span></div>
+        <div class="type-row"><span class="type-label">body · 13/400 · 正文</span><span class="t-body">负责前端页面开发与组件库维护，输出生产级 React 组件。</span></div>
+        <div class="type-row"><span class="type-label">caption · 12/400 · 辅助</span><span class="t-caption">管理你的数字员工档案，点击卡片查看详情</span></div>
+        <div class="type-row"><span class="type-label">mono · 13/500 · 工号</span><span class="t-mono">STAFF-20261017-R84G</span></div>
+      </div>
+    </section>
+
+    <!-- 组件 -->
+    <section id="components" class="reveal">
+      <div class="sec-tag">04 / COMPONENT</div>
+      <h2 class="sec-title">基础组件 · 锐利几何 + 微交互</h2>
+      <p class="sec-desc">按钮 4px、卡片 8px、弹窗 12px。默认零阴影，hover 才浮起；按压缩放 0.96 是全局按压语言；loading 用 shimmer 骨架而非转圈。</p>
+      <div class="comp-grid">
+        <div class="panel">
+          <div class="comp-label">buttons · hover 光晕 / active 按压</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary">新建员工</button>
+            <button class="btn btn-secondary">保存草稿</button>
+            <button class="btn btn-ghost">取消</button>
+            <button class="btn btn-danger">删除</button>
+          </div>
+          <div class="comp-label" style="margin-top:20px;">skeleton · shimmer 加载态</div>
+          <div class="skeleton-row"><div class="sk" style="width:38px;height:38px;border-radius:4px;"></div><div style="flex:1"><div class="sk" style="height:12px;width:40%;margin-bottom:8px;"></div><div class="sk" style="height:10px;width:70%;"></div></div></div>
+        </div>
+        <div class="panel">
+          <div class="comp-label">input · focus = accent ring</div>
+          <div class="field">
+            <label for="demo-name">姓名</label>
+            <input class="input" id="demo-name" placeholder="如：小兔" />
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label for="demo-code">工号（mono）</label>
+            <input class="input mono" id="demo-code" value="STAFF-20261017-R84G" readonly />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页面小样 -->
+    <section id="page-demo" class="reveal">
+      <div class="sec-tag">05 / PAGE PATTERN</div>
+      <h2 class="sec-title">页面小样 · 编排式揭示</h2>
+      <p class="sec-desc">页面加载 = 三幕编排：标题区先入 → 统计数字滚动上数 → 卡片墙 80ms 错峰浮出；hover 边框亮起 + 顶线流光 + 3px 上浮。</p>
+      <div class="panel">
+        <div class="demo-bar">
+          <div class="stats">
+            <span>员工总数 <b data-count="3">0</b></span>
+            <span>在岗 <b data-count="2">0</b></span>
+            <span>草稿 <b data-count="1">0</b></span>
+            <span>累计对话 <b data-count="128">0</b></span>
+          </div>
+          <button class="btn btn-primary">＋ 新建员工</button>
+        </div>
+        <div class="card-grid">
+          <div class="staff-card" tabindex="0">
+            <div class="staff-head">
+              <div class="avatar">钱</div>
+              <div><div class="staff-name">小钱</div><div class="staff-title">前端开发</div></div>
+              <span class="status-pill st-run"><span class="dot"></span>在岗</span>
+            </div>
+            <p class="staff-desc">负责前端页面开发与组件库维护；说话直接，先给结论再给依据，擅长把设计稿还原成生产级代码。</p>
+            <div class="staff-foot"><span class="tag">组织内</span><span>发布于 2026-10-17</span></div>
+          </div>
+          <div class="staff-card" tabindex="0">
+            <div class="staff-head">
+              <div class="avatar alt">策</div>
+              <div><div class="staff-name">阿策</div><div class="staff-title">内容策划</div></div>
+              <span class="status-pill st-run"><span class="dot"></span>在岗</span>
+            </div>
+            <p class="staff-desc">内容策划与文案打磨，擅长把技术语言翻译成用户听得懂的价值表达，输出风格统一的内容矩阵。</p>
+            <div class="staff-foot"><span class="tag">组织内</span><span>发布于 2026-10-16</span></div>
+          </div>
+          <div class="staff-card" tabindex="0">
+            <div class="staff-head">
+              <div class="avatar alt">数</div>
+              <div><div class="staff-name">小数</div><div class="staff-title">数据分析</div></div>
+              <span class="status-pill st-draft"><span class="dot"></span>草稿</span>
+            </div>
+            <p class="staff-desc">数据清洗、指标拆解与周报生成；正在完善人设与职责边界，尚未发布上岗。</p>
+            <div class="staff-foot"><span class="tag">私有</span><span>创建于 2026-10-17</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 对话：Ant Design X -->
+    <section id="chat" class="reveal">
+      <div class="sec-tag">06 / CONVERSATION · ANT DESIGN X</div>
+      <h2 class="sec-title">对话界面 · Ant Design X 组件体系</h2>
+      <p class="sec-desc">全部 AI 对话组件采用 <b>@ant-design/x</b>（Bubble / Sender / Conversations / ThoughtChain…），经 XProvider 接入主题后翠绿与亮暗自动生效。气泡按对话时序错峰入场（本页演示延迟重放）。</p>
+      <div class="panel" style="max-width:560px;">
+        <div class="prompts" aria-label="快捷话题">
+          <button class="prompt-chip">还原度走查</button>
+          <button class="prompt-chip">帮我写周报</button>
+          <button class="prompt-chip">API 评审</button>
+        </div>
+        <div class="chat-demo">
+          <div class="bubble user">帮我看下这个页面的还原度怎么样？</div>
+          <div class="bubble-row">
+            <div class="avatar" style="width:28px;height:28px;font-size:12px;">钱</div>
+            <div class="bubble agent">结论：还原度约 92%。主要差异在两处：卡片间距比设计稿大 4px；状态标签的琥珀色饱和度偏高。需要我列出逐项对照清单吗？</div>
+          </div>
+          <div class="bubble-row">
+            <div class="avatar alt" style="width:28px;height:28px;font-size:12px;">钱</div>
+            <div class="bubble agent"><span class="typing"><i></i><i></i><i></i></span></div>
+          </div>
+        </div>
+        <div class="sender">
+          <textarea rows="1" placeholder="给小钱发消息…（Enter 发送 / Shift+Enter 换行）"></textarea>
+          <div class="sender-bar">
+            <span class="hint">⌘↵ send</span>
+            <button class="send-btn" aria-label="发送">↑</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 动效体系 -->
+    <section id="motion" class="reveal">
+      <div class="sec-tag">07 / MOTION SYSTEM</div>
+      <h2 class="sec-title">动效四层体系 · 每层都有语义</h2>
+      <p class="sec-desc">「眼前一亮」来自<b>编排</b>而非堆砌：层级越高的动效越慢越隆重，层级越低越快越轻。全系统仅两类常驻循环：状态呼吸点与 loading（shimmer/打字点），其余皆一次性。</p>
+      <div class="panel" style="padding:0; overflow-x:auto;">
+        <table class="motion-table">
+          <thead><tr><th>层级</th><th>语义</th><th>时长 / 缓动</th><th>样例（本页全部可体验）</th></tr></thead>
+          <tbody>
+            <tr><td>L1 交互反馈</td><td>告诉用户「系统收到了」</td><td>140ms · ease-out / spring</td><td>按钮 hover 光晕 · 按压 0.96 · 输入 focus 环 · chips 弹起</td></tr>
+            <tr><td>L2 状态过渡</td><td>物体属性变化的连续性</td><td>200–360ms · ease-out</td><td>卡片浮起+流光顶线 · 主题切换 · 骨架 shimmer · 气泡 pop-in</td></tr>
+            <tr><td>L3 编排揭示</td><td>页面叙事：先标题、再数据、后内容</td><td>520ms · ease-out · 错峰 80ms</td><td>Hero 逐行入场+下划线展开 · 统计数字滚动 · 卡片墙错峰 · 滚动出现</td></tr>
+            <tr><td>L4 环境氛围</td><td>空间质感（存在但不可察觉移动）</td><td>46–58s · 极慢漂移</td><td>顶部极光微光 · 噪点纹理 · 玻璃顶栏 · 在岗呼吸点</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel" style="margin-top:16px; font-family:var(--font-mono); font-size:12px; color:var(--rw-fg-muted); line-height:2;">
+        reduced-motion → 一切动画 0.01ms 直接呈现终态（本页已生效）<br />
+        hover 边框亮起 ≠ 阴影放大 · transform-only（无 width/height/top 动画）· GPU 合成层（opacity/transform）
+      </div>
+    </section>
+
+    <footer>
+      <span>RabbitWork Design System v2.1 · 现代工具感 × 高级编排</span>
+      <span>slate × emerald · light/dark · L1–L4 motion</span>
+    </footer>
+  </main>
+
+<script>
+  // ── 色板渲染（实时取 CSS 变量值，亮暗切换自动正确）──
+  const SWATCHES = [
+    ["--rw-bg", "页面底", "app background"],
+    ["--rw-card", "卡片面", "card surface"],
+    ["--rw-fg", "前景", "primary text"],
+    ["--rw-fg-muted", "次前景", "secondary text"],
+    ["--rw-fg-subtle", "弱前景", "placeholder / disabled"],
+    ["--rw-border", "边框", "hairline 1px"],
+    ["--rw-border-strong", "沉浸边框", "hover / active border"],
+    ["--rw-accent", "强调 · 运行绿", "primary action"],
+    ["--rw-accent-subtle", "强调浅底", "selected bg"],
+    ["--rw-success", "成功", "same as accent"],
+    ["--rw-warning", "警告", "draft state"],
+    ["--rw-danger", "危险", "delete / fail"],
+  ];
+  const grid = document.getElementById("swatches");
+  function renderSwatches() {
+    const cs = getComputedStyle(document.documentElement);
+    grid.innerHTML = SWATCHES.map(([v, name, role]) => {
+      const val = cs.getPropertyValue(v).trim();
+      return `<div class="swatch">
+        <div class="chip" style="background:${val}; border-bottom:1px solid var(--rw-border);"></div>
+        <div class="info">
+          <div class="name">${name} <span class="role">· ${role}</span></div>
+          <div class="varname">${v}</div>
+          <div class="hex">${val}</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  renderSwatches();
+
+  // ── 主题切换（html.dark + 持久化 + 色板重渲）──
+  const btn = document.getElementById("themeBtn");
+  const saved = localStorage.getItem("rw-ds-theme");
+  if (saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches)) {
+    document.documentElement.classList.add("dark");
+  }
+  function syncBtn() {
+    btn.textContent = document.documentElement.classList.contains("dark") ? "◑ theme: dark" : "◐ theme: light";
+  }
+  syncBtn();
+  btn.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem("rw-ds-theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+    syncBtn();
+    renderSwatches();
+  });
+
+  // ── L3 滚动出现（IntersectionObserver，一次性）──
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+  // ── L3 统计数字滚动（进入视口触发，tabular-nums 防抖动）──
+  function countUp(el) {
+    const target = Number(el.dataset.count);
+    const dur = 900;
+    const t0 = performance.now();
+    (function tick(t) {
+      const p = Math.min((t - t0) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = String(Math.round(target * eased));
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  const cio = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) { countUp(e.target); cio.unobserve(e.target); }
+    });
+  }, { threshold: 0.6 });
+  document.querySelectorAll("[data-count]").forEach((el) => cio.observe(el));
+</script>
+</body>
+</html>

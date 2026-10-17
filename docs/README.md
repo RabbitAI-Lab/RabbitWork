@@ -62,9 +62,10 @@
 ## 七、支撑文档
 
 | 文档 | 说明 |
-| ---- | ---- |
+| --- | --- |
 | [glossary.md](./glossary.md) | 术语表（含模型映射，随域扩展） |
 | [plan/功能规格模板.md](./plan/功能规格模板.md) | 规格文档统一模板（元信息表/能力表§1.2/用例表§5/交付清单§7） |
+| [plan/digital-employee-platform-blueprint.md](./plan/digital-employee-platform-blueprint.md) | 数字员工平台总体规划（**最终版 v1.0**，2026-10-17 定稿；产品定位评审输入。已合并《数字员工平台总体方案》草案，旧稿仅留作废指向） |
 | [design/README.md](./design/README.md) | 高保真原型目录说明（AGENTS.md 门禁 2） |
 | [security/mimosa-fp-ledger.md](./security/mimosa-fp-ledger.md) | Mimosa 误报台账（rules/security §8） |
 | [../rules/](../rules/) | 研发规范细则（9 份，AGENTS.md 引用） |

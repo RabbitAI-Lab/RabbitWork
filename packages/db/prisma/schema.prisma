@@ -23,6 +23,7 @@ model User {
   email        String    @unique @db.VarChar(256)
   name         String    @db.VarChar(128)
   passwordHash String    @map("password_hash") @db.VarChar(512)
+  role         String    @default("MEMBER") @db.VarChar(32) // ADMIN | MEMBER（应用层 zod 登记）
   status       String    @default("ACTIVE") @db.VarChar(32) // ACTIVE | DISABLED（应用层 zod 登记）
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -31,6 +32,7 @@ model User {
   orgMemberships     OrgMember[]
   ownedOrganizations Organization[]  @relation("OrgOwner")
   projectMembers     ProjectMember[]
+  employees          DigitalEmployee[]
 
   @@index([deletedAt])
   @@map("users")
@@ -48,6 +50,7 @@ model Organization {
   owner    User?       @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   members  OrgMember[]
   projects Project[]
+  employees DigitalEmployee[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -99,4 +102,414 @@ model ProjectMember {
   @@unique([projectId, userId])
   @@index([userId])
   @@map("project_members")
+}
+
+// ───────────────────────── staff 域（数字员工平台，门禁 3 一次建齐，S1 起用核心表） ─────────────────────────
+// 契约来源：docs/plan/digital-employee-platform-blueprint.md §3；
+// as* 前缀列 = AgentScope 运行时投影引用（引用不是副本，可空可重建）。
+
+model DigitalEmployee {
+  id            String    @id @default(uuid())
+  orgId         String    @map("org_id")
+  code          String    @db.VarChar(64) // 工号，org 内唯一
+  name          String    @db.VarChar(128)
+  title         String    @db.VarChar(128) // 岗位
+  personaPrompt String    @map("persona_prompt") @db.Text // 人设（发布时编译为 system prompt）
+  boundary      String?   @db.Text // 职责边界
+  avatarUrl     String?   @map("avatar_url") @db.VarChar(512)
+  status        String    @default("DRAFT") @db.VarChar(32) // DRAFT | PUBLISHED | OFFLINE
+  visibility    String    @default("PRIVATE") @db.VarChar(32) // PRIVATE | ORG | GALLERY
+  creatorId     String?   @map("creator_id")
+  asAgentId     String?   @map("as_agent_id") @db.VarChar(64) // AgentScope agent.id（运行时投影）
+  asNamespace   String?   @map("as_namespace") @db.VarChar(128)
+  asAgentKey    String?   @map("as_agent_key") @db.VarChar(128)
+  asVersion     Int?      @map("as_version")
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  org              Organization            @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  creator          User?                   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  versions         EmployeeVersion[]
+  modelBindings    EmployeeModelBinding[]
+  resourceBindings EmployeeResourceBinding[]
+  conversations    Conversation[]
+  teamMemberships  TeamMember[]
+
+  @@unique([orgId, code])
+  @@index([orgId, deletedAt])
+  @@index([status])
+  @@map("digital_employees")
+}
+
+model EmployeeVersion {
+  id             String   @id @default(uuid())
+  employeeId     String   @map("employee_id")
+  version        Int
+  assemblyJson   Json     @map("assembly_json") // 装配清单快照（人设/绑定/配置）
+  promptCompiled String   @map("prompt_compiled") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  employee DigitalEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, version])
+  @@map("employee_versions")
+}
+
+model EmployeeModelBinding {
+  id           String   @id @default(uuid())
+  employeeId   String   @map("employee_id")
+  role         String   @db.VarChar(32) // MAIN（首期单角色；router/step/response 预留 StaffDeck 先例）
+  modelRef     String   @map("model_ref") @db.VarChar(256) // 模型标识（AgentScope 侧解析）
+  configJson   Json?    @map("config_json") // 温度/上限等参数快照
+  fingerprint  String?  @db.VarChar(128) // 配置指纹（变更检测）
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  employee DigitalEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("employee_model_bindings")
+}
+
+model EmployeeResourceBinding {
+  id              String   @id @default(uuid())
+  employeeId      String   @map("employee_id")
+  resourceType    String   @map("resource_type") @db.VarChar(32) // SKILL | KNOWLEDGE | TOOL | MCP
+  resourceId      String   @map("resource_id")
+  capabilityScope String   @default("GENERAL") @map("capability_scope") @db.VarChar(32) // GENERAL | SOP_SPECIFIC
+  paramsJson      Json?    @map("params_json")
+  asRef           String?  @map("as_ref") @db.VarChar(256) // AgentScope 侧资源引用
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  employee DigitalEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, resourceType])
+  @@map("employee_resource_bindings")
+}
+
+model Conversation {
+  id                 String    @id @default(uuid())
+  orgId              String    @map("org_id")
+  employeeId         String    @map("employee_id")
+  userId             String    @map("user_id")
+  title              String    @db.VarChar(256)
+  status             String    @default("ACTIVE") @db.VarChar(32) // ACTIVE | IDLE | TERMINATED
+  origin             String    @default("WEB") @db.VarChar(32) // WEB | API | CHANNEL | TEAM
+  originRef          String?   @map("origin_ref") @db.VarChar(128)
+  asChatId           String?   @map("as_chat_id") @db.VarChar(64)
+  asSessionId        String?   @map("as_session_id") @db.VarChar(64)
+  asRuntimeSessionId String?   @map("as_runtime_session_id") @db.VarChar(64)
+  asEventStreamUrl   String?   @map("as_event_stream_url") @db.VarChar(512)
+  asEventsUrl        String?   @map("as_events_url") @db.VarChar(512)
+  lastMessageAt      DateTime? @map("last_message_at") @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  employee  DigitalEmployee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  messages  MessageMirror[]
+  runs      RunRecord[]
+
+  @@index([orgId, userId, deletedAt])
+  @@index([employeeId])
+  @@map("conversations")
+}
+
+model MessageMirror {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  seq            Int // 会话内单调递增（平台侧排序）
+  role           String   @db.VarChar(16) // USER | ASSISTANT | SYSTEM
+  content        String   @db.Text // 展示级全文（完整消息以 AgentScope 为准，本表为镜像）
+  asMsgId        String?  @map("as_msg_id") @db.VarChar(64)
+  tokenUsage     Json?    @map("token_usage")
+  eventMeta      Json?    @map("event_meta")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  feedback     MessageFeedback[]
+
+  @@unique([conversationId, seq])
+  @@index([conversationId])
+  @@map("message_mirrors")
+}
+
+model RunRecord {
+  id              String    @id @default(uuid())
+  conversationId  String    @map("conversation_id")
+  asRunId         String?   @map("as_run_id") @db.VarChar(64)
+  asTurnId        String?   @map("as_turn_id") @db.VarChar(64)
+  status          String    @default("STARTED") @db.VarChar(32) // STARTED | STREAMING | SUCCEEDED | FAILED | INTERRUPTED
+  eventSummaryJson Json?    @map("event_summary_json") // 事件类型计数与关键节点摘要
+  durationMs      Int?      @map("duration_ms")
+  tokenIn         Int?      @map("token_in")
+  tokenOut        Int?      @map("token_out")
+  error           String?   @db.Text
+  startedAt       DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt      DateTime? @map("finished_at") @db.Timestamptz(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, status])
+  @@map("run_records")
+}
+
+model MessageFeedback {
+  id              String   @id @default(uuid())
+  messageMirrorId String   @map("message_mirror_id")
+  rating          String   @db.VarChar(16) // UP | DOWN
+  comment         String?  @db.VarChar(1024)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  messageMirror MessageMirror @relation(fields: [messageMirrorId], references: [id], onDelete: Cascade)
+
+  @@unique([messageMirrorId])
+  @@map("message_feedback")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?  @map("actor_id")
+  action     String   @db.VarChar(128)
+  targetType String?  @map("target_type") @db.VarChar(64)
+  targetId   String?  @map("target_id") @db.VarChar(64)
+  reqId      String?  @db.VarChar(64)
+  latencyMs  Int?     @map("latency_ms")
+  statusCode Int?     @map("status_code")
+  detailJson Json?    @map("detail_json")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+model UsageDaily {
+  id         String   @id @default(uuid())
+  orgId      String   @map("org_id")
+  employeeId String   @map("employee_id")
+  day        DateTime @db.Date
+  runs       Int      @default(0)
+  messages   Int      @default(0)
+  tokenIn    Int      @default(0) @map("token_in")
+  tokenOut   Int      @default(0) @map("token_out")
+
+  @@unique([employeeId, day])
+  @@index([orgId, day])
+  @@map("usage_dailies")
+}
+
+// ───── 能力资产域（S3+ 启用，列随 staff 域一次建齐——门禁 3） ─────
+
+model KnowledgeBase {
+  id          String    @id @default(uuid())
+  orgId       String    @map("org_id")
+  name        String    @db.VarChar(128)
+  description String?   @db.VarChar(512)
+  status      String    @default("ACTIVE") @db.VarChar(32)
+  asRef       String?   @map("as_ref") @db.VarChar(256) // AgentScope knowledge base 引用
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  documents  KnowledgeDocument[]
+  ingestJobs KnowledgeIngestJob[]
+
+  @@index([orgId, deletedAt])
+  @@map("knowledge_bases")
+}
+
+model KnowledgeDocument {
+  id        String    @id @default(uuid())
+  baseId    String    @map("base_id")
+  title     String    @db.VarChar(256)
+  sourceUrl String?   @map("source_url") @db.VarChar(512)
+  status    String    @default("PENDING") @db.VarChar(32) // PENDING | INGESTING | READY | FAILED
+  asDocId   String?   @map("as_doc_id") @db.VarChar(64)
+  error     String?   @db.Text
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  base KnowledgeBase @relation(fields: [baseId], references: [id], onDelete: Cascade)
+
+  @@index([baseId, status])
+  @@map("knowledge_documents")
+}
+
+model KnowledgeIngestJob {
+  id        String    @id @default(uuid())
+  baseId    String    @map("base_id")
+  documentId String?  @map("document_id")
+  status    String    @default("PENDING") @db.VarChar(32)
+  progress  Int       @default(0)
+  error     String?   @db.Text
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  base KnowledgeBase @relation(fields: [baseId], references: [id], onDelete: Cascade)
+
+  @@index([baseId, status])
+  @@map("knowledge_ingest_jobs")
+}
+
+model SkillDefinition {
+  id               String    @id @default(uuid())
+  orgId            String    @map("org_id")
+  name             String    @db.VarChar(128)
+  description      String?   @db.VarChar(512)
+  kind             String    @default("PROMPT") @db.VarChar(32) // PROMPT | SOP（SOP S4+ 启用）
+  promptTemplate   String?   @map("prompt_template") @db.Text
+  sopGraph         Json?     @map("sop_graph") // 状态机图（节点/条件边/人工节点/子流程）
+  variablesSchema  Json?     @map("variables_schema")
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  @@unique([orgId, name])
+  @@index([orgId, deletedAt])
+  @@map("skill_definitions")
+}
+
+model ToolDefinition {
+  id           String    @id @default(uuid())
+  orgId        String    @map("org_id")
+  name         String    @db.VarChar(128)
+  description  String?   @db.VarChar(512)
+  method       String    @default("GET") @db.VarChar(16)
+  url          String    @db.VarChar(512)
+  headersJson  Json?     @map("headers_json") // 凭证加密存储（rules/security §5）
+  inputSchema  Json?     @map("input_schema")
+  outputSchema Json?     @map("output_schema")
+  status       String    @default("ACTIVE") @db.VarChar(32)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  @@unique([orgId, name])
+  @@map("tool_definitions")
+}
+
+model McpServerConfig {
+  id         String    @id @default(uuid())
+  orgId      String    @map("org_id")
+  name       String    @db.VarChar(128)
+  transport  String    @db.VarChar(32) // stdio | streamable_http | sse | builtin
+  endpoint   String    @db.VarChar(512)
+  status     String    @default("ACTIVE") @db.VarChar(32)
+  configJson Json?     @map("config_json")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  @@unique([orgId, name])
+  @@map("mcp_server_configs")
+}
+
+model ScheduledTask {
+  id              String    @id @default(uuid())
+  orgId           String    @map("org_id")
+  employeeId      String    @map("employee_id")
+  name            String    @db.VarChar(128)
+  cron            String    @db.VarChar(64)
+  inputTemplate   String    @map("input_template") @db.Text
+  enabled         Boolean   @default(true)
+  asAutomationId  String?   @map("as_automation_id") @db.VarChar(64)
+  lastRunAt       DateTime? @map("last_run_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  runs ScheduledTaskRun[]
+
+  @@index([orgId, deletedAt])
+  @@map("scheduled_tasks")
+}
+
+model ScheduledTaskRun {
+  id         String    @id @default(uuid())
+  taskId     String    @map("task_id")
+  status     String    @default("PENDING") @db.VarChar(32)
+  startedAt  DateTime? @map("started_at") @db.Timestamptz(3)
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz(3)
+  error      String?   @db.Text
+  output     Json?
+
+  task ScheduledTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, status])
+  @@map("scheduled_task_runs")
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  orgId      String    @map("org_id")
+  name       String    @db.VarChar(128)
+  scope      String    @db.VarChar(32) // ACCOUNT | STAFF | CLIENT（三级密钥，S5 启用）
+  staffId    String?   @map("staff_id")
+  keyPrefix  String    @map("key_prefix") @db.VarChar(32) // rw_live_ 前缀展示位
+  pepperHash String    @map("pepper_hash") @db.VarChar(256) // 只存 pepper 摘要
+  lastUsedAt DateTime? @map("last_used_at") @db.Timestamptz(3)
+  expiresAt  DateTime? @map("expires_at") @db.Timestamptz(3)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([orgId])
+  @@map("api_keys")
+}
+
+model HumanHandoffRecord {
+  id          String    @id @default(uuid())
+  conversationId String @map("conversation_id")
+  status      String    @default("PENDING") @db.VarChar(32) // PENDING | HANDLING | RESOLVED
+  initiatedBy String?   @map("initiated_by") @db.VarChar(64)
+  handledBy   String?   @map("handled_by") @db.VarChar(64)
+  reason      String?   @db.VarChar(512)
+  resolvedAt  DateTime? @map("resolved_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([conversationId, status])
+  @@map("human_handoff_records")
+}
+
+// ───────────────────────── team 域（我的团队，S6+ 运行时映射预留列一次建齐） ─────────────────────────
+
+model Team {
+  id          String    @id @default(uuid())
+  orgId       String    @map("org_id")
+  name        String    @db.VarChar(128)
+  description String?   @db.VarChar(512)
+  goal        String?   @db.VarChar(1024) // 团队目标
+  status      String    @default("ACTIVE") @db.VarChar(32) // ACTIVE | ARCHIVED
+  creatorId   String?   @map("creator_id")
+  asTeamId    String?   @map("as_team_id") @db.VarChar(64) // AgentScope teams 映射（S6+）
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  members TeamMember[]
+
+  @@unique([orgId, name])
+  @@index([orgId, deletedAt])
+  @@map("teams")
+}
+
+model TeamMember {
+  id         String   @id @default(uuid())
+  teamId     String   @map("team_id")
+  employeeId String   @map("employee_id")
+  role       String   @default("MEMBER") @db.VarChar(32) // LEADER（项目领导 TL）| MEMBER
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  team     Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  employee DigitalEmployee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, employeeId])
+  @@index([employeeId])
+  @@map("team_members")
 }

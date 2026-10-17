@@ -51,6 +51,8 @@ export function resolveSlot(cwd = process.cwd(), env = process.env) {
     }
     return n;
   }
+  // zcode 工作副本固定槽位 1（与主仓 RabbitWork 槽位 0 并行互不冲突）
+  if (/rabbitwork[-_]zcode$/i.test(path.basename(path.resolve(cwd)))) return 1;
   return 0;
 }
 

@@ -19,7 +19,11 @@
 
 12. **并行 worktree 槽位隔离**：多 worktree 并行时端口/Redis 键空间/共享 /tmp 路径按槽位隔离（`RABBIT_SLOT` > 目录名 `RabbitWork-s{N}` > 主仓/CI=0），**禁止硬编码端口**，一律出自 `scripts/rabbit-env.mjs`（e2e 用例侧 `tests/e2e/env.ts`）；端口表与**启动操作手册**见 AGENTS.md §4.2 / rules/git-workflow.md §9·§9.7。端口基址相对 RabbitAITest 整体偏移（dev 3600+/e2e 3700+/PG 6440+/Redis 6390·6391），同机两项目并行零冲突。
 
+13. **UI 设计规范（RabbitWork DS v2.1）**：一切 UI 开发遵循 [design-system/rabbitwork/MASTER.md](./design-system/rabbitwork/MASTER.md)（现代工具感：中性灰阶 + 运行绿单强调、圆角 4/8/12、亮暗双主题、动效四层、antd+AntDesignX 主题穿透）；执行细则与评审清单见 rules/design-system.md——**语义 token 强制**（禁裸 hex/裸色板类），违例 PR 阻塞。
+
 @rules/typescript.md
+
+@rules/design-system.md
 
 @rules/react-nextjs.md
 

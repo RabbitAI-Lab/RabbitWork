@@ -1,0 +1,30 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "RabbitWork 数字员工平台" [level=1] [ref=e10]
+      - paragraph [ref=e11]: 将岗位经验固化为可持续上岗的数字员工
+    - generic [ref=e12]:
+      - alert [ref=e60]:
+        - img "close-circle" [ref=e61]
+        - generic [ref=e64]: 邮箱或密码错误
+      - generic [ref=e13]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: 邮箱
+          - generic [ref=e22]:
+            - img "mail" [ref=e24]
+            - textbox "邮箱" [ref=e27]:
+              - /placeholder: admin@rabbitwork.local
+              - text: admin@rabbitwork.local
+        - generic [ref=e29]:
+          - generic [ref=e30]: 密码
+          - generic [ref=e33]:
+            - generic [ref=e36]:
+              - img "lock" [ref=e38]
+              - textbox "密码" [active] [invalid] [ref=e41]:
+                - /placeholder: rabbit123
+              - img "eye-invisible" [ref=e43] [cursor=pointer]
+            - generic [ref=e66]: 请输入密码
+        - button "登 录" [ref=e47] [cursor=pointer]
+    - paragraph [ref=e49]: 种子账号 admin@rabbitwork.local · rabbit123
+  - button "Open Next.js Dev Tools" [ref=e55] [cursor=pointer]
+  - alert [ref=e59]

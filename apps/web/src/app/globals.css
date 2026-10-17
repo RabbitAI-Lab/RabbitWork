@@ -1,1 +1,251 @@
 @import "tailwindcss";
+/* RabbitWork DS v2.1（design-system/rabbitwork/MASTER.md）
+   现代工具感：中性灰阶 + 运行绿单强调 · 圆角 4/8/12 · 亮暗双主题
+   token 唯一事实源 = ./theme/tokens.css；本文件只做 Tailwind 映射与全局工具 */
+@import "./theme/tokens.css";
+
+/* 暗色策略 = class（html.dark），与 antd algorithm / theme-toggle 同步 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 语义 token → Tailwind 色板（业务代码只允许 rw-* 语义类，禁裸色板类） */
+@theme inline {
+  --color-rw-bg: var(--rw-bg);
+  --color-rw-card: var(--rw-card);
+  --color-rw-fg: var(--rw-fg);
+  --color-rw-fg-muted: var(--rw-fg-muted);
+  --color-rw-fg-subtle: var(--rw-fg-subtle);
+  --color-rw-border: var(--rw-border);
+  --color-rw-border-strong: var(--rw-border-strong);
+  --color-rw-accent: var(--rw-accent);
+  --color-rw-accent-hover: var(--rw-accent-hover);
+  --color-rw-accent-fg: var(--rw-accent-fg);
+  --color-rw-accent-subtle: var(--rw-accent-subtle);
+  --color-rw-success: var(--rw-success);
+  --color-rw-success-subtle: var(--rw-success-subtle);
+  --color-rw-warning: var(--rw-warning);
+  --color-rw-warning-subtle: var(--rw-warning-subtle);
+  --color-rw-danger: var(--rw-danger);
+  --color-rw-danger-subtle: var(--rw-danger-subtle);
+  --color-rw-muted-subtle: var(--rw-muted-subtle);
+  --color-rw-ring: var(--rw-ring);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --radius-rw-sm: var(--radius-sm);
+  --radius-rw-md: var(--radius-md);
+  --radius-rw-lg: var(--radius-lg);
+
+  --animate-fade-up: fade-up 0.44s var(--ease-out) both;
+  --animate-reveal-up: reveal-up 0.52s var(--ease-out) both;
+  --animate-bubble-in: bubble-in 0.36s var(--ease-spring) both;
+  --animate-pulse-dot: pulse-dot 2.4s ease-in-out infinite;
+  --animate-blink: blink 0.9s steps(2) infinite;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--rw-bg);
+  color: var(--rw-fg);
+  transition: background var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out);
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* 数字统一等宽数字（统计/工号/金额） */
+.tabular-nums,
+[data-count] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 键盘焦点环（规范：focus 必须可见且唯一） */
+:focus-visible {
+  outline: 2px solid var(--rw-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── 动效 keyframes（L2/L3，MASTER §2）── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ── L4 环境氛围层（全局挂载一次，pointer-events 穿透）── */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ambient .aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  animation: aurora-drift 46s var(--ease-out) infinite alternate;
+}
+.ambient .aurora-a1 {
+  width: 640px;
+  height: 640px;
+  top: -280px;
+  right: -160px;
+  background: radial-gradient(circle, var(--rw-aurora-a) 0%, transparent 65%);
+}
+.ambient .aurora-a2 {
+  width: 520px;
+  height: 520px;
+  top: 120px;
+  left: -220px;
+  background: radial-gradient(circle, var(--rw-aurora-b) 0%, transparent 65%);
+  animation-duration: 58s;
+  animation-direction: alternate-reverse;
+}
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-60px, 50px, 0) scale(1.12);
+  }
+}
+.ambient .grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* ── 玻璃拟态（顶栏/浮层）── */
+.glass {
+  background: color-mix(in srgb, var(--rw-bg) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
+/* ── 细滚动条（消息区/列表）── */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rw-border-strong) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: var(--rw-border-strong);
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── L2 卡片 hover 全套（边框亮起 + 流光顶线 + 上浮）── */
+.card-hover {
+  position: relative;
+  transition: border-color var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-spring),
+    box-shadow var(--t-base) var(--ease-out);
+}
+.card-hover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rw-accent), transparent);
+  opacity: 0;
+  transition: opacity var(--t-slow) var(--ease-out);
+}
+.card-hover:hover {
+  border-color: var(--rw-accent);
+  transform: translateY(-3px);
+  box-shadow: var(--rw-shadow-float);
+}
+.card-hover:hover::before {
+  opacity: 1;
+}
+
+/* 头像底：accent 同色系微渐变（规范允许的两个渐变场景之一） */
+.avatar-accent {
+  background-image: linear-gradient(135deg, var(--rw-accent), var(--rw-accent-hover));
+  color: var(--rw-accent-fg);
+}
+
+/* ── 对话气泡（MASTER §4 · Ant Design X 主题穿透 + token 兜底）── */
+.bubble-user {
+  background: var(--rw-accent);
+  color: var(--rw-accent-fg);
+  border-bottom-right-radius: 2px;
+}
+.bubble-agent {
+  background: var(--rw-card);
+  color: var(--rw-fg);
+  border: 1px solid var(--rw-border);
+  border-bottom-left-radius: 2px;
+}
+
+/* reduced-motion：全部动效收敛为终态（规范红线） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

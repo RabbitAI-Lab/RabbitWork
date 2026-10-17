@@ -1,0 +1,206 @@
+- generic [ref=f2e1]:
+  - banner [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - generic [ref=f2e4]: R
+      - text: RabbitWork
+      - generic [ref=f2e5]: DS v2.0
+    - navigation [ref=f2e6]:
+      - link "色彩" [ref=f2e7] [cursor=pointer]:
+        - /url: "#colors"
+      - link "状态" [ref=f2e8] [cursor=pointer]:
+        - /url: "#status"
+      - link "字体" [ref=f2e9] [cursor=pointer]:
+        - /url: "#type"
+      - link "组件" [ref=f2e10] [cursor=pointer]:
+        - /url: "#components"
+      - link "页面小样" [ref=f2e11] [cursor=pointer]:
+        - /url: "#page-demo"
+      - link "对话" [ref=f2e12] [cursor=pointer]:
+        - /url: "#chat"
+    - button "切换亮暗主题" [active] [ref=f2e13] [cursor=pointer]: "◑ theme: dark"
+  - main [ref=f2e14]:
+    - generic [ref=f2e15]:
+      - heading [level=1] [ref=f2e16]:
+        - text: 中性灰阶为骨，
+        - emphasis [ref=f2e17]: 运行绿
+        - text: 为魂。工具的克制，员工的温度。
+      - paragraph [ref=f2e18]: 现代工具感设计系统 —— 面向数字员工平台的生产力界面。95% 中性色，单一强调色只做语义信号；紧凑密度、细边框分层、零阴影默认；亮暗双主题同源切换。
+      - generic [ref=f2e19]:
+        - generic [ref=f2e20]: 风格 Minimalism / Swiss · Tooling
+        - generic [ref=f2e21]: "强调 #10B981 → #34D399"
+        - generic [ref=f2e22]: 密度 紧凑（行高 40px）
+    - generic [ref=f2e23]:
+      - generic [ref=f2e24]: 01 / COLOR
+      - heading "语义色板 · 亮 / 暗双套" [level=2] [ref=f2e25]
+      - paragraph [ref=f2e26]:
+        - text: 每个语义变量在
+        - code [ref=f2e27]: .dark
+        - text: 下自动切换。切换右上角主题按钮查看暗色值 —— 卡片色块会实时反映当前主题下的实际颜色。
+      - generic [ref=f2e28]:
+        - generic [ref=f2e237]:
+          - generic [ref=f2e238]: 页面底 · app background
+          - generic [ref=f2e239]: "--rw-bg"
+          - generic [ref=f2e240]: "#0B0F1A"
+        - generic [ref=f2e243]:
+          - generic [ref=f2e244]: 卡片面 · card surface
+          - generic [ref=f2e245]: "--rw-card"
+          - generic [ref=f2e246]: "#111827"
+        - generic [ref=f2e249]:
+          - generic [ref=f2e250]: 前景 · primary text
+          - generic [ref=f2e251]: "--rw-fg"
+          - generic [ref=f2e252]: "#F1F5F9"
+        - generic [ref=f2e255]:
+          - generic [ref=f2e256]: 次前景 · secondary text
+          - generic [ref=f2e257]: "--rw-fg-muted"
+          - generic [ref=f2e258]: "#94A3B8"
+        - generic [ref=f2e261]:
+          - generic [ref=f2e262]: 弱前景 · placeholder / disabled
+          - generic [ref=f2e263]: "--rw-fg-subtle"
+          - generic [ref=f2e264]: "#5B6B82"
+        - generic [ref=f2e267]:
+          - generic [ref=f2e268]: 边框 · hairline 1px
+          - generic [ref=f2e269]: "--rw-border"
+          - generic [ref=f2e270]: "#1E293B"
+        - generic [ref=f2e273]:
+          - generic [ref=f2e274]: 沉浸边框 · hover / active border
+          - generic [ref=f2e275]: "--rw-border-strong"
+          - generic [ref=f2e276]: "#334155"
+        - generic [ref=f2e279]:
+          - generic [ref=f2e280]: 强调 · 运行绿 · primary action
+          - generic [ref=f2e281]: "--rw-accent"
+          - generic [ref=f2e282]: "#34D399"
+        - generic [ref=f2e285]:
+          - generic [ref=f2e286]: 强调浅底 · selected bg
+          - generic [ref=f2e287]: "--rw-accent-subtle"
+          - generic [ref=f2e288]: rgba(52, 211, 153, 0.12)
+        - generic [ref=f2e291]:
+          - generic [ref=f2e292]: 成功 · same as accent
+          - generic [ref=f2e293]: "--rw-success"
+          - generic [ref=f2e294]: "#34D399"
+        - generic [ref=f2e297]:
+          - generic [ref=f2e298]: 警告 · draft state
+          - generic [ref=f2e299]: "--rw-warning"
+          - generic [ref=f2e300]: "#F59E0B"
+        - generic [ref=f2e303]:
+          - generic [ref=f2e304]: 危险 · delete / fail
+          - generic [ref=f2e305]: "--rw-danger"
+          - generic [ref=f2e306]: "#F87171"
+    - generic [ref=f2e101]:
+      - generic [ref=f2e102]: 02 / STATUS
+      - heading "状态语义 · 与员工状态机对应" [level=2] [ref=f2e103]
+      - paragraph [ref=f2e104]: 色彩只承载语义：运行绿 = 在岗/成功，琥珀 = 草稿/警告，玫红 = 下线/失败，灰 = 禁用。禁止用颜色做装饰。
+      - generic [ref=f2e105]:
+        - generic [ref=f2e106]:
+          - generic [ref=f2e107]: 在岗 PUBLISHED
+          - generic [ref=f2e109]: 草稿 DRAFT
+          - generic [ref=f2e111]: 下线 OFFLINE
+          - generic [ref=f2e113]: 禁用 DISABLED
+        - generic [ref=f2e115]: "mapping: PUBLISHED→success · DRAFT→warning · OFFLINE→danger · (disabled)→muted"
+    - generic [ref=f2e116]:
+      - generic [ref=f2e117]: 03 / TYPE
+      - heading "字体阶梯 · 双语分治" [level=2] [ref=f2e118]
+      - paragraph [ref=f2e119]: Space Grotesk 承担英文标题与数字的工程气质，正文 DM Sans，中文回退苹方/雅黑；工号与 ID 一律 JetBrains Mono。
+      - generic [ref=f2e120]:
+        - generic [ref=f2e121]:
+          - generic [ref=f2e122]: display · 30/600 · 页面英雄题
+          - generic [ref=f2e123]: 数字员工平台
+        - generic [ref=f2e124]:
+          - generic [ref=f2e125]: h1 · 20/600 · 区块标题
+          - generic [ref=f2e126]: 我的数字员工
+        - generic [ref=f2e127]:
+          - generic [ref=f2e128]: h2 · 15/600 · 卡片标题
+          - generic [ref=f2e129]: 小钱 — 前端开发
+        - generic [ref=f2e130]:
+          - generic [ref=f2e131]: body · 13/400 · 正文
+          - generic [ref=f2e132]: 负责前端页面开发与组件库维护，输出生产级 React 组件。
+        - generic [ref=f2e133]:
+          - generic [ref=f2e134]: caption · 12/400 · 辅助说明
+          - generic [ref=f2e135]: 管理你的数字员工档案，点击卡片查看详情
+        - generic [ref=f2e136]:
+          - generic [ref=f2e137]: mono · 13/500 · 工号 / ID
+          - generic [ref=f2e138]: STAFF-20261017-R84G
+    - generic [ref=f2e139]:
+      - generic [ref=f2e140]: 04 / COMPONENT
+      - heading "基础组件 · 克制几何" [level=2] [ref=f2e141]
+      - paragraph [ref=f2e142]: 按钮 8px 圆角、卡片 12px、弹窗 16px —— 不超过。默认零阴影，边框即层级；focus 环唯一且可见。
+      - generic [ref=f2e143]:
+        - generic [ref=f2e144]:
+          - generic [ref=f2e145]: buttons · 8px radius
+          - generic [ref=f2e146]:
+            - button "新建员工" [ref=f2e147] [cursor=pointer]
+            - button "保存草稿" [ref=f2e148] [cursor=pointer]
+            - button "取消" [ref=f2e149] [cursor=pointer]
+            - button "删除" [ref=f2e150] [cursor=pointer]
+        - generic [ref=f2e151]:
+          - generic [ref=f2e152]: input · focus = accent ring
+          - generic [ref=f2e153]:
+            - generic [ref=f2e154]: 姓名
+            - textbox "姓名" [ref=f2e155]:
+              - /placeholder: 如：小兔
+          - generic [ref=f2e156]:
+            - generic [ref=f2e157]: 工号（mono）
+            - textbox "工号（mono）" [ref=f2e158]: STAFF-20261017-R84G
+    - generic [ref=f2e159]:
+      - generic [ref=f2e160]: 05 / PAGE PATTERN
+      - heading "页面小样 · 员工卡片墙" [level=2] [ref=f2e161]
+      - paragraph [ref=f2e162]: 真实页面气质预览：统计条 + 过滤 + 卡片。卡片入场 fade-up 错峰 60ms，hover 仅边框变强调色 + 2px 上浮 —— 没有阴影放大，没有缩放跳动。
+      - generic [ref=f2e163]:
+        - generic [ref=f2e164]:
+          - generic [ref=f2e165]:
+            - generic [ref=f2e166]: 员工总数 3
+            - generic [ref=f2e167]: 在岗 2
+            - generic [ref=f2e168]: 草稿 1
+          - button "＋ 新建员工" [ref=f2e169] [cursor=pointer]
+        - generic [ref=f2e170]:
+          - generic [ref=f2e171] [cursor=pointer]:
+            - generic [ref=f2e172]:
+              - generic [ref=f2e173]: 钱
+              - generic [ref=f2e174]:
+                - generic [ref=f2e175]: 小钱
+                - generic [ref=f2e176]: 前端开发
+              - generic [ref=f2e177]: 在岗
+            - paragraph [ref=f2e179]: 负责前端页面开发与组件库维护；说话直接，先给结论再给依据，擅长把设计稿还原成生产级代码。
+            - generic [ref=f2e180]:
+              - generic [ref=f2e181]: 组织内
+              - generic [ref=f2e182]: 发布于 2026-10-17
+          - generic [ref=f2e183] [cursor=pointer]:
+            - generic [ref=f2e184]:
+              - generic [ref=f2e185]: 策
+              - generic [ref=f2e186]:
+                - generic [ref=f2e187]: 阿策
+                - generic [ref=f2e188]: 内容策划
+              - generic [ref=f2e189]: 在岗
+            - paragraph [ref=f2e191]: 内容策划与文案打磨，擅长把技术语言翻译成用户听得懂的价值表达，输出风格统一的内容矩阵。
+            - generic [ref=f2e192]:
+              - generic [ref=f2e193]: 组织内
+              - generic [ref=f2e194]: 发布于 2026-10-16
+          - generic [ref=f2e195] [cursor=pointer]:
+            - generic [ref=f2e196]:
+              - generic [ref=f2e197]: 数
+              - generic [ref=f2e198]:
+                - generic [ref=f2e199]: 小数
+                - generic [ref=f2e200]: 数据分析
+              - generic [ref=f2e201]: 草稿
+            - paragraph [ref=f2e203]: 数据清洗、指标拆解与周报生成；正在完善人设与职责边界，尚未发布上岗。
+            - generic [ref=f2e204]:
+              - generic [ref=f2e205]: 私有
+              - generic [ref=f2e206]: 创建于 2026-10-17
+    - generic [ref=f2e207]:
+      - generic [ref=f2e208]: 06 / CONVERSATION
+      - heading "对话界面 · 数字员工的声音" [level=2] [ref=f2e209]
+      - paragraph [ref=f2e210]: 用户消息 = 实心强调色气泡（右），员工回复 = 卡片底细边框气泡（左）；打字指示三点闪烁是唯一允许的循环动画（loading 同理）。
+      - generic [ref=f2e211]:
+        - generic [ref=f2e212]: 帮我看下这个页面的还原度怎么样？
+        - generic [ref=f2e213]: 结论：还原度约 92%。主要差异在两处：卡片间距比设计稿大 4px；状态标签的琥珀色饱和度偏高。需要我列出逐项对照清单吗？
+    - generic [ref=f2e219]:
+      - generic [ref=f2e220]: 07 / SHAPE & MOTION
+      - heading "形状与动效 · 刻度表" [level=2] [ref=f2e221]
+      - generic [ref=f2e222]:
+        - generic [ref=f2e223]: btn 8px
+        - generic [ref=f2e225]: card 12px
+        - generic [ref=f2e227]: modal 16px
+        - generic [ref=f2e229]: never >16px
+      - generic [ref=f2e231]: duration 150–250ms · easing ease-out · 入场 fade-up 12px/60ms 错峰 hover = 边框色变 + translateY(-2px) · 禁止 scale 跳动 / 多层阴影 / 装饰循环动画 reduced-motion → 全部动画 0.01ms 收敛为直接呈现
+    - generic [ref=f2e232]:
+      - generic [ref=f2e233]: RabbitWork Design System v2 · 现代工具感
+      - generic [ref=f2e234]: slate × emerald · light/dark · 单文件预览
