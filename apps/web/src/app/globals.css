@@ -309,3 +309,52 @@ h4,
     scroll-behavior: auto !important;
   }
 }
+
+/* ── 语义 token 工具类 · unlayered 覆盖（DS v2.1 / RABBITWORK 维护笔记）───
+   Tailwind v4 把自动生成的工具类放进 @layer utilities，CSS 级联规则：
+   unlayered 样式 > layered 样式（高→低）。antd 5 用 CSS-in-JS 注入的
+   `:where(.css-dev-only-do-not-override-*) a { color: var(--ant-color-link); }`
+   是 unlayered，会压底 Tailwind 的 text-rw-* 颜色规则——暗色主题下
+   --ant-color-link 解析为 #030303，导致菜单链接文字不可见。
+
+   此处把 rw-* 颜色 / 背景 / 边框工具类再次声明在 unlayered（不在任何
+   @layer 内）位置，让其凭"未分层样式胜出"压过 antd 的通用 <a> 规则。
+   同时保住 Tailwind utilities 层的其他用途（box / flex / spacing 等
+   与 antd 不竞争的类）正常工作。
+
+   Why: 业务侧使用 text-rw-fg / bg-rw-muted 等语义类被 antd 通用 <a>
+        规则覆盖，黑主题下文字与背景同黑看不见。
+   How to apply: 仅覆盖会被 antd 重置的元素级选择器（<a> / <button>）
+        影响的属性（color / background-color / border-color）。Tailwind
+        的物理布局类（inset / flex 等）放在 utilities 层已能正确生效。 */
+.text-rw-fg { color: var(--rw-fg); }
+.text-rw-fg-muted { color: var(--rw-fg-muted); }
+.text-rw-fg-subtle { color: var(--rw-fg-subtle); }
+.text-rw-accent { color: var(--rw-accent); }
+.text-rw-success { color: var(--rw-success); }
+.text-rw-warning { color: var(--rw-warning); }
+.text-rw-danger { color: var(--rw-danger); }
+
+.hover\:text-rw-fg:hover { color: var(--rw-fg); }
+.hover\:text-rw-fg-muted:hover { color: var(--rw-fg-muted); }
+.hover\:text-rw-accent:hover { color: var(--rw-accent); }
+
+.bg-rw-bg { background-color: var(--rw-bg); }
+.bg-rw-card { background-color: var(--rw-card); }
+.bg-rw-muted-subtle { background-color: var(--rw-muted-subtle); }
+.bg-rw-accent { background-color: var(--rw-accent); }
+.bg-rw-accent-subtle { background-color: var(--rw-accent-subtle); }
+.bg-rw-success { background-color: var(--rw-success); }
+.bg-rw-success-subtle { background-color: var(--rw-success-subtle); }
+.bg-rw-warning-subtle { background-color: var(--rw-warning-subtle); }
+.bg-rw-danger-subtle { background-color: var(--rw-danger-subtle); }
+.bg-rw-card\/50 { background-color: color-mix(in srgb, var(--rw-card) 50%, transparent); }
+
+.hover\:bg-rw-muted-subtle:hover { background-color: var(--rw-muted-subtle); }
+.hover\:bg-rw-accent-subtle:hover { background-color: var(--rw-accent-subtle); }
+
+.border-rw-border { border-color: var(--rw-border); }
+.border-rw-border-strong { border-color: var(--rw-border-strong); }
+.border-rw-accent { border-color: var(--rw-accent); }
+.hover\:border-rw-border-strong:hover { border-color: var(--rw-border-strong); }
+.hover\:border-rw-accent:hover { border-color: var(--rw-accent); }
