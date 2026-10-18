@@ -429,16 +429,19 @@
 /* ── CHAT-002· composer 区 ──────────────────────────────────────────── */
 .rw-composer {
   border-top: 1px solid var(--rw-border);
-  padding: 14px 24px 18px;
+  /* CHAT-002 修复：去掉水平 padding，让 .rw-composer-card 撑满右栏整宽。
+     原 padding 14px 24px 18px → 760 - 2*24 = 712，input 实际只有 684。 */
+  padding: 14px 0 18px;
   flex-shrink: 0;
 }
 .rw-composer-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px 12px 10px 14px;
-  max-width: 768px;
-  margin: 0 auto;
+  padding: 8px 24px 10px;
+  /* CHAT-002 修复：让 .rw-composer-card 撑满右栏整宽（760px）。
+     原 max-width:768 + margin:0 auto 居中 / 后续 margin:0 24px → 都让 card 偏小；
+     视觉留白改由 card 自身水平 padding:24px 承担。 */
   background: var(--rw-card);
   border: 1px solid var(--rw-border-strong);
   border-radius: var(--radius-md);
