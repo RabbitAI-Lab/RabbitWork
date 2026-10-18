@@ -1,15 +1,24 @@
 "use client";
 
+/**
+ * CHAT-002 · 对话工作台（DS v2.1）
+ * ─────────────────────────────────────────────────────────
+ * 双栏布局：左 persona 卡 / 右 消息流 + composer。
+ * 沿用 CHAT-001 的 SSE 流式 / chatApi / 入参 / 出参契约 —— 仅改 UI。
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { App, Avatar } from "antd";
-import { ArrowLeftOutlined, SendOutlined, StopOutlined } from "@ant-design/icons";
-import { Bubble, Sender, Welcome } from "@ant-design/x";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import { AppShell } from "@/components/AppShell";
-import { StatusPill } from "@/components/StatusPill";
+import { ChatPersonaCard } from "@/components/ChatPersonaCard";
+import { ChatBubble, ChatStreamingBubble } from "@/components/ChatBubble";
+import { ChatComposer } from "@/components/ChatComposer";
 import { chatApi, conversationEventsUrl } from "@rabbit/api-client";
 import type { ChatEvent, MessageDto } from "@rabbit/shared";
+import "../chat.css";
 
 interface TokenUsage {
   model?: string;
@@ -18,14 +27,14 @@ interface TokenUsage {
   total?: number;
 }
 
+const CONTEXT_BUDGET_TOKENS = 8_000;
 const SUGGESTIONS = ["用一句话介绍你自己", "你擅长处理哪些工作？", "帮我列一份工作计划"];
 
-/** CHAT-001 对话工作台（DS v2.1 §4）：antdx Bubble/Sender/Welcome 形状接管 + 沉浸式布局 + SSE 流式。 */
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { message } = App.useApp();
+  const { message: ctxMessage } = App.useApp();
 
   const detail = useQuery({
     queryKey: ["conversation", id],
@@ -38,6 +47,7 @@ export default function ChatPage() {
   const [streaming, setStreaming] = useState(false);
   const [input, setInput] = useState("");
   const [lastUsage, setLastUsage] = useState<TokenUsage | null>(null);
+  const [contextCount] = useState(0); // M2 接真实任务上下文注入；骨架期固定为 0
   const esRef = useRef<EventSource | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -101,7 +111,7 @@ export default function ChatPage() {
         case "run_ended":
           break;
         case "error":
-          message.error(event.message);
+          ctxMessage.error(event.message);
           setStreaming(false);
           setStreamingText("");
           break;
@@ -114,11 +124,10 @@ export default function ChatPage() {
       }
     };
     es.onerror = () => {
-      // 服务端 done 后主动 close；异常断开时兜底复位
       setStreaming(false);
       closeStream();
     };
-  }, [id, closeStream, message, queryClient]);
+  }, [id, closeStream, ctxMessage, queryClient]);
 
   useEffect(() => closeStream, [closeStream]);
 
@@ -129,7 +138,7 @@ export default function ChatPage() {
       setInput("");
       openStream();
     },
-    onError: (e) => message.error(e instanceof Error ? e.message : "发送失败"),
+    onError: (e) => ctxMessage.error(e instanceof Error ? e.message : "发送失败"),
   });
 
   const interrupt = useMutation({
@@ -138,218 +147,241 @@ export default function ChatPage() {
       setStreaming(false);
       closeStream();
       setStreamingText("");
-      message.info("已打断");
+      ctxMessage.info("已打断");
     },
   });
 
   const employee = detail.data?.employee;
   const employeeName = employee?.name ?? "数字员工";
+  const employeeInitial = employeeName.slice(0, 1);
 
   const submit = () => {
     const v = input.trim();
     if (v && !send.isPending && !streaming) send.mutate(v);
   };
 
+  const onCopy = useCallback(
+    (text: string) => {
+      navigator.clipboard?.writeText(text).catch(() => {
+        ctxMessage.info("复制失败：请手动复制");
+      });
+    },
+    [ctxMessage],
+  );
+
+  const onCopyMarkdown = useCallback(
+    (text: string) => {
+      // M2 接 chatApi.format(messageId, 'md')；骨架期包个代码块
+      onCopy("```\n" + text + "\n```");
+    },
+    [onCopy],
+  );
+
+  const onFeedback = useCallback(
+    (msg: MessageDto, score: "up" | "down") => {
+      ctxMessage.info(`已记录反馈：${score === "up" ? "👍" : "👎"}`);
+      // M2 接 chatApi.feedback(msg.id, score)
+      void msg;
+    },
+    [ctxMessage],
+  );
+
+  const onRegenerate = useCallback(() => {
+    // M2: 找到上一条 user message 并 resend
+    ctxMessage.info("重生成（M2 接真实接口）");
+  }, [ctxMessage]);
+
+  const onNewChat = useCallback(() => {
+    // M2: 创建新会话 + 重定向
+    router.push("/office");
+  }, [router]);
+
+  const recentTasks = useMemo(
+    () => [
+      { title: "处理「上线前 a11y 走查」" },
+      { title: "输出「Q3 性能周报」" },
+      { title: "解答 menu 弹层被裁剪" },
+    ],
+    [],
+  );
+
   return (
     <AppShell active="office">
-      <div className="mx-auto flex h-full max-w-3xl flex-col px-4 sm:px-6" data-testid="chat-page">
-        {/* 会话头（一行紧凑） */}
-        <div className="flex items-center gap-3 py-4">
-          <Avatar size={34} className="avatar-accent !flex !items-center !justify-center">
-            <span className="text-sm font-medium">{employeeName.slice(0, 1)}</span>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-display truncate text-[15px] font-semibold text-rw-fg">
-                {employeeName}
-              </span>
-              <span className="text-rw-fg-subtle truncate text-xs">
-                {employee?.title ?? "数字员工"}
-              </span>
-            </div>
-          </div>
-          <span data-testid="chat-status">
-            <StatusPill
-              custom={
-                streaming ? { label: "回复中…", tone: "success" } : { label: "空闲", tone: "muted" }
-              }
-            />
-          </span>
-          <button
-            type="button"
-            aria-label="返回办公室"
-            onClick={() => router.push("/office")}
-            className="text-rw-fg-subtle hover:text-rw-fg hover:bg-rw-muted-subtle flex h-8 w-8 cursor-pointer items-center justify-center rounded-rw-sm transition-colors duration-[140ms] ease-out"
-          >
-            <ArrowLeftOutlined />
-          </button>
-        </div>
+      <div className="rw-chat-shell" data-testid="chat-page">
+        {/* 左：persona 卡 */}
+        <ChatPersonaCard
+          employee={
+            employee ? { name: employee.name, title: employee.title, personaPrompt: null } : null
+          }
+          usage={lastUsage}
+          totalTokensBudget={CONTEXT_BUDGET_TOKENS}
+          recentTasks={recentTasks}
+          onNewChat={onNewChat}
+        />
 
-        {/* 消息区（沉浸式无框） */}
-        <div
-          className="scroll-slim flex-1 space-y-4 overflow-y-auto pb-6"
-          data-testid="chat-messages"
-        >
-          {messages.length === 0 && !streamingText && !streaming && (
-            <div className="flex h-full min-h-[320px] items-center justify-center py-10">
-              <Welcome
-                icon={
-                  <Avatar size={56} className="avatar-accent !flex !items-center !justify-center">
-                    <span className="text-xl font-medium">{employeeName.slice(0, 1)}</span>
-                  </Avatar>
-                }
-                title={
-                  <span className="font-display text-base font-semibold text-rw-fg">
-                    与 {employeeName} 开始对话
-                  </span>
-                }
-                description={
-                  <span className="text-rw-fg-subtle text-[13px]">
-                    发布后的数字员工由 AgentScope 运行时驱动
-                  </span>
-                }
-                extra={
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    {SUGGESTIONS.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setInput(s)}
-                        className="border-rw-border-strong bg-rw-card text-rw-fg-muted hover:border-rw-accent hover:text-rw-accent rounded-rw-sm border px-3.5 py-1.5 text-xs transition-all duration-[140ms] ease-out hover:-translate-y-px active:scale-95"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+        {/* 右：消息流 + composer */}
+        <section className="rw-chat-main">
+          {/* 头部：大头像 + 状态 + 工具 */}
+          <header className="rw-chat-header" data-testid="chat-header">
+            <Avatar
+              size={40}
+              className="avatar-accent rw-chat-header-avatar"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+            >
+              {employeeInitial}
+            </Avatar>
+            <div className="rw-chat-header-info">
+              <div className="rw-chat-header-title-row">
+                <span className="rw-chat-header-name">{employeeName}</span>
+                <span
+                  className="rw-status-pill"
+                  style={{
+                    background: streaming ? "var(--rw-accent-subtle)" : "var(--rw-muted-subtle)",
+                    color: streaming ? "var(--rw-accent)" : "var(--rw-fg-muted)",
+                    borderColor: streaming ? "var(--rw-accent)" : "var(--rw-border)",
+                  }}
+                  data-testid="chat-status"
+                >
+                  {streaming ? "回复中…" : "空闲"}
+                </span>
+              </div>
+              <div className="rw-chat-header-sub">
+                {employee?.title ?? "数字员工"}
+                {employee ? " · 已发布" : ""}
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label="导出"
+              title="导出为 Markdown"
+              className="rw-icon-btn"
+              onClick={() => ctxMessage.info("导出（M2 接真实接口）")}
+            >
+              ⤓
+            </button>
+            <button
+              type="button"
+              aria-label="任务上下文"
+              title="任务上下文"
+              className="rw-icon-btn"
+              onClick={() => ctxMessage.info("任务上下文（M2 接真实接口）")}
+            >
+              📋
+            </button>
+            <button
+              type="button"
+              aria-label="设置"
+              title="设置"
+              className="rw-icon-btn"
+              onClick={() => ctxMessage.info("设置（M2 接真实接口）")}
+            >
+              ⚙
+            </button>
+            <button
+              type="button"
+              aria-label="返回办公室"
+              title="返回办公室"
+              data-testid="chat-back"
+              onClick={() => router.push("/office")}
+              className="rw-icon-btn"
+            >
+              <ArrowLeftOutlined />
+            </button>
+          </header>
+
+          {/* 消息流 */}
+          <div className="rw-chat-messages scroll-slim" data-testid="chat-messages">
+            {messages.length === 0 && !streamingText && !streaming ? (
+              <WelcomeBlock onPickSuggestion={setInput} />
+            ) : null}
+
+            {messages.map((m, idx) => (
+              <ChatBubble
+                key={m.id ?? idx}
+                role={m.role as "USER" | "ASSISTANT"}
+                content={m.content}
+                usage={m.tokenUsage as TokenUsage | null}
+                name={employeeName}
+                onCopy={() => onCopy(m.content)}
+                onEdit={() => ctxMessage.info("编辑（M2 接真实接口）")}
+                onRegenerate={m.role === "ASSISTANT" ? onRegenerate : undefined}
+                onFeedback={m.role === "ASSISTANT" ? (score) => onFeedback(m, score) : undefined}
+                onCopyMarkdown={
+                  m.role === "ASSISTANT" ? () => onCopyMarkdown(m.content) : undefined
                 }
               />
-            </div>
-          )}
+            ))}
 
-          {messages.map((m) => (
-            <MessageBubble
-              key={m.id}
-              role={m.role}
-              content={m.content}
-              usage={m.tokenUsage as TokenUsage | null}
-              name={employeeName}
-            />
-          ))}
+            {/* 流式中（无已 submit 文本） */}
+            {streaming && streamingText.length === 0 ? (
+              <ChatStreamingBubble name={employeeName} partial="" />
+            ) : null}
+            {/* 流式中（accumulated delta） */}
+            {streamingText ? (
+              <ChatBubble
+                role="ASSISTANT"
+                content={streamingText}
+                streaming
+                usage={lastUsage}
+                name={employeeName}
+                onCopy={() => onCopy(streamingText)}
+                onCopyMarkdown={() => onCopyMarkdown(streamingText)}
+              />
+            ) : null}
+            <div ref={bottomRef} />
+          </div>
 
-          {streaming && !streamingText && (
-            <Bubble
-              placement="start"
-              avatar={
-                <Avatar size={28} className="avatar-accent !flex !items-center !justify-center">
-                  <span className="text-xs">{employeeName.slice(0, 1)}</span>
-                </Avatar>
-              }
-              content=""
-              loading
-            />
-          )}
-          {streamingText && (
-            <MessageBubble role="ASSISTANT" content={streamingText} streaming name={employeeName} />
-          )}
-          <div ref={bottomRef} />
-        </div>
-
-        {/* 输入区（底部悬浮卡） */}
-        <div className="pb-5">
-          {lastUsage && (
-            <div
-              className="text-rw-fg-subtle mb-2 text-center font-mono text-[11px]"
-              data-testid="chat-usage"
-            >
-              {lastUsage.model} · 输入 {lastUsage.input ?? "-"} / 输出 {lastUsage.output ?? "-"}{" "}
-              tokens
-            </div>
-          )}
-          <Sender
-            rootClassName="rw-sender"
+          {/* 底部 composer */}
+          <ChatComposer
             value={input}
             onChange={setInput}
             onSubmit={submit}
-            disabled={send.isPending}
-            placeholder={`向 ${employeeName} 发送消息…`}
-            data-testid="chat-input"
-            suffix={() =>
-              streaming ? (
-                <button
-                  type="button"
-                  data-testid="chat-interrupt"
-                  aria-label="打断回复"
-                  className="rw-send-btn rw-stop-btn"
-                  onClick={() => interrupt.mutate()}
-                >
-                  <StopOutlined />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  data-testid="chat-send"
-                  aria-label="发送"
-                  className="rw-send-btn"
-                  disabled={!input.trim() || send.isPending}
-                  onClick={submit}
-                >
-                  <SendOutlined />
-                </button>
-              )
-            }
+            streaming={streaming}
+            sending={send.isPending}
+            onInterrupt={() => interrupt.mutate()}
+            contextCount={contextCount}
           />
-          <div className="text-rw-fg-subtle mt-2 text-center font-mono text-[11px]">
-            ⌘↵ 发送 · Shift+↵ 换行
-          </div>
-        </div>
+        </section>
       </div>
     </AppShell>
   );
 }
 
-function MessageBubble({
-  role,
-  content,
-  streaming,
-  usage,
-  name,
-}: {
-  role: string;
-  content: string;
-  streaming?: boolean;
-  usage?: TokenUsage | null;
-  name?: string;
-}) {
-  const isUser = role === "USER";
-  const avatarName = (name ?? "员").slice(0, 1);
+/** 空态 Welcome（不用 antdx Welcome，自己画避免其固定样式与 DS v2.1 冲突） */
+function WelcomeBlock({ onPickSuggestion }: { onPickSuggestion: (s: string) => void }) {
   return (
-    <Bubble
-      placement={isUser ? "end" : "start"}
-      avatar={
-        isUser ? undefined : (
-          <Avatar
-            size={28}
-            className="avatar-accent !mt-0.5 !flex !shrink-0 !items-center !justify-center"
-          >
-            <span className="text-xs">{avatarName}</span>
-          </Avatar>
-        )
-      }
-      content={
-        <>
-          <span className="whitespace-pre-wrap">{content}</span>
-          {streaming && (
-            <span className="text-rw-accent animate-blink ml-0.5 font-semibold">▍</span>
-          )}
-          {usage?.total != null && (
-            <div className="text-rw-fg-subtle mt-1 font-mono text-[11px]">
-              {usage.model} · {usage.input ?? "-"} 输入 / {usage.output ?? "-"} 输出 tokens
-            </div>
-          )}
-        </>
-      }
-      classNames={{ root: "bubble-row", content: isUser ? "bubble-user" : "bubble-agent" }}
-      data-testid={isUser ? "bubble-user" : "bubble-assistant"}
-    />
+    <div className="rw-welcome" data-testid="chat-welcome">
+      <div className="rw-welcome-card">
+        <Avatar
+          size={56}
+          className="avatar-accent"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 22,
+            fontWeight: 600,
+          }}
+          aria-hidden
+        >
+          💬
+        </Avatar>
+        <div className="rw-welcome-title">开始这次对话</div>
+        <div className="rw-welcome-sub">发布后的数字员工由 AgentScope 运行时驱动</div>
+        <div className="rw-welcome-pills">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => onPickSuggestion(s)}
+              className="rw-welcome-pill"
+              data-testid={`chat-welcome-pill-${s}`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

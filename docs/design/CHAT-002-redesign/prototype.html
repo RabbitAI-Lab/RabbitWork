@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CHAT-002 重设计 — 与「小钱」对话（DS v2.1）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root{
+        --rw-bg:#fafafa; --rw-card:#ffffff; --rw-fg:#0f172a; --rw-fg-muted:#64748b; --rw-fg-subtle:#94a3b8;
+        --rw-border:#e4e8ee; --rw-border-strong:#cbd5e1;
+        --rw-accent:#10b981; --rw-accent-hover:#059669; --rw-accent-fg:#ffffff; --rw-accent-subtle:#ecfdf5;
+        --rw-muted-subtle:#f1f5f9;
+        --rw-shadow-float:0 8px 24px rgba(15,23,42,.12);
+        --t-fast:140ms; --t-base:200ms; --ease-out:cubic-bezier(.25,.46,.45,.94);
+      }
+      .dark{
+        --rw-bg:#0b0f1a; --rw-card:#111827; --rw-fg:#f1f5f9; --rw-fg-muted:#94a3b8; --rw-fg-subtle:#5b6b82;
+        --rw-border:#1e293b; --rw-border-strong:#334155;
+        --rw-accent:#34d399; --rw-accent-hover:#6ee7b7; --rw-accent-fg:#052e21; --rw-accent-subtle:rgba(52,211,153,.12);
+        --rw-muted-subtle:rgba(148,163,184,.1);
+        --rw-shadow-float:0 8px 24px rgba(0,0,0,.5);
+      }
+      body{ margin:0; background:var(--rw-bg); color:var(--rw-fg); font-family:var(--font-body); font-size:13px; }
+      .font-display{ font-family:"Space Grotesk","PingFang SC",sans-serif; letter-spacing:-0.01em; }
+      .font-mono{ font-family:"JetBrains Mono",ui-monospace,monospace; }
+      .glass{ background:color-mix(in srgb,var(--rw-bg) 78%,transparent); backdrop-filter:blur(16px); }
+      .scroll-slim::-webkit-scrollbar{ width:6px; }
+      .scroll-slim::-webkit-scrollbar-thumb{ border-radius:9999px; background:var(--rw-border-strong); }
+      .scroll-slim{ scrollbar-width:thin; scrollbar-color:var(--rw-border-strong) transparent; }
+      .avatar-accent{ background-image:linear-gradient(135deg,var(--rw-accent),var(--rw-accent-hover)); color:var(--rw-accent-fg); }
+      .rw-card{ background:var(--rw-card); border:1px solid var(--rw-border); border-radius:var(--radius-md); }
+      .rw-stat-pill-running{ background:var(--rw-accent-subtle); color:var(--rw-accent); border:1px solid var(--rw-accent); }
+      .rw-stat-pill-idle{ background:var(--rw-muted-subtle); color:var(--rw-fg-muted); border:1px solid var(--rw-border); }
+      .btn-ghost{ padding:6px 10px; border-radius:var(--radius-sm); color:var(--rw-fg-muted); background:transparent; border:1px solid transparent; cursor:pointer; transition:all var(--t-fast) var(--ease-out); }
+      .btn-ghost:hover{ background:var(--rw-muted-subtle); color:var(--rw-fg); }
+      .btn-ghost:active{ transform:scale(0.96); }
+      .btn-icon{ height:32px; width:32px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all var(--t-fast) var(--ease-out); color:var(--rw-fg-muted); background:transparent; border:1px solid transparent; }
+      .btn-icon:hover{ background:var(--rw-muted-subtle); color:var(--rw-fg); }
+      .btn-icon:active{ transform:scale(0.92); }
+      .bubble-user{ background:var(--rw-accent); color:var(--rw-accent-fg); border-radius:4px 4px 2px 4px; padding:10px 14px; max-width:560px; }
+      .bubble-agent{ background:var(--rw-card); color:var(--rw-fg); border:1px solid var(--rw-border); border-radius:4px 4px 4px 2px; padding:10px 14px; max-width:600px; }
+      .bubble-row{ animation:bubble-in 0.36s cubic-bezier(.34,1.3,.64,1) both; }
+      .bubble-actions{ display:flex; gap:6px; opacity:0; transition:opacity var(--t-fast) var(--ease-out); margin-top:4px; }
+      .bubble-host:hover .bubble-actions{ opacity:1; }
+      .icon-btn{ width:28px; height:28px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--rw-border); background:var(--rw-card); color:var(--rw-fg-muted); cursor:pointer; transition:all var(--t-fast) var(--ease-out); }
+      .icon-btn:hover{ color:var(--rw-fg); border-color:var(--rw-border-strong); }
+      .icon-btn:active{ transform:scale(0.92); }
+      .icon-btn.is-on{ color:var(--rw-accent); border-color:var(--rw-accent); background:var(--rw-accent-subtle); }
+      .skill-chip{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; background:var(--rw-muted-subtle); border:1px solid var(--rw-border); color:var(--rw-fg-muted); font-size:11.5px; }
+      .skill-chip .dot{ width:5px; height:5px; border-radius:999px; background:var(--rw-accent); }
+      .typing-dot{ width:6px; height:6px; border-radius:999px; background:var(--rw-accent); display:inline-block; }
+      .typing-dot + .typing-dot{ margin-left:3px; animation:bounce 1s infinite; }
+      .typing-dot + .typing-dot + .typing-dot{ animation-delay:0.18s; }
+      .typing-dot{ animation:bounce 1s infinite; animation-delay:0.36s; }
+      @keyframes bubble-in{ from{ opacity:0; transform:translateY(8px) scale(.97); } to{ opacity:1; transform:translateY(0) scale(1); } }
+      @keyframes bounce{ 0%,80%,100%{ transform:translateY(0); opacity:.4; } 40%{ transform:translateY(-3px); opacity:1; } }
+      .composer-wrap{ display:flex; flex-direction:column; gap:8px; padding:10px 12px 10px 14px; background:var(--rw-card); border:1px solid var(--rw-border-strong); border-radius:var(--radius-md); transition:border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out); }
+      .composer-wrap:focus-within{ border-color:var(--rw-accent); box-shadow:0 0 0 3px var(--rw-ring); }
+      .composer-toolbar{ display:flex; align-items:center; gap:4px; }
+      .composer-input{ flex:1; background:transparent; border:none; outline:none; color:var(--rw-fg); font-family:var(--font-body); font-size:13.5px; padding:6px 0; min-height:32px; resize:none; }
+      .composer-input::placeholder{ color:var(--rw-fg-subtle); }
+      .composer-row{ display:flex; align-items:center; justify-content:space-between; }
+      .composer-hint{ font-family:var(--font-mono); font-size:10.5px; color:var(--rw-fg-subtle); }
+      .send-btn{ width:30px; height:30px; border-radius:var(--radius-sm); background:var(--rw-accent); color:var(--rw-accent-fg); border:none; cursor:pointer; display:grid; place-items:center; transition:all var(--t-fast) var(--ease-out); }
+      .send-btn:hover{ background:var(--rw-accent-hover); }
+      .send-btn:active{ transform:scale(0.9); }
+      .send-btn[disabled]{ opacity:.45; cursor:not-allowed; }
+      .kbd{ display:inline-block; min-width:18px; padding:1px 4px; border-radius:3px; border:1px solid var(--rw-border); background:var(--rw-muted-subtle); font-family:var(--font-mono); font-size:10px; color:var(--rw-fg-muted); text-align:center; }
+      .toolbar-icon{ width:30px; height:30px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; justify-content:center; color:var(--rw-fg-muted); cursor:pointer; transition:all var(--t-fast) var(--ease-out); }
+      .toolbar-icon:hover{ color:var(--rw-fg); background:var(--rw-muted-subtle); }
+      .toolbar-icon:active{ transform:scale(0.92); }
+      .toolbar-icon.is-on{ color:var(--rw-accent); background:var(--rw-accent-subtle); }
+      .task-pill{ display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:var(--radius-sm); background:var(--rw-card); border:1px solid var(--rw-border); font-size:12px; color:var(--rw-fg-muted); }
+      .task-pill:hover{ border-color:var(--rw-border-strong); color:var(--rw-fg); cursor:pointer; }
+      .persona-quote{ position:relative; padding:14px 16px 14px 22px; background:var(--rw-muted-subtle); border-radius:var(--radius-md); color:var(--rw-fg-muted); font-size:12.5px; line-height:1.6; }
+      .persona-quote::before{ content:""; position:absolute; left:8px; top:6px; bottom:6px; width:2px; border-radius:2px; background:var(--rw-accent); }
+      .usage-bar{ position:relative; height:4px; border-radius:999px; background:var(--rw-muted-subtle); overflow:hidden; }
+      .usage-bar > span{ display:block; height:100%; background:linear-gradient(90deg, var(--rw-accent), var(--rw-accent-hover)); }
+      .row-host{ display:flex; flex-direction:column; align-items:flex-end; max-width:680px; margin-left:auto; }
+      .row-ai{ display:flex; flex-direction:row; align-items:flex-start; gap:10px; max-width:680px; }
+      .row-ai .col-text{ display:flex; flex-direction:column; gap:4px; }
+      .theme-toggle{ position:fixed; top:18px; right:22px; z-index:100; padding:6px 12px; border-radius:999px; border:1px solid var(--rw-border); background:var(--rw-card); color:var(--rw-fg); font-size:12px; cursor:pointer; box-shadow:var(--rw-shadow-float); }
+    </style>
+  </head>
+  <body>
+    <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark'); this.textContent = document.documentElement.classList.contains('dark') ? '☀ 切亮色' : '☾ 切暗色'">
+      ☀ 切亮色
+    </button>
+
+    <div class="flex h-screen overflow-hidden">
+      <!-- ────────── AppShell 侧栏 ────────── -->
+      <aside class="glass flex w-60 shrink-0 flex-col border-r" style="border-right-color: var(--rw-border)">
+        <div class="flex items-center gap-3 px-5 pb-5 pt-6">
+          <div class="flex h-8 w-8 items-center justify-center rounded-md" style="background:var(--rw-accent); color:var(--rw-accent-fg); font-family:var(--font-display); font-weight:700;">R</div>
+          <div class="flex flex-col leading-tight">
+            <span class="font-display text-[15px] font-semibold" style="color:var(--rw-fg)">RabbitWork</span>
+            <span class="text-[11px]" style="color:var(--rw-fg-subtle)">数字员工平台</span>
+          </div>
+        </div>
+        <nav class="flex-1 space-y-1 px-3">
+          <a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm" style="color:var(--rw-fg-muted)" href="#">📦 我的数字员工</a>
+          <a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm" style="color:var(--rw-fg-muted)" href="#">👥 我的团队</a>
+          <a class="flex items-center gap-3 rounded-md px-3 py-2 text-sm" style="color:var(--rw-fg-muted)" href="/office">🏠 办公室</a>
+        </nav>
+        <div class="flex items-center gap-2 border-t p-3" style="border-top-color: var(--rw-border)">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold" style="background:linear-gradient(135deg, var(--rw-accent), var(--rw-accent-hover)); color:var(--rw-accent-fg)">U</div>
+          <div class="flex flex-1 flex-col leading-tight">
+            <span class="text-[13px] font-medium" style="color:var(--rw-fg)">管理员</span>
+            <span class="text-[11px]" style="color:var(--rw-fg-subtle)">管理员</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ────────── 主区：左 persona ｜ 右 消息+composer ────────── -->
+      <main class="flex-1 min-w-0 flex">
+        <!-- 左：员工档案 + 历史任务 -->
+        <aside class="w-[260px] shrink-0 border-r overflow-y-auto p-5" style="border-right-color: var(--rw-border)" data-testid="chat-persona">
+          <!-- 头像 + 名 -->
+          <div class="flex flex-col items-center gap-3 pb-5">
+            <div class="relative">
+              <div class="avatar-accent flex h-16 w-16 items-center justify-center rounded-full text-2xl font-semibold">小</div>
+              <span class="absolute right-0 bottom-0 h-3 w-3 rounded-full" style="background:var(--rw-accent); border:2px solid var(--rw-card);"></span>
+            </div>
+            <div class="text-center">
+              <div class="font-display text-[16px] font-semibold" style="color:var(--rw-fg)">小钱</div>
+              <div class="text-[12px]" style="color:var(--rw-fg-subtle)">前端开发 · 数字员工 #P001</div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-medium" style="background:var(--rw-accent-subtle); color:var(--rw-accent);">空闲</span>
+          </div>
+
+          <!-- persona 摘要 -->
+          <div class="space-y-3">
+            <div>
+              <div class="text-[11px] font-medium uppercase tracking-wider" style="color:var(--rw-fg-subtle)">风格画像</div>
+              <div class="persona-quote mt-2">
+                资深前端，偏好 TypeScript；输出格式：先结论后代码，注释详细；遇到未知技术会主动调研而不是猜。
+              </div>
+            </div>
+
+            <div>
+              <div class="text-[11px] font-medium uppercase tracking-wider" style="color:var(--rw-fg-subtle)">擅长</div>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <span class="skill-chip"><span class="dot"></span>React 19</span>
+                <span class="skill-chip"><span class="dot"></span>TypeScript</span>
+                <span class="skill-chip"><span class="dot"></span>Next.js</span>
+                <span class="skill-chip"><span class="dot"></span>Tailwind</span>
+                <span class="skill-chip"><span class="dot"></span>a11y</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-medium uppercase tracking-wider" style="color:var(--rw-fg-subtle)">本会话 token</span>
+                <span class="font-mono text-[11px]" style="color:var(--rw-fg-muted)">1.2K / 8K</span>
+              </div>
+              <div class="usage-bar mt-1.5"><span style="width:15%"></span></div>
+            </div>
+
+            <div>
+              <div class="text-[11px] font-medium uppercase tracking-wider" style="color:var(--rw-fg-subtle)">最近任务</div>
+              <div class="mt-2 space-y-1.5">
+                <div class="task-pill">📨 处理「上线前 a11y 走查」</div>
+                <div class="task-pill">📊 输出「Q3 性能周报」</div>
+                <div class="task-pill">💬 解答一个 menu 弹层被裁剪问题</div>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button class="btn-ghost w-full text-xs">+ 新对话</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右：消息流 + composer -->
+        <section class="flex-1 min-w-0 flex flex-col">
+          <!-- 头部：员工 + 状态 + 工具 -->
+          <header class="flex items-center gap-3 border-b px-5 py-3" style="border-bottom-color: var(--rw-border)" data-testid="chat-header">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="avatar-accent flex h-10 w-10 items-center justify-center rounded-full font-semibold">小</div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-display truncate text-[15px] font-semibold" style="color:var(--rw-fg)">小钱</span>
+                  <span style="background:var(--rw-accent-subtle); color:var(--rw-accent); border:1px solid var(--rw-accent);" class="rounded-full px-2 py-0.5 text-[10.5px] font-medium">空闲</span>
+                </div>
+                <div class="truncate text-[11.5px]" style="color:var(--rw-fg-subtle)">前端开发 · 已就座 1F-01 · 上次活跃 1 分钟前</div>
+              </div>
+            </div>
+            <button class="btn-icon" title="导出为 Markdown">⤓</button>
+            <button class="btn-icon" title="任务上下文">📋</button>
+            <button class="btn-icon" title="设置">⚙</button>
+            <button class="btn-icon" title="返回办公室" onclick="location.href='/office'">←</button>
+          </header>
+
+          <!-- 消息流 -->
+          <div class="scroll-slim flex-1 overflow-y-auto px-6 py-6" data-testid="chat-messages">
+            <!-- 欢迎 / 建议 -->
+            <div class="mx-auto max-w-2xl pb-6 text-center">
+              <div class="mx-auto flex max-w-md flex-col items-center gap-3 rounded-xl p-6" style="background:var(--rw-card); border:1px solid var(--rw-border);">
+                <div class="avatar-accent flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold">小</div>
+                <div>
+                  <div class="font-display text-[15px] font-semibold" style="color:var(--rw-fg)">与 小钱 开始对话</div>
+                  <div class="mt-1 text-[12px]" style="color:var(--rw-fg-subtle)">发布后的数字员工由 AgentScope 运行时驱动</div>
+                </div>
+                <div class="flex flex-wrap justify-center gap-1.5 pt-2">
+                  <button class="border px-3 py-1.5 text-[12px] rounded-md transition-all" style="border-color:var(--rw-border-strong); color:var(--rw-fg-muted); background:var(--rw-card);">用一句话介绍你自己</button>
+                  <button class="border px-3 py-1.5 text-[12px] rounded-md transition-all" style="border-color:var(--rw-border-strong); color:var(--rw-fg-muted); background:var(--rw-card);">你擅长处理哪些工作？</button>
+                  <button class="border px-3 py-1.5 text-[12px] rounded-md transition-all" style="border-color:var(--rw-border-strong); color:var(--rw-fg-muted); background:var(--rw-card);">帮我列一份工作计划</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 用户消息 -->
+            <div class="row-host bubble-host mb-5">
+              <div class="bubble-row">
+                <div class="bubble-user whitespace-pre-wrap">帮我看一眼「按不可点击父菜单下的 aria-disabled 子菜单被 screen reader 念出来」的修复方案</div>
+              </div>
+              <div class="bubble-actions">
+                <button class="icon-btn" title="复制">⧉</button>
+                <button class="icon-btn" title="编辑">✎</button>
+              </div>
+            </div>
+
+            <!-- AI 回复 -->
+            <div class="row-ai bubble-host mb-6">
+              <div class="avatar-accent flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold">小</div>
+              <div class="col-text">
+                <div class="flex items-center gap-1.5 text-[11px]" style="color:var(--rw-fg-subtle)">
+                  <span>小钱</span>
+                  <span style="color:var(--rw-border-strong)">·</span>
+                  <span class="font-mono tabular-nums">0.8s</span>
+                  <span style="color:var(--rw-border-strong)">·</span>
+                  <span class="font-mono tabular-nums">in 142 / out 318 tokens</span>
+                </div>
+                <div class="bubble-row">
+                  <div class="bubble-agent">
+                    <span class="whitespace-pre-wrap">结论：在父 `<li>` 用 `aria-disabled="true"`，子菜单的 `&lt;a&gt;` 仍保留 `href` 但渲染出视觉禁用态；屏幕阅读器会念 "dimmed" 或 "disabled"，无障碍发现性 OK，但**点击**会被父 onClick 拦下，所以得配键盘防御。</span>
+                    <ol class="mt-2 space-y-1 pl-5 list-decimal">
+                      <li>父 `<li aria-disabled="true">` + 子 `<a tabIndex={-1} aria-disabled="true">` 双标</li>
+                      <li>键盘 Enter 到子时由父 keydown 拦下 + 阻止默认</li>
+                      <li>保留 `href` 便于 css `:focus-within`</li>
+                    </ol>
+                    <div class="mt-3 rounded-md p-2 font-mono text-[11.5px]" style="background:var(--rw-muted-subtle); color:var(--rw-fg)">
+                      &lt;li aria-disabled="true" onKeyDown={disableParentEnter}&gt;<br>
+                      &nbsp;&nbsp;&lt;a href="..." tabIndex={-1} aria-disabled="true"&gt;子菜单&lt;/a&gt;<br>
+                      &lt;/li&gt;
+                    </div>
+                  </div>
+                </div>
+                <div class="bubble-actions" style="margin-left:0">
+                  <button class="icon-btn" title="复制">⧉</button>
+                  <button class="icon-btn" title="重生成">↻</button>
+                  <button class="icon-btn" title="👍">👍</button>
+                  <button class="icon-btn" title="👎">👎</button>
+                  <button class="icon-btn" title="复制 markdown">⎘</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 流式中 -->
+            <div class="row-ai bubble-row mb-6">
+              <div class="avatar-accent flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold">小</div>
+              <div class="col-text">
+                <div class="flex items-center gap-2 text-[11.5px]" style="color:var(--rw-fg-subtle)">
+                  <span>小钱</span>
+                  <span>正在思考</span>
+                  <span class="flex"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>
+                </div>
+                <div class="bubble-agent">
+                  <span class="whitespace-pre-wrap">另外，如果你那条菜单在 <code class="font-mono text-[12.5px] px-1.5 py-0.5 rounded" style="background:var(--rw-muted-subtle)">AppShell.tsx</code> 里，我可以直接读源码给一<span style="color:var(--rw-accent); font-weight:600;">▍</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部 composer -->
+          <div class="border-t px-6 py-4" style="border-top-color: var(--rw-border)">
+            <div class="mx-auto max-w-3xl">
+              <div class="composer-wrap">
+                <!-- 工具栏 -->
+                <div class="composer-toolbar">
+                  <button class="toolbar-icon" title="附件（图片 / 文件）">📎</button>
+                  <button class="toolbar-icon" title="代码片段">⌨</button>
+                  <button class="toolbar-icon" title="任务上下文（注入当前任务）">📋</button>
+                  <button class="toolbar-icon" title="人格切换">🧪</button>
+                  <div class="flex-1"></div>
+                  <span class="font-mono text-[10.5px]" style="color:var(--rw-fg-subtle)">已选 0 个上下文</span>
+                </div>
+                <!-- 输入 -->
+                <textarea class="composer-input" rows="1" placeholder="向小钱发送消息…">帮我读一下</textarea>
+                <!-- 底部行：提示 + 发送 -->
+                <div class="composer-row">
+                  <div class="composer-hint"><span class="kbd">⌘</span><span class="kbd">↵</span> 发送 · <span class="kbd">⇧</span><span class="kbd">↵</span> 换行</div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-[10.5px]" style="color:var(--rw-fg-subtle)">in 32 / out ~220</span>
+                    <button class="send-btn" title="发送">▲</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

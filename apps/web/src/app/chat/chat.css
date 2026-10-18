@@ -1,0 +1,632 @@
+/* ============================================================================
+   CHAT-002 · chat 工作台重设计
+   与现有 .bubble-user / .bubble-agent / .rw-sender 兼容（DS v2.1 已定义于 globals.css）。
+   仅新增 persona-card / chat-bubble hover / chat-composer toolbar 相关类。
+   ============================================================================ */
+
+/* ── 主区双栏布局 ─────────────────────────────────────────────────── */
+.rw-chat-shell {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.rw-chat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── CHAT-002· 头部 header ─────────────────────────────────────────── */
+.rw-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rw-border);
+  padding: 10px 18px;
+  flex-shrink: 0;
+}
+.rw-chat-header-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rw-chat-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rw-chat-header-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rw-fg);
+}
+.rw-chat-header-sub {
+  font-size: 11.5px;
+  color: var(--rw-fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rw-chat-header-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background-image: linear-gradient(135deg, var(--rw-accent), var(--rw-accent-hover));
+  color: var(--rw-accent-fg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* ── CHAT-002· persona 卡（左 280px） ─────────────────────────────────── */
+.rw-persona-card {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--rw-border);
+  background: var(--rw-card);
+  padding: 22px 20px 18px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rw-border-strong) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.rw-persona-avatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rw-persona-avatar-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+}
+.rw-persona-online-dot {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--rw-accent);
+  border: 2px solid var(--rw-card);
+}
+.rw-persona-name-wrap {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rw-persona-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rw-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rw-persona-title {
+  font-size: 11.5px;
+  color: var(--rw-fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rw-persona-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rw-persona-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rw-fg-subtle);
+  margin: 0 0 4px;
+}
+.rw-persona-eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.rw-persona-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--rw-fg-muted);
+}
+.rw-persona-quote {
+  position: relative;
+  margin: 0;
+  padding: 10px 12px 10px 16px;
+  background: var(--rw-muted-subtle);
+  border-radius: var(--radius-md);
+  color: var(--rw-fg-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.rw-persona-quote::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--rw-accent);
+}
+.rw-persona-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rw-skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: var(--rw-muted-subtle);
+  border: 1px solid var(--rw-border);
+  color: var(--rw-fg-muted);
+  font-size: 11.5px;
+}
+.rw-skill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--rw-accent);
+}
+.rw-usage-bar {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--rw-muted-subtle);
+  overflow: hidden;
+}
+.rw-usage-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--rw-accent), var(--rw-accent-hover));
+}
+.rw-persona-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rw-task-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--rw-bg);
+  border: 1px solid var(--rw-border);
+  font-size: 12px;
+  color: var(--rw-fg-muted);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+}
+.rw-task-pill:hover {
+  border-color: var(--rw-border-strong);
+  color: var(--rw-fg);
+}
+.rw-task-pill:active {
+  transform: scale(0.98);
+}
+.rw-persona-empty {
+  margin: 0;
+  padding: 4px 0;
+  font-size: 11.5px;
+  color: var(--rw-fg-subtle);
+}
+.rw-persona-new-chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: auto;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px dashed var(--rw-border-strong);
+  color: var(--rw-fg-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.rw-persona-new-chat:hover {
+  color: var(--rw-accent);
+  border-color: var(--rw-accent);
+  background: var(--rw-accent-subtle);
+}
+.rw-persona-new-chat:active {
+  transform: scale(0.97);
+}
+
+/* status pill（复用 DS v2.1 节奏） */
+.rw-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.rw-status-idle {
+  color: var(--rw-fg-muted);
+  background: var(--rw-muted-subtle);
+  border-color: var(--rw-border);
+}
+
+/* ── CHAT-002· 消息流（沉浸式 + hover actions） ─────────────────────── */
+.rw-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rw-border-strong) transparent;
+}
+
+/* hover 显示 icon-btn 组 */
+.rw-bubble-host {
+  position: relative;
+}
+.rw-bubble-host:hover .rw-bubble-actions {
+  opacity: 1;
+}
+.rw-row-host {
+  display: flex;
+  justify-content: flex-end;
+}
+.rw-row-ai {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+.rw-col-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 640px;
+}
+.rw-bubble-avatar {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* 用户气泡的 actions 在气泡上方右对齐显示 */
+.rw-bubble-actions {
+  opacity: 0;
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  transition: opacity var(--t-fast) var(--ease-out);
+  pointer-events: auto;
+}
+.rw-row-ai .rw-bubble-actions {
+  flex-direction: row;
+}
+.rw-row-host .rw-bubble-actions {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.rw-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rw-card);
+  border: 1px solid var(--rw-border);
+  color: var(--rw-fg-muted);
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  font-size: 14px;
+  line-height: 1;
+}
+.rw-icon-btn:hover {
+  color: var(--rw-fg);
+  border-color: var(--rw-border-strong);
+}
+.rw-icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* AI 元信息行（与 prototype 一致） */
+.rw-ai-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--rw-fg-subtle);
+}
+.rw-ai-meta-dot {
+  color: var(--rw-border-strong);
+}
+.rw-ai-meta-tokens {
+  font-family: var(--font-mono);
+}
+
+/* 流式 typing 3 跳点 */
+.rw-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.rw-thinking-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--rw-accent);
+  animation: bounce-dot 0.9s ease-in-out infinite;
+}
+.rw-thinking-dot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.rw-thinking-dot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+@keyframes bounce-dot {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+/* 流式 accent 光标（bubble 末尾） */
+.rw-bubble-cursor {
+  color: var(--rw-accent);
+  font-weight: 600;
+  margin-left: 2px;
+  animation: blink 0.9s steps(2) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── CHAT-002· composer 区 ──────────────────────────────────────────── */
+.rw-composer {
+  border-top: 1px solid var(--rw-border);
+  padding: 14px 24px 18px;
+  flex-shrink: 0;
+}
+.rw-composer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 10px 14px;
+  max-width: 768px;
+  margin: 0 auto;
+  background: var(--rw-card);
+  border: 1px solid var(--rw-border-strong);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--t-base) var(--ease-out),
+    box-shadow var(--t-base) var(--ease-out);
+}
+.rw-composer-card:focus-within {
+  border-color: var(--rw-accent);
+  box-shadow: 0 0 0 3px var(--rw-ring);
+}
+.rw-composer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rw-composer-toolbar-spacer {
+  flex: 1;
+}
+.rw-composer-context-count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--rw-fg-subtle);
+}
+.rw-toolbar-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--rw-fg-muted);
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.rw-toolbar-icon:hover {
+  background: var(--rw-muted-subtle);
+  color: var(--rw-fg);
+}
+.rw-toolbar-icon:active {
+  transform: scale(0.92);
+}
+
+.rw-composer-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--rw-fg);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  resize: none;
+  min-height: 32px;
+  line-height: 1.5;
+  padding: 4px 0;
+  width: 100%;
+}
+.rw-composer-input::placeholder {
+  color: var(--rw-fg-subtle);
+}
+
+.rw-composer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rw-composer-hint {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--rw-fg-subtle);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.rw-kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid var(--rw-border);
+  background: var(--rw-muted-subtle);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--rw-fg-muted);
+  text-align: center;
+}
+.rw-composer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.rw-composer-tokens {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--rw-fg-subtle);
+  font-variant-numeric: tabular-nums;
+}
+.rw-send-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--rw-accent);
+  color: var(--rw-accent-fg);
+  border: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    transform var(--t-fast) var(--ease-spring);
+}
+.rw-send-btn:hover {
+  background: var(--rw-accent-hover);
+}
+.rw-send-btn:active {
+  transform: scale(0.9);
+}
+.rw-send-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.rw-send-btn.rw-stop-btn {
+  background: transparent;
+  color: var(--rw-danger);
+  border: 1px solid var(--rw-danger);
+}
+.rw-send-btn.rw-stop-btn:hover {
+  background: var(--rw-danger-subtle);
+  box-shadow: none;
+}
+
+/* message-bubble 兼容（沿用 globals.css 已有 .bubble-user / .bubble-agent） */
+.rw-bubble-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 空态 Welcome（不引 antdx Welcome，DS v2.1 自画） */
+.rw-welcome {
+  margin: 24px auto 32px;
+  max-width: 520px;
+  display: flex;
+  justify-content: center;
+}
+.rw-welcome-card {
+  width: 100%;
+  padding: 22px 24px;
+  background: var(--rw-card);
+  border: 1px solid var(--rw-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.rw-welcome-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rw-fg);
+}
+.rw-welcome-sub {
+  font-size: 12.5px;
+  color: var(--rw-fg-subtle);
+}
+.rw-welcome-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+.rw-welcome-pill {
+  border: 1px solid var(--rw-border-strong);
+  background: var(--rw-card);
+  color: var(--rw-fg-muted);
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.rw-welcome-pill:hover {
+  border-color: var(--rw-accent);
+  color: var(--rw-accent);
+  transform: translateY(-1px);
+}
+.rw-welcome-pill:active {
+  transform: scale(0.97);
+}
