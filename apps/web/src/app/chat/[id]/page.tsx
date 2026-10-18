@@ -367,7 +367,6 @@ function WelcomeBlock({ onPickSuggestion }: { onPickSuggestion: (s: string) => v
           💬
         </Avatar>
         <div className="rw-welcome-title">开始这次对话</div>
-        <div className="rw-welcome-sub">发布后的数字员工由 AgentScope 运行时驱动</div>
         <div className="rw-welcome-pills">
           {SUGGESTIONS.map((s) => (
             <button

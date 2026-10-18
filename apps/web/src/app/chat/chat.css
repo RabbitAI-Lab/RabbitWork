@@ -436,6 +436,7 @@
 .rw-composer-card {
   display: flex;
   flex-direction: column;
+  width:100%;
   gap: 8px;
   padding: 8px 12px 10px 14px;
   /* CHAT-002 间距：右栏内左右各 20px 留白（不要贴边也不要满铺）。

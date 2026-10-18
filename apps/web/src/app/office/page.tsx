@@ -298,28 +298,6 @@ export default function OfficePage() {
             </div>
             <div className="rw-stat-hint">在线人数</div>
           </div>
-          <div className="rw-stat-card rw-stat-system" data-testid="office-stat-system">
-            <div className="rw-stat-label">系统资源</div>
-            <div className="rw-meter">
-              <span className="rw-meter-label">CPU</span>
-              <div className="rw-meter-bar">
-                <span style={{ width: "32%" }} />
-              </div>
-              <span className="rw-meter-value">32%</span>
-            </div>
-            <div className="rw-meter">
-              <span className="rw-meter-label">内存</span>
-              <div className="rw-meter-bar">
-                <span style={{ width: "56%" }} />
-              </div>
-              <span className="rw-meter-value">56%</span>
-            </div>
-            <div className="rw-meter">
-              <span className="rw-meter-label">网络</span>
-              <div className="rw-meter-bar rw-meter-bar-empty" />
-              <span className="rw-meter-value">—</span>
-            </div>
-          </div>
         </div>
 
         {/* ── 三列主体：左 立体办公楼+待安排 ｜ 中 工位网格 ｜ 右 任务流+动态 ── */}

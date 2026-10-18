@@ -2188,10 +2188,10 @@
   margin: 0;
 }
 
-/* ── 顶部 5 张数据卡 ─────────────────────────────────────────────────── */
+/* ── 顶部 4 张数据卡（OFFCIE-002 落地后去掉「系统资源」第 5 张） ── */
 .rw-stats-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   flex-shrink: 0;
 }
