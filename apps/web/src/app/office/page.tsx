@@ -9,7 +9,6 @@ import {
   EditOutlined,
   SwapOutlined,
   UserAddOutlined,
-  SendOutlined,
 } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -48,61 +47,12 @@ type EmoteKey = keyof typeof EMOTES;
 
 const seatKey = (floor: number, seat: number) => `${floor}-${seat}`;
 
-/* ============================================================================
-   顶部 5 张数据卡 + 右栏任务卡 + 实时动态 = mock 数据。
-   mock 原因：任务域尚无正式 API（INFRA-001 阶段），首个 Task 域规格落地后接入；
-   字段定义与字段计算规则确定来自 specs/OFFICE-001-v2 §4（任务域 schema 入站时一并替换），
-   当前所有 mock 入口集中在此处便于一次性回填。
-   ============================================================================ */
-type TaskStatus = "RUNNING" | "PENDING" | "BLOCKED" | "IDLE";
-
-interface MockTask {
-  id: string;
-  title: string;
-  owner: string;
-  status: TaskStatus;
-  progress: number; // 0..100
-}
-
-const MOCK_TASKS: readonly MockTask[] = [
-  { id: "1", title: "市场调研", owner: "李研", status: "RUNNING", progress: 72 },
-  { id: "2", title: "文案撰写", owner: "陈书", status: "RUNNING", progress: 60 },
-  { id: "3", title: "合规审核", owner: "赵审", status: "PENDING", progress: 30 },
-  { id: "4", title: "打包汇报", owner: "刘市", status: "IDLE", progress: 0 },
-] as const;
-
-interface FeedItem {
-  id: string;
-  who: string;
-  text: string;
-  time: string;
-}
-const MOCK_FEED: readonly FeedItem[] = [
-  { id: "1", who: "李研", text: "开始梳理市场资料", time: "01:46" },
-  { id: "2", who: "陈书", text: "正在起草文案", time: "01:46" },
-  { id: "3", who: "赵审", text: "等待补充来源材料", time: "01:45" },
-  { id: "4", who: "刘市", text: "已被分配到「打包汇报」", time: "01:42" },
-] as const;
-
-const TASK_STATUS_LABEL: Record<
-  TaskStatus,
-  { label: string; tone: "running" | "pending" | "idle" }
-> = {
-  RUNNING: { label: "进行中", tone: "running" },
-  PENDING: { label: "待处理", tone: "pending" },
-  BLOCKED: { label: "阻塞", tone: "pending" },
-  IDLE: { label: "待开始", tone: "idle" },
-};
-
-/* 进度条配色（与原型一致；保持彩条区分语义状态）。 */
-const PROGRESS_COLOR_CLASS: Record<TaskStatus, string> = {
-  RUNNING: "rw-progress-running",
-  PENDING: "rw-progress-purple",
-  BLOCKED: "rw-progress-warning",
-  IDLE: "rw-progress-grey",
-};
-
-/** 办公室（OFFICE-001 v2）：楼面 × 每层 20 工位 + 顶部数据卡 + 右栏任务流与动态 + 底部 composer。 */
+/**
+ * 办公室（OFFICE-001 v3）：楼面 × 每层 20 工位 + 顶部员工数据卡 + 中央楼层平面 + 底部 composer。
+ * 2026-10-18 决策：移除原右栏「当前任务流」「实时动态」及顶部 3 张任务统计卡——
+ * agentscope 平台无 Task 概念，仅暴露 agents/chats/turns/events，原模块数据均为 mock。
+ * 后续 Task 域规格落地时按需重建。
+ */
 export default function OfficePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -164,21 +114,14 @@ export default function OfficePage() {
   const floorCount = (f: number) => seated.filter((s) => s.deskFloor === f).length;
   const onlineCount = all.filter((s) => s.status === "PUBLISHED").length;
 
-  // ─── 顶部数据卡 mock 数值（M2 任务域落地后改为 query） ───
-  const stats = useMemo(() => {
-    const running = MOCK_TASKS.filter((t) => t.status === "RUNNING").length;
-    const completed = 1; // mock：今日已完成
-    const pending = MOCK_TASKS.filter(
-      (t) => t.status === "PENDING" || t.status === "BLOCKED",
-    ).length;
-    return {
-      running,
-      completed,
-      pending,
+  // ─── 顶部数据卡（仅保留 AI 员工在线/总数） ───
+  const stats = useMemo(
+    () => ({
       staffsOnline: onlineCount,
       staffsTotal: all.length,
-    };
-  }, [onlineCount, all.length]);
+    }),
+    [onlineCount, all.length],
+  );
 
   // 点击工位:复用该员工最近会话,没有则新建
   const enterDesk = useMutation({
@@ -237,21 +180,6 @@ export default function OfficePage() {
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["staffs"] });
 
-  /**
-   * 底部 composer 提交：
-   * 任务域 API 暂无（M2 任务域规格落地后接入），此处只做 UI 兜底——
-   * 提醒用户「已收到」后清空输入，避免静默吞错（rules/observability §4）。
-   */
-  const onComposerSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const input = form.querySelector<HTMLInputElement>("[data-testid='office-composer-input']");
-    const text = input?.value.trim();
-    if (!text) return;
-    message.success(`已收到：${text.slice(0, 32)}${text.length > 32 ? "…" : ""}`);
-    if (input) input.value = "";
-  };
-
   return (
     <AppShell active="office">
       <div className="rw-office-shell" data-testid="office-page">
@@ -273,34 +201,19 @@ export default function OfficePage() {
           </Button>
         </div>
 
-        {/* ── 顶部 5 张数据卡（PixOffice 借鉴） ── */}
+        {/* ── 顶部数据卡（仅 AI 员工在线/总数） ── */}
         <div className="rw-stats-row">
-          <div className="rw-stat-card" data-testid="office-stat-running">
-            <div className="rw-stat-label">进行中</div>
-            <div className="rw-stat-value">{stats.running}</div>
-            <div className="rw-stat-hint">当前任务</div>
-          </div>
-          <div className="rw-stat-card" data-testid="office-stat-completed">
-            <div className="rw-stat-label">已完成</div>
-            <div className="rw-stat-value">{stats.completed}</div>
-            <div className="rw-stat-hint">今日完成</div>
-          </div>
-          <div className="rw-stat-card" data-testid="office-stat-pending">
-            <div className="rw-stat-label">待处理</div>
-            <div className="rw-stat-value">{stats.pending}</div>
-            <div className="rw-stat-hint">阻塞任务</div>
-          </div>
-          <div className="rw-stat-card" data-testid="office-stat-staffs">
+          {/* <div className="rw-stat-card" data-testid="office-stat-staffs">
             <div className="rw-stat-label">AI 员工</div>
             <div className="rw-stat-value">
               {stats.staffsOnline}
               <span className="rw-stat-value-sub"> / {stats.staffsTotal}</span>
             </div>
             <div className="rw-stat-hint">在线人数</div>
-          </div>
+          </div> */}
         </div>
 
-        {/* ── 三列主体：左 立体办公楼+待安排 ｜ 中 工位网格 ｜ 右 任务流+动态 ── */}
+        {/* ── 两列主体：左 立体办公楼+待安排 ｜ 中 工位网格 ── */}
         <div className="rw-office-main">
           {/* 左：立体办公楼 + 待安排 */}
           <aside className="rw-office-left">
@@ -390,98 +303,9 @@ export default function OfficePage() {
             </div>
           </section>
 
-          {/* 右：当前任务流 + 实时动态 */}
-          <aside className="rw-office-right">
-            <section className="rw-card" data-testid="office-task-flow">
-              <header className="rw-task-flow-head">
-                <h2 className="rw-card-title">当前任务流</h2>
-                <span className="rw-text-muted font-mono text-xs tabular-nums">
-                  · {MOCK_TASKS.length}
-                </span>
-              </header>
-              <div className="rw-task-list">
-                {MOCK_TASKS.map((task) => {
-                  const meta = TASK_STATUS_LABEL[task.status];
-                  return (
-                    <div
-                      key={task.id}
-                      className="rw-task-card"
-                      data-testid={`office-task-card-${task.id}`}
-                      data-status={task.status}
-                    >
-                      <div className="rw-task-card-header">
-                        <span className="rw-task-card-title">{task.title}</span>
-                        <span className={`rw-status-pill rw-status-${meta.tone}`}>
-                          {task.status === "RUNNING"
-                            ? "● "
-                            : task.status === "PENDING"
-                              ? "◌ "
-                              : "○ "}
-                          {meta.label}
-                        </span>
-                      </div>
-                      <div className="rw-task-card-owner">{task.owner}</div>
-                      <div className="rw-task-progress">
-                        <span
-                          className={PROGRESS_COLOR_CLASS[task.status]}
-                          style={{ width: `${task.progress}%` }}
-                        />
-                      </div>
-                      <div className="rw-task-progress-footer">
-                        <span />
-                        <span>{task.progress}%</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="rw-card" data-testid="office-activity-feed">
-              <header className="rw-task-flow-head">
-                <h2 className="rw-card-title">实时动态</h2>
-              </header>
-              <div className="rw-feed-list">
-                {MOCK_FEED.map((row) => (
-                  <div
-                    key={row.id}
-                    className="rw-feed-row"
-                    data-testid={`office-feed-row-${row.id}`}
-                  >
-                    <div className="rw-feed-text">
-                      <b>{row.who}</b> {row.text}
-                    </div>
-                    <div className="rw-feed-time">{row.time}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </aside>
+          {/* 注：2026-10-18 移除右栏任务流 + 实时动态（agentscope 无 Task 数据源），后续按需重建 */}
         </div>
-
-        {/* ── 底部 chat composer（PixOffice 借鉴） ── */}
-        <form className="rw-composer" data-testid="office-composer" onSubmit={onComposerSubmit}>
-          <div className="rw-composer-wrap">
-            <span className="rw-composer-emoji" aria-hidden="true">
-              💬
-            </span>
-            <input
-              type="text"
-              className="rw-composer-input"
-              data-testid="office-composer-input"
-              placeholder="和办公室聊一聊…"
-              aria-label="给办公室发消息"
-            />
-            <button
-              type="submit"
-              className="rw-composer-send"
-              data-testid="office-composer-send"
-              aria-label="发送"
-            >
-              <SendOutlined />
-            </button>
-          </div>
-        </form>
+        {/* 注：2026-10-18 移除底部 chat composer（办公室页只保留"看 + 安排工位"功能） */}
       </div>
 
       {/* 工位选择器：换座（pickerStaff 指定员工）/ 空位安排（先选员工） */}

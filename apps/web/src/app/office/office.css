@@ -2188,10 +2188,10 @@
   margin: 0;
 }
 
-/* ── 顶部 4 张数据卡（OFFCIE-002 落地后去掉「系统资源」第 5 张） ── */
+/* ── 顶部数据卡（OFFICE-001 v3：仅保留 AI 员工） ── */
 .rw-stats-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   flex-shrink: 0;
 }
@@ -2235,56 +2235,11 @@
   font-size: 11px;
   color: var(--rw-fg-subtle);
 }
-.rw-stat-system .rw-stat-label {
-  margin-bottom: 4px;
-}
 
-/* 系统资源卡内联 meter */
-.rw-meter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--rw-fg-muted);
-  font-family: var(--font-mono);
-}
-.rw-meter + .rw-meter {
-  margin-top: 3px;
-}
-.rw-meter-label {
-  width: 28px;
-  flex-shrink: 0;
-}
-.rw-meter-bar {
-  flex: 1;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--rw-muted-subtle);
-  overflow: hidden;
-  min-width: 0;
-}
-.rw-meter-bar > span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, var(--rw-accent), var(--rw-accent-hover));
-  transition: width var(--t-base) var(--ease-out);
-}
-.rw-meter-bar.rw-meter-bar-empty::before {
-  /* 占位保持高度，无填充 */
-}
-.rw-meter-bar-empty > span {
-  width: 0;
-}
-.rw-meter-value {
-  width: 28px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── 三列主区 ──────────────────────────────────────────────────────────── */
+/* ── 两列主区（OFFICE-001 v3：去掉右栏任务流+动态） ─────────────────── */
 .rw-office-main {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr) 340px;
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: 16px;
   align-items: start; /* OFFCIE-003：让 floor-plan-card 按 canvas 自身高度撑开，不要被 stretch 拉平 */
 }
@@ -2293,15 +2248,6 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-}
-.rw-office-right {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--rw-border-strong) transparent;
 }
 
 /* 楼层平面卡：工位地台区域 */
@@ -2372,210 +2318,6 @@
   background: var(--rw-accent-subtle);
 }
 
-/* ── 右栏：任务卡 + 状态 pill + 进度条 ────────────────────────────────── */
-.rw-task-flow-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.rw-task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.rw-task-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 1px solid var(--rw-border);
-  border-radius: var(--radius-md);
-  background: var(--rw-bg);
-  transition: border-color var(--t-base) var(--ease-out);
-}
-.rw-task-card:hover {
-  border-color: var(--rw-border-strong);
-}
-.rw-task-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.rw-task-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--rw-fg);
-}
-.rw-task-card-owner {
-  font-size: 11px;
-  color: var(--rw-fg-muted);
-}
-.rw-task-progress {
-  height: 5px;
-  border-radius: 999px;
-  background: var(--rw-muted-subtle);
-  overflow: hidden;
-  margin-top: 4px;
-}
-.rw-task-progress > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  transition: width var(--t-slow, 360ms) var(--ease-out);
-}
-.rw-task-progress-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--rw-fg-subtle);
-  font-variant-numeric: tabular-nums;
-}
-
-.rw-progress-running {
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
-}
-.rw-progress-warning {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-}
-.rw-progress-purple {
-  background: linear-gradient(90deg, #a855f7, #c084fc);
-}
-.rw-progress-grey {
-  background: var(--rw-border-strong);
-}
-
-/* 状态徽章 */
-.rw-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 1px 9px;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 500;
-  border: 1px solid transparent;
-  white-space: nowrap;
-}
-.rw-status-running {
-  color: var(--rw-accent);
-  background: var(--rw-accent-subtle);
-  border-color: var(--rw-accent);
-}
-.rw-status-pending {
-  color: var(--rw-warning);
-  background: var(--rw-warning-subtle);
-  border-color: var(--rw-warning);
-}
-.rw-status-idle {
-  color: var(--rw-fg-muted);
-  background: var(--rw-muted-subtle);
-  border-color: var(--rw-border);
-}
-
-/* ── 实时动态 feed ───────────────────────────────────────────────────── */
-.rw-feed-list {
-  display: flex;
-  flex-direction: column;
-}
-.rw-feed-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 0;
-  border-bottom: 1px dashed var(--rw-border);
-}
-.rw-feed-row:last-child {
-  border-bottom: none;
-}
-.rw-feed-text {
-  font-size: 12px;
-  color: var(--rw-fg-muted);
-  line-height: 1.5;
-}
-.rw-feed-text b {
-  color: var(--rw-fg);
-  font-weight: 500;
-  margin-right: 2px;
-}
-.rw-feed-time {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--rw-fg-subtle);
-  flex-shrink: 0;
-}
-
-/* ── 底部 chat composer ─────────────────────────────────────────────── */
-.rw-composer {
-  flex-shrink: 0;
-  padding: 8px 0 16px;
-  display: flex;
-  justify-content: center;
-}
-.rw-composer-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 720px;
-  padding: 6px 6px 6px 16px;
-  background: var(--rw-card);
-  border: 1px solid var(--rw-border-strong);
-  border-radius: var(--radius-md);
-  transition:
-    border-color var(--t-base) var(--ease-out),
-    box-shadow var(--t-base) var(--ease-out);
-}
-.rw-composer-wrap:focus-within {
-  border-color: var(--rw-accent);
-  box-shadow: 0 0 0 3px var(--rw-ring);
-}
-.rw-composer-emoji {
-  color: var(--rw-fg-muted);
-  font-size: 14px;
-}
-.rw-composer-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--rw-fg);
-  font-family: var(--font-body);
-  font-size: 13.5px;
-  padding: 8px 0;
-  min-width: 0;
-}
-.rw-composer-input::placeholder {
-  color: var(--rw-fg-subtle);
-}
-.rw-composer-send {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  background: var(--rw-accent);
-  color: var(--rw-accent-fg);
-  border: none;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  transition:
-    background var(--t-fast) var(--ease-out),
-    transform var(--t-fast) var(--ease-spring);
-}
-.rw-composer-send:hover {
-  background: var(--rw-accent-hover);
-}
-.rw-composer-send:active {
-  transform: scale(0.92);
-}
-
 /* ── 楼层切换 tab（在工位选择 modal 内，复用既有 visual） ──────────── */
 .rw-floor-tab {
   cursor: pointer;
@@ -2635,11 +2377,8 @@
   cursor: not-allowed;
 }
 
-/* ── 响应式（与高保真原型一致） ────────────────────────────────────── */
+/* ── 响应式（OFFICE-001 v3：仅保留单卡 stats-row 之外的布局自适应） ──── */
 @media (max-width: 1279px) {
-  .rw-stats-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
   .rw-office-main {
     grid-template-columns: 1fr;
     overflow-y: auto;
@@ -2653,15 +2392,7 @@
     flex: 1;
   }
 }
-@media (max-width: 1023px) {
-  .rw-stats-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 @media (max-width: 767px) {
-  .rw-stats-row {
-    grid-template-columns: 1fr;
-  }
   .rw-office-shell {
     padding: 16px 16px 12px;
   }
@@ -2675,9 +2406,6 @@
    这里只补 button 类的 hover/active 按压反馈 */
 button:not(:disabled):active {
   transform: scale(0.97);
-}
-.rw-composer-send:active {
-  transform: scale(0.9);
 }
 
 /* ── OFFCIE-002 · Pixi 演示工位卡（OFFCIE-003 落地后已退役；CSS 暂留待 OFFCIE-005 sprite 阶段再用） ── */
@@ -2751,8 +2479,7 @@ button:not(:disabled):active {
 }
 .rw-pixi-floor-wrap canvas {
   display: block;
-  width: 100%;
-  max-width: 720px;
+  width: 100%; /* 撑满中栏：工位按列等分宽度（Pixi 矢量等比缩放，不变形） */
   height: auto;
 }
 .rw-pixi-demo-card {
