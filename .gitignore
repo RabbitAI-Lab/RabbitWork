@@ -21,3 +21,12 @@ dump.rdb
 # mimosa 插件本地扫描状态（会话级运行时数据，不入库）
 .mimosa/
 data/
+
+# Playwright MCP 调试快照（本地浏览器自动化产生的 yml，不入库）
+.playwright-mcp/
+
+# 本地会话级 root 截图（chat-v2-*.png / office-003-*.png 等）；不进库，进 CI artifact
+/chat-*.png
+/office-*.png
+/pixoffice-reference.png
+
