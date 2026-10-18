@@ -9,9 +9,11 @@ import {
   EditOutlined,
   SwapOutlined,
   UserAddOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AppShell } from "@/components/AppShell";
+import { PixiFloorPlan } from "@/components/PixiFloorPlan";
 import { chatApi, staffApi } from "@rabbit/api-client";
 import { OFFICE_FLOOR_COUNT, OFFICE_SEATS_PER_FLOOR, type StaffDto } from "@rabbit/shared";
 import "./office.css";
@@ -46,7 +48,61 @@ type EmoteKey = keyof typeof EMOTES;
 
 const seatKey = (floor: number, seat: number) => `${floor}-${seat}`;
 
-/** 办公室（OFFICE-001 v2）：楼层平面 × 每层 20 工位；员工可自由切换工位。 */
+/* ============================================================================
+   顶部 5 张数据卡 + 右栏任务卡 + 实时动态 = mock 数据。
+   mock 原因：任务域尚无正式 API（INFRA-001 阶段），首个 Task 域规格落地后接入；
+   字段定义与字段计算规则确定来自 specs/OFFICE-001-v2 §4（任务域 schema 入站时一并替换），
+   当前所有 mock 入口集中在此处便于一次性回填。
+   ============================================================================ */
+type TaskStatus = "RUNNING" | "PENDING" | "BLOCKED" | "IDLE";
+
+interface MockTask {
+  id: string;
+  title: string;
+  owner: string;
+  status: TaskStatus;
+  progress: number; // 0..100
+}
+
+const MOCK_TASKS: readonly MockTask[] = [
+  { id: "1", title: "市场调研", owner: "李研", status: "RUNNING", progress: 72 },
+  { id: "2", title: "文案撰写", owner: "陈书", status: "RUNNING", progress: 60 },
+  { id: "3", title: "合规审核", owner: "赵审", status: "PENDING", progress: 30 },
+  { id: "4", title: "打包汇报", owner: "刘市", status: "IDLE", progress: 0 },
+] as const;
+
+interface FeedItem {
+  id: string;
+  who: string;
+  text: string;
+  time: string;
+}
+const MOCK_FEED: readonly FeedItem[] = [
+  { id: "1", who: "李研", text: "开始梳理市场资料", time: "01:46" },
+  { id: "2", who: "陈书", text: "正在起草文案", time: "01:46" },
+  { id: "3", who: "赵审", text: "等待补充来源材料", time: "01:45" },
+  { id: "4", who: "刘市", text: "已被分配到「打包汇报」", time: "01:42" },
+] as const;
+
+const TASK_STATUS_LABEL: Record<
+  TaskStatus,
+  { label: string; tone: "running" | "pending" | "idle" }
+> = {
+  RUNNING: { label: "进行中", tone: "running" },
+  PENDING: { label: "待处理", tone: "pending" },
+  BLOCKED: { label: "阻塞", tone: "pending" },
+  IDLE: { label: "待开始", tone: "idle" },
+};
+
+/* 进度条配色（与原型一致；保持彩条区分语义状态）。 */
+const PROGRESS_COLOR_CLASS: Record<TaskStatus, string> = {
+  RUNNING: "rw-progress-running",
+  PENDING: "rw-progress-purple",
+  BLOCKED: "rw-progress-warning",
+  IDLE: "rw-progress-grey",
+};
+
+/** 办公室（OFFICE-001 v2）：楼面 × 每层 20 工位 + 顶部数据卡 + 右栏任务流与动态 + 底部 composer。 */
 export default function OfficePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -64,11 +120,65 @@ export default function OfficePage() {
   const all = staffs.data?.items ?? [];
   const seated = all.filter((s) => s.deskFloor != null && s.deskSeat != null);
   const waiting = all.filter((s) => s.deskFloor == null || s.deskSeat == null);
-  const bySeat = useMemo(
-    () => new Map(seated.map((s) => [seatKey(s.deskFloor!, s.deskSeat!), s])),
-    [seated],
-  );
+  const bySeat = useMemo(() => {
+    const base = new Map(seated.map((s) => [seatKey(s.deskFloor!, s.deskSeat!), s]));
+    // DEV-ONLY 演示桥：通过 ?withMock=1 在 auth 卡死时也能验证 Pixi 渲染
+    if (typeof window !== "undefined" && window.location.search.includes("withMock=1")) {
+      const mockStaff = (
+        id: string,
+        code: string,
+        name: string,
+        title: string,
+        seat: number,
+      ): StaffDto => ({
+        id,
+        orgId: "mock-org",
+        code,
+        name,
+        title,
+        personaPrompt: "",
+        boundary: null,
+        avatarUrl: null,
+        status: "PUBLISHED",
+        visibility: "PRIVATE",
+        asAgentId: null,
+        asAgentKey: null,
+        publishedAt: null,
+        deskFloor: floor, // 跟随当前 floor，使 mock 在 1F/2F/3F 都生效
+        deskSeat: seat,
+        createdAt: "",
+        updatedAt: "",
+      });
+      const MOCK: Record<number, StaffDto> = {
+        1: mockStaff("m1", "P001", "李研", "前端开发", 1),
+        6: mockStaff("m2", "P002", "陈书", "内容运营", 6),
+        11: mockStaff("m3", "P003", "赵审", "法务合规", 11),
+        16: mockStaff("m4", "P004", "刘市", "客户成功", 16),
+      };
+      for (const [seat, s] of Object.entries(MOCK)) {
+        base.set(`${floor}-${Number(seat)}`, s);
+      }
+    }
+    return base;
+  }, [seated, floor]);
   const floorCount = (f: number) => seated.filter((s) => s.deskFloor === f).length;
+  const onlineCount = all.filter((s) => s.status === "PUBLISHED").length;
+
+  // ─── 顶部数据卡 mock 数值（M2 任务域落地后改为 query） ───
+  const stats = useMemo(() => {
+    const running = MOCK_TASKS.filter((t) => t.status === "RUNNING").length;
+    const completed = 1; // mock：今日已完成
+    const pending = MOCK_TASKS.filter(
+      (t) => t.status === "PENDING" || t.status === "BLOCKED",
+    ).length;
+    return {
+      running,
+      completed,
+      pending,
+      staffsOnline: onlineCount,
+      staffsTotal: all.length,
+    };
+  }, [onlineCount, all.length]);
 
   // 点击工位:复用该员工最近会话,没有则新建
   const enterDesk = useMutation({
@@ -127,16 +237,29 @@ export default function OfficePage() {
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["staffs"] });
 
+  /**
+   * 底部 composer 提交：
+   * 任务域 API 暂无（M2 任务域规格落地后接入），此处只做 UI 兜底——
+   * 提醒用户「已收到」后清空输入，避免静默吞错（rules/observability §4）。
+   */
+  const onComposerSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const input = form.querySelector<HTMLInputElement>("[data-testid='office-composer-input']");
+    const text = input?.value.trim();
+    if (!text) return;
+    message.success(`已收到：${text.slice(0, 32)}${text.length > 32 ? "…" : ""}`);
+    if (input) input.value = "";
+  };
+
   return (
     <AppShell active="office">
-      <div className="mx-auto max-w-6xl px-8 py-8" data-testid="office-page">
-        {/* 页头 */}
-        <div className="mb-6 flex items-end justify-between">
+      <div className="rw-office-shell" data-testid="office-page">
+        {/* ── 页头：标题 + 刷新 ── */}
+        <div className="rw-office-header">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">
-              办公室
-            </h1>
-            <p className="text-rw-fg-subtle mt-1 text-sm">
+            <h1 className="rw-office-title">办公室</h1>
+            <p className="rw-office-subtitle">
               楼层平面 · 每层 {OFFICE_SEATS_PER_FLOOR} 个工位 · 点击工位可发起对话或更换座位
             </p>
           </div>
@@ -150,16 +273,61 @@ export default function OfficePage() {
           </Button>
         </div>
 
-        <div className="flex items-start gap-5">
-          {/* 左：立体办公楼 + 待安排 */}
-          <aside className="w-56 shrink-0 space-y-4">
-            <div
-              className="border-rw-border bg-rw-card rounded-rw-md border p-4"
-              data-testid="office-floors"
-            >
-              <div className="text-rw-fg-muted mb-3 text-xs font-medium">
-                办公楼 · 点击楼层查看平面
+        {/* ── 顶部 5 张数据卡（PixOffice 借鉴） ── */}
+        <div className="rw-stats-row">
+          <div className="rw-stat-card" data-testid="office-stat-running">
+            <div className="rw-stat-label">进行中</div>
+            <div className="rw-stat-value">{stats.running}</div>
+            <div className="rw-stat-hint">当前任务</div>
+          </div>
+          <div className="rw-stat-card" data-testid="office-stat-completed">
+            <div className="rw-stat-label">已完成</div>
+            <div className="rw-stat-value">{stats.completed}</div>
+            <div className="rw-stat-hint">今日完成</div>
+          </div>
+          <div className="rw-stat-card" data-testid="office-stat-pending">
+            <div className="rw-stat-label">待处理</div>
+            <div className="rw-stat-value">{stats.pending}</div>
+            <div className="rw-stat-hint">阻塞任务</div>
+          </div>
+          <div className="rw-stat-card" data-testid="office-stat-staffs">
+            <div className="rw-stat-label">AI 员工</div>
+            <div className="rw-stat-value">
+              {stats.staffsOnline}
+              <span className="rw-stat-value-sub"> / {stats.staffsTotal}</span>
+            </div>
+            <div className="rw-stat-hint">在线人数</div>
+          </div>
+          <div className="rw-stat-card rw-stat-system" data-testid="office-stat-system">
+            <div className="rw-stat-label">系统资源</div>
+            <div className="rw-meter">
+              <span className="rw-meter-label">CPU</span>
+              <div className="rw-meter-bar">
+                <span style={{ width: "32%" }} />
               </div>
+              <span className="rw-meter-value">32%</span>
+            </div>
+            <div className="rw-meter">
+              <span className="rw-meter-label">内存</span>
+              <div className="rw-meter-bar">
+                <span style={{ width: "56%" }} />
+              </div>
+              <span className="rw-meter-value">56%</span>
+            </div>
+            <div className="rw-meter">
+              <span className="rw-meter-label">网络</span>
+              <div className="rw-meter-bar rw-meter-bar-empty" />
+              <span className="rw-meter-value">—</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── 三列主体：左 立体办公楼+待安排 ｜ 中 工位网格 ｜ 右 任务流+动态 ── */}
+        <div className="rw-office-main">
+          {/* 左：立体办公楼 + 待安排 */}
+          <aside className="rw-office-left">
+            <div className="rw-card" data-testid="office-floors">
+              <div className="rw-card-eyebrow">办公楼 · 点击楼层查看平面</div>
               <div className="iso-building">
                 <div className="iso-roof" aria-hidden="true" />
                 {(Array.from({ length: OFFICE_FLOOR_COUNT }, (_, i) => i + 1) as number[]).map(
@@ -189,16 +357,13 @@ export default function OfficePage() {
               </div>
             </div>
 
-            <div
-              className="border-rw-border bg-rw-card rounded-rw-md border p-3"
-              data-testid="office-waiting"
-            >
-              <div className="text-rw-fg-muted mb-2 flex items-center justify-between text-xs">
+            <div className="rw-card" data-testid="office-waiting">
+              <div className="rw-card-eyebrow rw-card-eyebrow-flex">
                 <span>待安排就座</span>
                 <span className="font-mono tabular-nums">{waiting.length}</span>
               </div>
               {waiting.length === 0 ? (
-                <p className="text-rw-fg-subtle py-2 text-center text-xs">全员就座 🎉</p>
+                <p className="rw-card-empty">全员就座 🎉</p>
               ) : (
                 waiting.map((s) => (
                   <button
@@ -206,67 +371,139 @@ export default function OfficePage() {
                     type="button"
                     onClick={() => setPicker({ staff: s })}
                     data-testid={`office-waiting-${s.code}`}
-                    className="text-rw-fg-muted hover:bg-rw-muted-subtle hover:text-rw-fg mb-1 flex w-full cursor-pointer items-center gap-2 rounded-rw-sm px-2 py-1.5 text-left text-[13px] transition-colors duration-[140ms] ease-out last:mb-0"
+                    className="rw-waiting-row"
                   >
-                    <UserAddOutlined className="text-rw-accent shrink-0 text-xs" />
+                    <UserAddOutlined className="rw-text-accent shrink-0 text-xs" />
                     <span className="truncate">{s.name}</span>
-                    <span className="text-rw-fg-subtle ml-auto shrink-0 text-[11px]">
-                      {s.title}
-                    </span>
+                    <span className="rw-text-subtle ml-auto shrink-0 text-[11px]">{s.title}</span>
                   </button>
                 ))
               )}
             </div>
           </aside>
 
-          {/* 右：当前楼层平面 */}
+          {/* 中：当前楼层平面 */}
           <section
-            className="border-rw-border bg-rw-card animate-fade-up min-w-0 flex-1 rounded-rw-md border p-5"
+            className="rw-card rw-floor-plan-card animate-fade-up"
             aria-label={`${floor}F 楼层平面`}
             data-testid="office-floor-plan"
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-[15px] font-semibold text-rw-fg">
-                {floor}F 楼层平面
-              </h2>
-              <span className="text-rw-fg-subtle font-mono text-xs tabular-nums">
+            <div className="rw-floor-plan-header">
+              <h2 className="rw-floor-plan-title">{floor}F 楼层平面</h2>
+              <span className="rw-text-subtle font-mono text-xs tabular-nums">
                 {floorCount(floor)} / {OFFICE_SEATS_PER_FLOOR} 工位在用
               </span>
             </div>
-            {staffs.isLoading ? (
-              <p className="text-rw-fg-subtle py-16 text-center text-sm">楼层加载中…</p>
-            ) : (
-              <div className="iso-floor-plate grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3">
-                {(Array.from({ length: OFFICE_SEATS_PER_FLOOR }, (_, i) => i + 1) as number[]).map(
-                  (seat) => {
-                    const staff = bySeat.get(seatKey(floor, seat));
-                    return (
-                      <SeatTile
-                        key={seat}
-                        seat={seat}
-                        staff={staff}
-                        menuOpen={staff ? menuStaff?.id === staff.id : false}
-                        emoteKey={staff && emote?.staffId === staff.id ? emote.key : null}
-                        chatPending={
-                          staff ? enterDesk.isPending && enterDesk.variables === staff.id : false
-                        }
-                        onOpenMenu={setMenuStaff}
-                        onStartChat={(s) => enterDesk.mutate(s.id)}
-                        onOpenProfile={(s) => router.push(`/staffs/${s.id}`)}
-                        onSwapDesk={(s) => {
-                          setMenuStaff(null);
-                          setPicker({ staff: s });
-                        }}
-                        onEmote={playEmote}
-                        onAssign={() => setPicker({ staff: null })}
-                      />
-                    );
-                  },
-                )}
-              </div>
-            )}
+            <div className="rw-pixi-floor-wrap" data-testid="office-pixi-floor-wrap">
+              {staffs.isLoading ? (
+                <p className="rw-text-subtle py-8 text-center text-sm">楼层加载中…</p>
+              ) : null}
+              <PixiFloorPlan
+                floor={floor}
+                bySeat={bySeat}
+                onSeatClick={(seat, staff) => {
+                  if (staff) {
+                    enterDesk.mutate(staff.id);
+                  } else {
+                    setPicker({ staff: null });
+                  }
+                }}
+              />
+            </div>
           </section>
+
+          {/* 右：当前任务流 + 实时动态 */}
+          <aside className="rw-office-right">
+            <section className="rw-card" data-testid="office-task-flow">
+              <header className="rw-task-flow-head">
+                <h2 className="rw-card-title">当前任务流</h2>
+                <span className="rw-text-muted font-mono text-xs tabular-nums">
+                  · {MOCK_TASKS.length}
+                </span>
+              </header>
+              <div className="rw-task-list">
+                {MOCK_TASKS.map((task) => {
+                  const meta = TASK_STATUS_LABEL[task.status];
+                  return (
+                    <div
+                      key={task.id}
+                      className="rw-task-card"
+                      data-testid={`office-task-card-${task.id}`}
+                      data-status={task.status}
+                    >
+                      <div className="rw-task-card-header">
+                        <span className="rw-task-card-title">{task.title}</span>
+                        <span className={`rw-status-pill rw-status-${meta.tone}`}>
+                          {task.status === "RUNNING"
+                            ? "● "
+                            : task.status === "PENDING"
+                              ? "◌ "
+                              : "○ "}
+                          {meta.label}
+                        </span>
+                      </div>
+                      <div className="rw-task-card-owner">{task.owner}</div>
+                      <div className="rw-task-progress">
+                        <span
+                          className={PROGRESS_COLOR_CLASS[task.status]}
+                          style={{ width: `${task.progress}%` }}
+                        />
+                      </div>
+                      <div className="rw-task-progress-footer">
+                        <span />
+                        <span>{task.progress}%</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="rw-card" data-testid="office-activity-feed">
+              <header className="rw-task-flow-head">
+                <h2 className="rw-card-title">实时动态</h2>
+              </header>
+              <div className="rw-feed-list">
+                {MOCK_FEED.map((row) => (
+                  <div
+                    key={row.id}
+                    className="rw-feed-row"
+                    data-testid={`office-feed-row-${row.id}`}
+                  >
+                    <div className="rw-feed-text">
+                      <b>{row.who}</b> {row.text}
+                    </div>
+                    <div className="rw-feed-time">{row.time}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
         </div>
+
+        {/* ── 底部 chat composer（PixOffice 借鉴） ── */}
+        <form className="rw-composer" data-testid="office-composer" onSubmit={onComposerSubmit}>
+          <div className="rw-composer-wrap">
+            <span className="rw-composer-emoji" aria-hidden="true">
+              💬
+            </span>
+            <input
+              type="text"
+              className="rw-composer-input"
+              data-testid="office-composer-input"
+              placeholder="和办公室聊一聊…"
+              aria-label="给办公室发消息"
+            />
+            <button
+              type="submit"
+              className="rw-composer-send"
+              data-testid="office-composer-send"
+              aria-label="发送"
+            >
+              <SendOutlined />
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* 工位选择器：换座（pickerStaff 指定员工）/ 空位安排（先选员工） */}
@@ -326,12 +563,12 @@ function SeatTile({
       style={{ animationDelay: `${Math.min(seat, 8) * 40}ms` }}
     >
       <div className="pad-body relative flex h-full flex-col p-2">
-        <span className="text-rw-fg-subtle absolute left-2 top-1.5 z-[2] font-mono text-[10px] tabular-nums">
+        <span className="rw-text-subtle absolute left-2 top-1.5 z-[2] font-mono text-[10px] tabular-nums">
           {String(seat).padStart(2, "0")}
         </span>
         {active && (
           <span
-            className="bg-rw-success absolute right-2 top-2 z-[2] h-1.5 w-1.5 animate-pulse-dot rounded-full"
+            className="rw-bg-success absolute right-2 top-2 z-[2] h-1.5 w-1.5 animate-pulse-dot rounded-full"
             aria-label="在岗"
           />
         )}
@@ -385,7 +622,7 @@ function SeatTile({
               type="button"
               onClick={onAssign}
               aria-label={`安排员工就座 工位 ${seat}`}
-              className="text-rw-fg-subtle hover:text-rw-accent flex cursor-pointer flex-col items-center gap-1 transition-colors duration-[140ms] ease-out"
+              className="rw-text-subtle hover:rw-text-accent flex cursor-pointer flex-col items-center gap-1 transition-colors duration-[140ms] ease-out"
             >
               <UserAddOutlined className="text-lg" />
               <span className="text-[11px]">虚位以待</span>
@@ -395,8 +632,8 @@ function SeatTile({
 
         {staff && (
           <div className="flex items-center justify-between gap-1 px-1 pb-0.5">
-            <span className="truncate text-[12px] font-medium text-rw-fg">{staff.name}</span>
-            <span className="text-rw-fg-subtle shrink-0 text-[10px]">
+            <span className="rw-text-fg truncate text-[12px] font-medium">{staff.name}</span>
+            <span className="rw-text-subtle shrink-0 text-[10px]">
               {active ? staff.title.slice(0, 4) : "离岗"}
             </span>
           </div>
@@ -495,16 +732,16 @@ function DeskPickerModal({
     >
       {!target && candidates && candidates.length > 0 && (
         <div className="mb-4 space-y-1.5" data-testid="desk-picker-candidates">
-          <p className="text-rw-fg-muted mb-1 text-xs">选择要安排的员工：</p>
+          <p className="rw-text-muted mb-1 text-xs">选择要安排的员工：</p>
           {candidates.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => setPickedStaff(s)}
-              className="border-rw-border hover:border-rw-accent hover:bg-rw-accent-subtle flex w-full cursor-pointer items-center justify-between rounded-rw-sm border px-3 py-2 text-left transition-colors duration-[140ms] ease-out"
+              className="rw-waiting-pick-btn"
             >
-              <span className="text-[13px] font-medium text-rw-fg">{s.name}</span>
-              <span className="text-rw-fg-subtle text-xs">{s.title}</span>
+              <span className="rw-text-fg text-[13px] font-medium">{s.name}</span>
+              <span className="rw-text-subtle text-xs">{s.title}</span>
             </button>
           ))}
         </div>
@@ -518,11 +755,7 @@ function DeskPickerModal({
                 key={f}
                 type="button"
                 onClick={() => setFloor(f)}
-                className={`cursor-pointer rounded-rw-sm px-3 py-1 font-mono text-xs transition-colors duration-[140ms] ease-out ${
-                  f === floor
-                    ? "bg-rw-accent-subtle font-medium text-rw-accent"
-                    : "text-rw-fg-muted hover:bg-rw-muted-subtle"
-                }`}
+                className={`rw-floor-tab ${f === floor ? "rw-floor-tab-active" : "rw-floor-tab-idle"}`}
               >
                 {f}F
               </button>
@@ -541,12 +774,12 @@ function DeskPickerModal({
                     disabled={!free && !isSelf}
                     onClick={() => onPick(target.id, floor, seat)}
                     data-testid={`desk-pick-${floor}f-${seat}`}
-                    className={`rounded-rw-sm border px-1 py-2 text-center font-mono text-xs tabular-nums transition-all duration-[140ms] ease-out ${
+                    className={`rw-floor-seat ${
                       isSelf
-                        ? "border-rw-accent bg-rw-accent-subtle font-semibold text-rw-accent"
+                        ? "rw-floor-seat-self"
                         : free
-                          ? "border-rw-border hover:border-rw-accent hover:bg-rw-accent-subtle text-rw-fg-muted cursor-pointer"
-                          : "border-rw-border bg-rw-muted-subtle text-rw-fg-subtle cursor-not-allowed"
+                          ? "rw-floor-seat-free"
+                          : "rw-floor-seat-taken"
                     }`}
                   >
                     {String(seat).padStart(2, "0")}
@@ -558,7 +791,7 @@ function DeskPickerModal({
               },
             )}
           </div>
-          <p className="text-rw-fg-subtle mt-3 text-center font-mono text-[11px]">
+          <p className="rw-text-subtle mt-3 text-center font-mono text-[11px]">
             {loading ? "分配中…" : "灰色为已占用 · 点击空位确认"}
           </p>
         </>
