@@ -7,11 +7,12 @@
 /* ── 主区双栏布局 ─────────────────────────────────────────────────── */
 .rw-chat-shell {
   display: flex;
-  flex: 1;
+  width: 100%;
   min-width: 0;
   min-height: 100%;
-  /* CHAT-002 修复：main 是 block，子 div 默认只占 flow 高度；显式 min-height: 100%
-     让两层撑到 720 的 main 内部全高（与 office 用 .rw-office-shell 同模式） */
+  /* CHAT-002 修复：去掉 flex: 1（main 是 block 不是 flex container，flex: 1
+     在这里无效）；改 width: 100% 显式占满 → 客户端路由切换 office→chat
+     时 chat-shell 直接拿到父 main 的 100% 宽度，不依赖 flex 计算时机。 */
 }
 .rw-chat-main {
   flex: 1;
