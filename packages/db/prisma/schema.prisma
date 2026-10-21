@@ -399,11 +399,12 @@ model ToolDefinition {
   id           String    @id @default(uuid())
   orgId        String    @map("org_id")
   name         String    @db.VarChar(128)
-  description  String?   @db.VarChar(512)
-  method       String    @default("GET") @db.VarChar(16)
-  url          String    @db.VarChar(512)
-  headersJson  Json?     @map("headers_json") // 凭证加密存储（rules/security §5）
-  inputSchema  Json?     @map("input_schema")
+  description   String?  @db.VarChar(512)
+  method        String   @default("GET") @db.VarChar(16)
+  url           String   @db.VarChar(512)
+  headersJson   Json?    @map("headers_json")
+  secureHeaders String?  @map("secure_headers") // 敏感头密文（AES-256-GCM,TOOL-001 §2.1）
+  inputSchema   Json?    @map("input_schema")
   outputSchema Json?     @map("output_schema")
   status       String    @default("ACTIVE") @db.VarChar(32)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)

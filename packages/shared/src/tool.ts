@@ -6,6 +6,9 @@ export const TOOL_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 /** 敏感头键关键字（命中即加密列存储,rules/security §4.2） */
 export const TOOL_SENSITIVE_HEADER_KEYS = ["authorization", "apikey", "token", "secret"] as const;
 
+/** 敏感头掩码占位：详情回显值;编辑回传该占位 = 沿用旧值不重加密（TOOL-001 §2.1） */
+export const MASKED_HEADER_PLACEHOLDER = "••••••••";
+
 const headerValue = z.string().trim().min(1).max(2048);
 
 export const toolCreateInput = z.object({

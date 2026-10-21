@@ -8,7 +8,7 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
   fullyParallel: false,
-  workers: 4,
+  workers: process.env.CI ? 4 : 1, // 本地单 worker：多 worker 并发下 web 交互偶发整组僵死（8-16 分钟级,2026-10-22 三轮实证）
   retries: process.env.CI ? 2 : 0, // 本地失败敏感：偶现即视为不稳定用例，必须修复
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
@@ -38,6 +38,10 @@ export default defineConfig({
     url: `${E.e2e.webUrl}/api/v1/system/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    env: { ...process.env },
+    env: {
+      ...process.env,
+      // 结构化注入（bash 默认值链在 command 串内不可靠——::1 白名单多次未生效实证）
+      TOOL_SSRF_ALLOWLIST: process.env.E2E_TOOL_SSRF_ALLOWLIST ?? "127.0.0.1,::1",
+    },
   },
 });

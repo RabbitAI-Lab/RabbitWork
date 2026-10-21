@@ -20,7 +20,15 @@ describe("ipInCidr（CIDR 前缀匹配）", () => {
 
 describe("isPrivateIp（默认拒绝清单）", () => {
   it("私网/环回/链路本地/组播全拒", () => {
-    for (const ip of ["127.0.0.1", "10.0.0.1", "172.16.0.1", "192.168.1.10", "169.254.1.1", "0.0.0.0", "224.0.0.1"]) {
+    for (const ip of [
+      "127.0.0.1",
+      "10.0.0.1",
+      "172.16.0.1",
+      "192.168.1.10",
+      "169.254.1.1",
+      "0.0.0.0",
+      "224.0.0.1",
+    ]) {
       expect(isPrivateIp(ip), ip).toBe(true);
     }
   });
@@ -42,6 +50,7 @@ describe("isAllowedEgress（白名单放行矩阵）", () => {
     expect(isAllowedEgress("127.0.0.1", ["127.0.0.0/8"])).toBe(true);
     expect(isAllowedEgress("192.168.1.5", ["127.0.0.0/8"])).toBe(false);
     expect(isAllowedEgress("192.168.1.5", ["192.168.0.0/16"])).toBe(true);
+    expect(isAllowedEgress("::ffff:127.0.0.1", ["127.0.0.1/8"])).toBe(true); // v4-mapped 归一
   });
 });
 

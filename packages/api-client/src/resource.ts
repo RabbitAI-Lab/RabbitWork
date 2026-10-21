@@ -1,6 +1,11 @@
 /** 资源域（技能/知识库/员工绑定）API（RESOURCE-001）。 */
 import { del, get, patch, post, put } from "./client";
 import type {
+  ToolCreateInput,
+  ToolDto,
+  ToolTestRunInput,
+  ToolTestRunResultDto,
+  ToolUpdateInput,
   KbCreateInput,
   KbDocumentDto,
   KbDto,
@@ -49,4 +54,15 @@ export const staffResourceApi = {
   get: (staffId: string) => get<StaffResourcesDto>(`/api/v1/staffs/${staffId}/resources`),
   put: (staffId: string, input: { skillIds: string[]; knowledgeBaseIds: string[] }) =>
     put<{ ok: boolean }>(`/api/v1/staffs/${staffId}/resources`, input),
+};
+
+// ───── tools（TOOL-001 HTTP 工具与试运行） ─────
+
+export const toolApi = {
+  list: () => get<{ items: ToolDto[]; total: number }>("/api/v1/tools"),
+  create: (input: ToolCreateInput) => post<ToolDto>("/api/v1/tools", input),
+  update: (id: string, input: ToolUpdateInput) => patch<ToolDto>(`/api/v1/tools/${id}`, input),
+  remove: (id: string) => del<{ ok: boolean }>(`/api/v1/tools/${id}`),
+  testRun: (id: string, input: ToolTestRunInput) =>
+    post<ToolTestRunResultDto>(`/api/v1/tools/${id}/test-run`, input),
 };

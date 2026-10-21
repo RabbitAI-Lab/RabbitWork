@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-tool-1（蓝图 S4 能力配置 II） |
 | 优先级     | P1 |
 | 所属模块   | tool |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-22；单测 66 / e2e 21 全绿；走查待人工） |
 | 最后更新日期 | 2026-10-22 |
 | 上游依赖   | ToolDefinition 表（已一次建齐，零 DDL） |
 | 下游消费   | TOOL-002 MCP · 员工工具绑定（EmployeeResourceBinding type=TOOL） |
@@ -71,6 +71,13 @@
 ## 6. 基线深度对标
 
 StaffDeck 无工具概念；蓝图 F3 定义 HTTP 工具+MCP。上游实例无 workspace（实证）——本地工具管理为差异化起点，运行时消费随引擎。
+
+## 6.5 实现勘误（2026-10-22）
+
+1. **守卫形态调整**：Node 全局 fetch 无视 `init.dispatcher`、undici connect.lookup 钩子错误不中断连接且疑似句柄悬挂（e2e 多轮 8-16 分钟级僵死实证）→ 主守卫改为**前置 DNS 解析校验**（全部地址过白名单,任一私网快速拒绝）;dispatcher 实现保留导出作 §8.6-① 形态参照,不接入请求路径。
+2. **v4-mapped v6 归一**：`::ffff:127.0.0.1` 折回 v4 后再比白名单（跨族 CIDR 不命中）。
+3. **e2e env 注入**：playwright webServer 的 env 一律走 `env:` 对象结构化注入——bash command 内联赋值会覆盖 env 对象（多次 ::1 白名单未生效实证）。
+4. 本地 workers=1（多 worker 并发下 web 交互偶发整组僵死,三轮实证;CI 保持 4）。
 
 ## 7. 里程碑与验收
 

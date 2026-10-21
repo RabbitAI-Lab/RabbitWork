@@ -14,7 +14,7 @@ test("SKILL-001-01 技能 CRUD 全链路", async ({
 }) => {
   const name = uniq();
   await page.goto("/");
-  await page.getByRole("link", { name: "技能" }).click();
+  await page.getByTestId("nav-skills").click();
   // 4-worker 并发下首屏数据拉取可超默认 5s——URL 强信号 + 放宽可见性（§3.5.1-2）
   await expect(page).toHaveURL(/\/skills/u);
   await expect(page.getByTestId("skills-page")).toBeVisible({ timeout: 15_000 });

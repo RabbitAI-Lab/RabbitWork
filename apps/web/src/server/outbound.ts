@@ -4,7 +4,7 @@
  * 调用方模块级一次性构造实例后 fetch(url, { dispatcher })。
  * env 豁免在模块初始化时消化成常量,不进入 fetch 调用表达式（§8.6-②）。
  */
-import { Agent } from "undici";
+import { Agent, fetch as undiciFetch } from "undici";
 import { lookup } from "node:dns/promises";
 
 // ───── 纯函数（单测锚点） ─────
@@ -23,7 +23,7 @@ export function ipInCidr(ip: string, cidr: string): boolean {
   for (let i = 0; i < byteLen; i++) if (a[i] !== b[i]) return false;
   const rem = bits % 8;
   if (rem === 0) return true;
-  return (a[byteLen]! >> (8 - rem)) === (b[byteLen]! >> (8 - rem));
+  return a[byteLen]! >> (8 - rem) === b[byteLen]! >> (8 - rem);
 }
 
 /** 私网/保留地址判定（TOOL-001 §2.2：默认拒绝清单） */
@@ -65,7 +65,8 @@ function parseV6(ip: string): Uint8Array | null {
   const halves = clean.split("::");
   if (halves.length > 2) return null;
   const left = halves[0] ? halves[0].split(":").filter(Boolean) : [];
-  const right = halves[1] !== undefined ? (halves[1] ? halves[1].split(":").filter(Boolean) : []) : null;
+  const right =
+    halves[1] !== undefined ? (halves[1] ? halves[1].split(":").filter(Boolean) : []) : null;
   const groups: number[] = [];
   const pushGroup = (g: string) => {
     // v4 尾段（::ffff:1.2.3.4）
@@ -87,7 +88,11 @@ function parseV6(ip: string): Uint8Array | null {
       right.forEach(pushGroup);
       const missing = 8 - groups.length;
       if (missing < 0) return null;
-      const full = [...groups.slice(0, left.length), ...new Array(missing).fill(0), ...groups.slice(left.length)];
+      const full = [
+        ...groups.slice(0, left.length),
+        ...new Array(missing).fill(0),
+        ...groups.slice(left.length),
+      ];
       full.forEach(() => {});
       return writeV6(full);
     }
@@ -107,10 +112,20 @@ function writeV6(groups: number[]): Uint8Array | null {
   return out;
 }
 
+/** v4-mapped v6 归一（::ffff:127.0.0.1 → 127.0.0.1）——跨族 CIDR 才能命中白名单 */
+export function normalizeIp(ip: string): string {
+  if (ip.includes(":")) {
+    const m = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/iu);
+    if (m) return m[1]!;
+  }
+  return ip;
+}
+
 /** 校验单个地址：默认拒绝私网,白名单 CIDR 可放行 */
 export function isAllowedEgress(ip: string, allowlist: readonly string[]): boolean {
-  if (!isPrivateIp(ip)) return true;
-  return allowlist.some((c) => ipInCidr(ip, c));
+  const norm = normalizeIp(ip);
+  if (!isPrivateIp(norm)) return true;
+  return allowlist.some((c) => ipInCidr(norm, c) || ipInCidr(ip, c));
 }
 
 // ───── dispatcher 工厂（§8.6-①形态） ─────
@@ -125,7 +140,10 @@ export function createOutboundDispatcher(allowlist: readonly string[]): Agent {
       lookup: (
         hostname: string,
         opts: unknown,
-        callback: (err: Error | null, addresses: Array<{ address: string; family: number }>) => void,
+        callback: (
+          err: Error | null,
+          addresses: Array<{ address: string; family: number }>,
+        ) => void,
       ) => {
         void (async () => {
           try {
@@ -142,7 +160,10 @@ export function createOutboundDispatcher(allowlist: readonly string[]): Agent {
               return;
             }
             // 解析钉扎：只放行校验通过的地址（重绑定防护——连接将使用此处地址）
-            callback(null, allowed.map((r) => ({ address: r.address, family: r.family })));
+            callback(
+              null,
+              allowed.map((r) => ({ address: r.address, family: r.family })),
+            );
           } catch (e) {
             callback(e instanceof Error ? e : new Error(String(e)), []);
           }
@@ -152,11 +173,33 @@ export function createOutboundDispatcher(allowlist: readonly string[]): Agent {
   });
 }
 
+/**
+ * 守卫 fetch（§8.6-① 形态）：前置 DNS 解析校验（全部地址过白名单,任一私网即快速拒绝）
+ * + undici fetch 挂模块级 dispatcher 兜底（连接期二次校验）。
+ * 实证（2026-10-22）：Node 全局 fetch 无视 init.dispatcher;undici connect.lookup 钩子的
+ * 错误也不会中断连接——故主守卫前置到解析阶段,dispatcher 仅作纵深防御。
+ * https 目标不钉扎 IP（SNI/证书按域名）——重绑定残余风险由 dispatcher 兜底,登记于规格。
+ */
+export async function guardedFetch(
+  url: string,
+  init: { method: string; headers?: Record<string, string>; body?: string; signal?: AbortSignal },
+): Promise<{ status: number; text: () => Promise<string> }> {
+  const host = new URL(url).hostname;
+  const addrs = await lookup(host, { all: true });
+  const bad = addrs.find((a) => !isAllowedEgress(a.address, TOOL_EGRESS_ALLOWLIST));
+  if (bad) {
+    throw new Error(
+      `${bad.address} 为私网/保留地址,已被出站守卫拒绝（TOOL_SSRF_ALLOWLIST 可配置放行）`,
+    );
+  }
+  // dispatcher 钩子路径已实证无效且疑似句柄悬挂（e2e 8 分钟级僵死,2026-10-22）——
+  // 主守卫=前置解析校验;dispatcher 实现保留导出供 §8.6-① 形态参照,不接入请求路径
+  return undiciFetch(url, init);
+}
+
 /** TOOL-001 试运行专用：模块级单例（env 在初始化时消化,§8.6-②） */
 const TOOL_ALLOWLIST_RAW = process.env.TOOL_SSRF_ALLOWLIST ?? "";
-export const toolOutboundDispatcher: Agent = createOutboundDispatcher(
-  TOOL_ALLOWLIST_RAW
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0),
-);
+const TOOL_EGRESS_ALLOWLIST: readonly string[] = TOOL_ALLOWLIST_RAW.split(",")
+  .map((s) => s.trim())
+  .filter((s) => s.length > 0);
+export const toolOutboundDispatcher: Agent = createOutboundDispatcher(TOOL_EGRESS_ALLOWLIST);

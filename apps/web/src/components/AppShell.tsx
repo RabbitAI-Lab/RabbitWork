@@ -13,12 +13,13 @@ import {
   LineChartOutlined,
   BookOutlined,
   ThunderboltOutlined,
+  ToolOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export type MenuKey = "office" | "staffs" | "teams" | "runs" | "knowledge" | "skills";
+export type MenuKey = "office" | "staffs" | "teams" | "runs" | "knowledge" | "skills" | "tools";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -68,6 +69,13 @@ const MENUS: Array<{
     label: "技能",
     icon: <ThunderboltOutlined />,
     match: /^\/skills(\/|$)/,
+  },
+  {
+    key: "tools",
+    href: "/tools",
+    label: "工具",
+    icon: <ToolOutlined />,
+    match: /^\/tools(\/|$)/,
   },
 ];
 
