@@ -3,6 +3,7 @@ export type { Envelope } from "./envelope";
 export { isValidPermission, PERMISSIONS } from "./permissions";
 export type { Permission, PermissionAction } from "./permissions";
 export * from "./resource";
+export * from "./knowledge";
 export * from "./obs";
 export * from "./staff";
 export * from "./team";

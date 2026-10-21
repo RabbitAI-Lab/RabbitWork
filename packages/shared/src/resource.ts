@@ -53,6 +53,8 @@ export const kbDto = z.object({
   status: z.enum(KB_STATUSES),
   createdAt: z.string(),
   updatedAt: z.string(),
+  documentCount: z.number(),
+  chunkCount: z.number(),
 });
 export type KbDto = z.infer<typeof kbDto>;
 

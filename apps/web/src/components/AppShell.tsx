@@ -11,12 +11,13 @@ import {
   HomeOutlined,
   AppstoreOutlined,
   LineChartOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export type MenuKey = "office" | "staffs" | "teams" | "runs";
+export type MenuKey = "office" | "staffs" | "teams" | "runs" | "knowledge";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -52,6 +53,13 @@ const MENUS: Array<{
     label: "运行观测",
     icon: <LineChartOutlined />,
     match: /^\/runs(\/|$)/,
+  },
+  {
+    key: "knowledge",
+    href: "/knowledge",
+    label: "知识库",
+    icon: <BookOutlined />,
+    match: /^\/knowledge(\/|$)/,
   },
 ];
 

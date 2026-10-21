@@ -338,10 +338,26 @@ model KnowledgeDocument {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  base KnowledgeBase @relation(fields: [baseId], references: [id], onDelete: Cascade)
+  base    KnowledgeBase     @relation(fields: [baseId], references: [id], onDelete: Cascade)
+  chunks KnowledgeChunk[]
 
   @@index([baseId, status])
   @@map("knowledge_documents")
+}
+
+model KnowledgeChunk {
+  id         String   @id @default(uuid())
+  documentId String   @map("document_id")
+  baseId     String   @map("base_id")
+  seq        Int
+  content    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([baseId])
+  @@index([documentId, seq])
+  @@map("knowledge_chunks")
 }
 
 model KnowledgeIngestJob {

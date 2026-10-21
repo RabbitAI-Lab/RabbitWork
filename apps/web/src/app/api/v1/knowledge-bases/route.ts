@@ -17,7 +17,22 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       take: 200,
     });
-    return jsonOk({ items: rows.map(toKbDto), total: rows.length });
+    // KNW-001 列表统计：文档数 + 切片数（groupBy，避免逐卡子查询）
+    const [docCounts, chunkCounts] = await Promise.all([
+      prisma.knowledgeDocument.groupBy({ by: ["baseId"], _count: { _all: true } }),
+      prisma.knowledgeChunk.groupBy({ by: ["baseId"], _count: { _all: true } }),
+    ]);
+    const docMap = new Map(docCounts.map((d) => [d.baseId, d._count._all]));
+    const chunkMap = new Map(chunkCounts.map((c) => [c.baseId, c._count._all]));
+    return jsonOk({
+      items: rows.map((r) =>
+        toKbDto(r, {
+          documentCount: docMap.get(r.id) ?? 0,
+          chunkCount: chunkMap.get(r.id) ?? 0,
+        }),
+      ),
+      total: rows.length,
+    });
   } catch (e) {
     return toErrorResponse(e);
   }

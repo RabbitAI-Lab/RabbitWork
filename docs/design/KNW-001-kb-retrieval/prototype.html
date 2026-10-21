@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TEAM-001 团队协作复用 AgentScope teams（浅映射）— RabbitWork 高保真原型</title>
+    <title>KNW-001 知识库与检索调试 — RabbitWork 高保真原型</title>
+    <style>
+      /* =========================================================
+         RabbitWork DS v2.1 tokens（与 apps/web/src/app/theme/tokens.css 同源）
+         ========================================================= */
+      :root {
+        --rw-bg: #fafafa;
+        --rw-card: #ffffff;
+        --rw-fg: #0f172a;
+        --rw-fg-muted: #64748b;
+        --rw-fg-subtle: #94a3b8;
+        --rw-border: #e4e8ee;
+        --rw-border-strong: #cbd5e1;
+        --rw-accent: #10b981;
+        --rw-accent-hover: #059669;
+        --rw-accent-fg: #ffffff;
+        --rw-accent-subtle: #ecfdf5;
+        --rw-success: #10b981;
+        --rw-success-subtle: #ecfdf5;
+        --rw-warning: #d97706;
+        --rw-warning-subtle: #fef3e2;
+        --rw-danger: #dc2626;
+        --rw-danger-subtle: #fdecec;
+        --rw-muted-subtle: #f1f5f9;
+        --rw-ring: rgba(16, 185, 129, 0.45);
+        --rw-shadow-float: 0 8px 24px rgba(15, 23, 42, 0.12);
+        --font-display: "Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-body: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --t-fast: 140ms;
+        --t-base: 200ms;
+        --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .dark {
+        --rw-bg: #0b0f1a;
+        --rw-card: #111827;
+        --rw-fg: #f1f5f9;
+        --rw-fg-muted: #94a3b8;
+        --rw-fg-subtle: #5b6b82;
+        --rw-border: #1e293b;
+        --rw-border-strong: #334155;
+        --rw-accent: #34d399;
+        --rw-accent-hover: #6ee7b7;
+        --rw-accent-fg: #052e21;
+        --rw-accent-subtle: rgba(52, 211, 153, 0.12);
+        --rw-success: #34d399;
+        --rw-success-subtle: rgba(52, 211, 153, 0.12);
+        --rw-warning: #f59e0b;
+        --rw-warning-subtle: rgba(245, 158, 11, 0.14);
+        --rw-danger: #f87171;
+        --rw-danger-subtle: rgba(248, 113, 113, 0.12);
+        --rw-muted-subtle: rgba(148, 163, 184, 0.1);
+        --rw-ring: rgba(52, 211, 153, 0.5);
+        --rw-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      html { font-size: 16px; }
+      body {
+        background: var(--rw-bg);
+        color: var(--rw-fg);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        transition: background 200ms var(--ease-out), color 200ms var(--ease-out);
+      }
+      .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+      .font-mono { font-family: var(--font-mono); }
+      .num { font-variant-numeric: tabular-nums; }
+      .rw-card { background: var(--rw-card); border: 1px solid var(--rw-border); border-radius: var(--radius-md); }
+      .rw-hover { transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+      .rw-hover:hover { transform: translateY(-3px); border-color: var(--rw-border-strong); box-shadow: var(--rw-shadow-float); }
+      .btn-primary {
+        background: var(--rw-accent); color: var(--rw-accent-fg); border-radius: var(--radius-sm);
+        padding: 0 16px; height: 32px; font-size: 14px; font-weight: 500;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-primary:hover { background: var(--rw-accent-hover); box-shadow: 0 0 0 4px var(--rw-ring); }
+      .btn-primary:active { transform: scale(0.96); }
+      .btn-default {
+        background: var(--rw-card); color: var(--rw-fg); border: 1px solid var(--rw-border-strong);
+        border-radius: var(--radius-sm); padding: 0 16px; height: 32px; font-size: 14px;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-default:hover { border-color: var(--rw-accent); color: var(--rw-accent); }
+      .btn-text { color: var(--rw-fg-muted); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 14px; transition: all 140ms var(--ease-out); }
+      .btn-text:hover { background: var(--rw-muted-subtle); color: var(--rw-fg); }
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+        padding: 2px 10px; font-size: 12px; font-weight: 500; line-height: 20px;
+      }
+      .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+      .pill-success { background: var(--rw-success-subtle); color: var(--rw-success); }
+      .pill-success .pill-dot { background: var(--rw-success); animation: breathe 2.4s ease-in-out infinite; }
+      .pill-warning { background: var(--rw-warning-subtle); color: var(--rw-warning); }
+      .pill-warning .pill-dot { background: var(--rw-warning); }
+      .pill-muted { background: var(--rw-muted-subtle); color: var(--rw-fg-muted); }
+      .pill-muted .pill-dot { background: var(--rw-fg-subtle); }
+      .pill-danger { background: var(--rw-danger-subtle); color: var(--rw-danger); }
+      .pill-danger .pill-dot { background: var(--rw-danger); }
+      @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+      .tab {
+        padding: 8px 4px; margin-right: 24px; font-size: 14px; color: var(--rw-fg-muted);
+        border-bottom: 2px solid transparent; transition: all 140ms var(--ease-out); cursor: pointer;
+      }
+      .tab:hover { color: var(--rw-fg); }
+      .tab.active { color: var(--rw-accent); border-bottom-color: var(--rw-accent); font-weight: 500; }
+      .tab .num { margin-left: 4px; color: var(--rw-fg-subtle); font-size: 12px; }
+      .modal-mask { background: rgba(15, 23, 42, 0.45); }
+      .modal {
+        background: var(--rw-card); border-radius: var(--radius-lg); box-shadow: var(--rw-shadow-float);
+        border: 1px solid var(--rw-border);
+      }
+      .input {
+        background: var(--rw-card); border: 1px solid var(--rw-border-strong); border-radius: var(--radius-sm);
+        height: 32px; padding: 0 12px; font-size: 14px; color: var(--rw-fg); width: 100%;
+        transition: all 140ms var(--ease-out); outline: none;
+      }
+      .input:focus { border-color: var(--rw-accent); box-shadow: 0 0 0 3px var(--rw-ring); }
+      .avatar {
+        width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--rw-accent-subtle);
+        color: var(--rw-accent); display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 500; flex-shrink: 0;
+      }
+    <main class="mx-auto max-w-[1080px] px-8 py-8 space-y-12">
+
+      <!-- ═════════ A. 知识库列表 + 新建 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">A</span>
+          <h2 class="font-display text-[15px] font-semibold">知识库列表（/knowledge 新导航「知识库」）+ 新建弹窗</h2>
+        </div>
+        <div class="mb-4 flex items-end justify-between">
+          <div>
+            <h3 class="font-display text-2xl font-semibold tracking-tight text-rw-fg">知识库</h3>
+            <p class="mt-1 text-sm text-rw-fg-subtle">沉淀团队知识,绑定给数字员工后回答有据可依</p>
+          </div>
+          <button class="btn-primary" data-testid="kb-create-btn">＋ 新建知识库</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="rw-card rw-hover p-5">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="font-display text-[15px] font-semibold">产品手册</span>
+              <span class="pill pill-success"><span class="pill-dot" style="animation:none"></span>6 篇文档</span>
+            </div>
+            <p class="text-[13px] text-rw-fg-muted">产品功能说明与 FAQ</p>
+            <p class="mt-3 text-xs text-rw-fg-subtle tabular-nums">482 切片 · 绑定 3 名员工 · 更新于 10-21</p>
+          </div>
+          <div class="rw-card p-5">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="font-display text-[15px] font-semibold">合规红线</span>
+              <span class="pill pill-warning"><span class="pill-dot"></span>摄取中</span>
+            </div>
+            <p class="text-[13px] text-rw-fg-muted">禁词与合规口径</p>
+            <p class="mt-3 text-xs text-rw-fg-subtle tabular-nums">2 篇文档 · 120/180 切片</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═════════ B. KB 详情：文档管理 + 检索调试 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">B</span>
+          <h2 class="font-display text-[15px] font-semibold">知识库详情（/knowledge/[id]）：Tab「文档」+「检索调试」</h2>
+        </div>
+        <div class="rw-card p-6">
+          <div class="mb-4 flex items-start justify-between">
+            <div>
+              <h3 class="font-display text-xl font-semibold tracking-tight">产品手册</h3>
+              <p class="mt-1 text-[13px] text-rw-fg-subtle">6 篇文档 · 482 切片 · pg 关键词检索（向量检索随 AI Provider 规格接入）</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-default">⬆ 上传文档</button>
+              <button class="btn-default" style="border-color: var(--rw-danger); color: var(--rw-danger)">🗑</button>
+            </div>
+          </div>
+          <div class="mb-4 flex border-b" style="border-color: var(--rw-border)">
+            <div class="tab active">文档 (6)</div>
+            <div class="tab">检索调试</div>
+          </div>
+
+          <!-- 文档表 -->
+          <div class="overflow-hidden rounded-[8px] border" style="border-color: var(--rw-border)">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-xs" style="background: var(--rw-muted-subtle); color: var(--rw-fg-muted)">
+                <th class="px-4 py-2.5 font-medium">文档</th><th class="px-4 py-2.5 font-medium">状态</th>
+                <th class="px-4 py-2.5 font-medium text-right">切片</th><th class="px-4 py-2.5 font-medium text-right">上传时间</th>
+              </tr></thead>
+              <tbody>
+                <tr class="row-hover"><td class="px-4 py-2.5">快速上手.md</td>
+                  <td class="px-4 py-2.5"><span class="pill pill-success"><span class="pill-dot" style="animation:none"></span>READY</span></td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]">86</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px] text-rw-fg-subtle">10-21 14:02</td></tr>
+                <tr class="row-hover" style="border-top:1px solid var(--rw-border)"><td class="px-4 py-2.5">口径说明.txt</td>
+                  <td class="px-4 py-2.5"><span class="pill pill-danger"><span class="pill-dot"></span>FAILED</span></td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]">—</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px] text-rw-fg-subtle">10-21 13:40</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 失败原因透出 -->
+          <p class="mt-3 rounded-[8px] px-4 py-3 font-mono text-xs" style="background: var(--rw-danger-subtle); color: var(--rw-danger)">
+            口径说明.txt · 摄取失败：文件编码非 UTF-8（仅支持 UTF-8 的 .md/.txt）
+          </p>
+
+          <!-- B2 检索调试面板 -->
+          <div class="mt-6 rounded-rw-md border p-5" style="border-color: var(--rw-border); background: var(--rw-muted-subtle)" data-testid="kb-retrieval-panel">
+            <p class="mb-3 text-[13px] font-medium">检索调试——用员工视角试一试知识命中</p>
+            <div class="flex gap-2">
+              <input class="input" value="如何重置密码" data-testid="kb-retrieval-input" />
+              <button class="btn-primary shrink-0" data-testid="kb-retrieval-run">检索</button>
+            </div>
+            <div class="mt-4 space-y-2">
+              <div class="rw-card p-3.5 text-[13px]">
+                <p class="mb-1 text-xs text-rw-fg-subtle">快速上手.md · 切片 #12 · 命中 2 处</p>
+                <p>…进入「账号设置 → <b style="color: var(--rw-accent)">重置密码</b>」,通过绑定邮箱验证后即可设置新<b style="color: var(--rw-accent)">密码</b>…</p>
+              </div>
+              <div class="rw-card p-3.5 text-[13px]">
+                <p class="mb-1 text-xs text-rw-fg-subtle">FAQ.md · 切片 #34 · 命中 1 处</p>
+                <p>…<b style="color: var(--rw-accent)">密码</b>连续输错 5 次将锁定 30 分钟…</p>
+              </div>
+            </div>
+            <p class="mt-3 text-xs text-rw-fg-subtle">命中数 2 · 耗时 12ms · 检索口径：pg 关键词（切片级）</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═════════ C. 员工绑定区（staffs/[id] 详情新增） ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">C</span>
+          <h2 class="font-display text-[15px] font-semibold">员工档案新增「知识绑定」区（多选知识库）</h2>
+        </div>
+        <div class="rw-card p-6">
+          <div class="mb-3 flex items-center justify-between">
+            <h4 class="font-display text-[15px] font-semibold">知识绑定</h4>
+            <button class="btn-default">编辑绑定</button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="pill pill-success"><span class="pill-dot" style="animation:none"></span>产品手册</span>
+            <span class="pill pill-success"><span class="pill-dot" style="animation:none"></span>合规红线</span>
+            <span class="pill pill-muted"><span class="pill-dot"></span>＋ 添加</span>
+          </div>
+          <p class="mt-3 text-xs text-rw-fg-subtle">绑定的知识库在对话检索时按绑定顺序合并取 Top 命中（蓝图 §3.3 经绑定表挂资源）</p>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>
