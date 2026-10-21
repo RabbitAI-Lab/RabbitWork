@@ -4,7 +4,7 @@
  * 调用方模块级一次性构造实例后 fetch(url, { dispatcher })。
  * env 豁免在模块初始化时消化成常量,不进入 fetch 调用表达式（§8.6-②）。
  */
-import { Agent, type DispatcherFactoryOptions } from "undici";
+import { Agent } from "undici";
 import { lookup } from "node:dns/promises";
 
 // ───── 纯函数（单测锚点） ─────
@@ -160,5 +160,3 @@ export const toolOutboundDispatcher: Agent = createOutboundDispatcher(
     .map((s) => s.trim())
     .filter((s) => s.length > 0),
 );
-
-export type { DispatcherFactoryOptions };
