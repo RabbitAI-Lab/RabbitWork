@@ -256,56 +256,6 @@ h4,
   animation: bubble-in 0.36s var(--ease-spring) both;
 }
 
-/* ── Sender 精修（4px 锐角 + focus 翠绿环 + 紧凑工具条）── */
-.rw-sender {
-  border-radius: var(--radius-sm);
-  border-color: var(--rw-border-strong);
-  background: var(--rw-card);
-  transition:
-    border-color var(--t-base) var(--ease-out),
-    box-shadow var(--t-base) var(--ease-out);
-}
-.rw-sender:focus-within {
-  border-color: var(--rw-accent);
-  box-shadow: 0 0 0 3px var(--rw-ring);
-}
-.rw-send-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  background: var(--rw-accent);
-  color: var(--rw-accent-fg);
-  border: none;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  transition:
-    background var(--t-fast) var(--ease-out),
-    transform var(--t-fast) var(--ease-spring),
-    box-shadow var(--t-base) var(--ease-out);
-}
-.rw-send-btn:hover:not(:disabled) {
-  background: var(--rw-accent-hover);
-  box-shadow: 0 2px 10px var(--rw-ring);
-}
-.rw-send-btn:active:not(:disabled) {
-  transform: scale(0.9);
-}
-.rw-send-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.rw-send-btn.rw-stop-btn {
-  background: transparent;
-  color: var(--rw-danger);
-  border: 1px solid var(--rw-danger);
-}
-.rw-send-btn.rw-stop-btn:hover {
-  background: var(--rw-danger-subtle);
-  box-shadow: none;
-}
-
 /* reduced-motion：全部动效收敛为终态（规范红线） */
 @media (prefers-reduced-motion: reduce) {
   *,

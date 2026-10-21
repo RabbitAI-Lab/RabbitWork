@@ -1,7 +1,7 @@
 /* ============================================================================
    CHAT-002 · chat 工作台重设计
    与现有 .bubble-user / .bubble-agent / .rw-sender 兼容（DS v2.1 已定义于 globals.css）。
-   仅新增 persona-card / chat-bubble hover / chat-composer toolbar 相关类。
+   仅新增 persona-card / chat-bubble hover / chat-composer 相关类（工具栏与底部行已按走查移除）。
    ============================================================================ */
 
 /* ── 主区双栏布局 ─────────────────────────────────────────────────── */
@@ -436,7 +436,6 @@
 .rw-composer-card {
   display: flex;
   flex-direction: column;
-  width:100%;
   gap: 8px;
   padding: 8px 12px 10px 14px;
   /* CHAT-002 间距：右栏内左右各 20px 留白（不要贴边也不要满铺）。
@@ -452,39 +451,6 @@
 .rw-composer-card:focus-within {
   border-color: var(--rw-accent);
   box-shadow: 0 0 0 3px var(--rw-ring);
-}
-.rw-composer-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.rw-composer-toolbar-spacer {
-  flex: 1;
-}
-.rw-composer-context-count {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--rw-fg-subtle);
-}
-.rw-toolbar-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--rw-fg-muted);
-  cursor: pointer;
-  transition: all var(--t-fast) var(--ease-out);
-}
-.rw-toolbar-icon:hover {
-  background: var(--rw-muted-subtle);
-  color: var(--rw-fg);
-}
-.rw-toolbar-icon:active {
-  transform: scale(0.92);
 }
 
 .rw-composer-input {
@@ -503,77 +469,6 @@
 }
 .rw-composer-input::placeholder {
   color: var(--rw-fg-subtle);
-}
-
-.rw-composer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.rw-composer-hint {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--rw-fg-subtle);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-.rw-kbd {
-  display: inline-block;
-  min-width: 18px;
-  padding: 1px 4px;
-  border-radius: 3px;
-  border: 1px solid var(--rw-border);
-  background: var(--rw-muted-subtle);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--rw-fg-muted);
-  text-align: center;
-}
-.rw-composer-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.rw-composer-tokens {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--rw-fg-subtle);
-  font-variant-numeric: tabular-nums;
-}
-.rw-send-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  background: var(--rw-accent);
-  color: var(--rw-accent-fg);
-  border: none;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  transition:
-    background var(--t-fast) var(--ease-out),
-    transform var(--t-fast) var(--ease-spring);
-}
-.rw-send-btn:hover {
-  background: var(--rw-accent-hover);
-}
-.rw-send-btn:active {
-  transform: scale(0.9);
-}
-.rw-send-btn[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.rw-send-btn.rw-stop-btn {
-  background: transparent;
-  color: var(--rw-danger);
-  border: 1px solid var(--rw-danger);
-}
-.rw-send-btn.rw-stop-btn:hover {
-  background: var(--rw-danger-subtle);
-  box-shadow: none;
 }
 
 /* message-bubble 兼容（沿用 globals.css 已有 .bubble-user / .bubble-agent） */

@@ -47,7 +47,6 @@ export default function ChatPage() {
   const [streaming, setStreaming] = useState(false);
   const [input, setInput] = useState("");
   const [lastUsage, setLastUsage] = useState<TokenUsage | null>(null);
-  const [contextCount] = useState(0); // M2 接真实任务上下文注入；骨架期固定为 0
   const esRef = useRef<EventSource | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -139,16 +138,6 @@ export default function ChatPage() {
       openStream();
     },
     onError: (e) => ctxMessage.error(e instanceof Error ? e.message : "发送失败"),
-  });
-
-  const interrupt = useMutation({
-    mutationFn: () => chatApi.interrupt(id),
-    onSuccess: () => {
-      setStreaming(false);
-      closeStream();
-      setStreamingText("");
-      ctxMessage.info("已打断");
-    },
   });
 
   const employee = detail.data?.employee;
@@ -252,33 +241,6 @@ export default function ChatPage() {
             </div>
             <button
               type="button"
-              aria-label="导出"
-              title="导出为 Markdown"
-              className="rw-icon-btn"
-              onClick={() => ctxMessage.info("导出（M2 接真实接口）")}
-            >
-              ⤓
-            </button>
-            <button
-              type="button"
-              aria-label="任务上下文"
-              title="任务上下文"
-              className="rw-icon-btn"
-              onClick={() => ctxMessage.info("任务上下文（M2 接真实接口）")}
-            >
-              📋
-            </button>
-            <button
-              type="button"
-              aria-label="设置"
-              title="设置"
-              className="rw-icon-btn"
-              onClick={() => ctxMessage.info("设置（M2 接真实接口）")}
-            >
-              ⚙
-            </button>
-            <button
-              type="button"
               aria-label="返回办公室"
               title="返回办公室"
               data-testid="chat-back"
@@ -338,8 +300,6 @@ export default function ChatPage() {
             onSubmit={submit}
             streaming={streaming}
             sending={send.isPending}
-            onInterrupt={() => interrupt.mutate()}
-            contextCount={contextCount}
           />
         </section>
       </div>

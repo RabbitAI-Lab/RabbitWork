@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RabbitWork · 3D 数字孪生园区 Spike</title>
+<style>
+  :root {
+    --bg: #060d1a;
+    --panel: rgba(10, 22, 40, 0.82);
+    --panel-border: rgba(56, 225, 200, 0.35);
+    --fg: #dce8f2;
+    --fg-muted: #8ba3b8;
+    --fg-subtle: #5c7186;
+    --accent: #38e1c8;
+    --accent2: #4aa8ff;
+    --warn: #ffd166;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--fg);
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 26px;
+    background: linear-gradient(to bottom, rgba(6,13,26,0.9), transparent);
+    pointer-events: none;
+  }
+  .topbar .logo {
+    width: 30px; height: 30px; border: 1px solid var(--accent);
+    display: grid; place-items: center; color: var(--accent);
+    font-size: 15px; font-weight: 700;
+    clip-path: polygon(0 0, 100% 0, 100% 72%, 72% 100%, 0 100%);
+  }
+  .topbar .title { font-size: 16px; font-weight: 600; letter-spacing: 0.06em; }
+  .topbar .sub {
+    font-size: 11px; color: var(--accent); letter-spacing: 0.18em;
+    border: 1px solid var(--panel-border); padding: 2px 10px;
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  }
+
+  /* 面包屑 */
+  .crumbs {
+    position: fixed; top: 58px; left: 26px; z-index: 10;
+    display: flex; align-items: center; gap: 4px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    padding: 7px 12px; font-size: 12.5px;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    backdrop-filter: blur(6px);
+  }
+  .crumbs button {
+    border: none; background: transparent; color: var(--fg-muted);
+    font-size: 12.5px; cursor: pointer; padding: 2px 6px;
+  }
+  .crumbs button:hover { color: var(--accent); }
+  .crumbs .cur { color: var(--accent); font-weight: 600; padding: 2px 6px; }
+  .crumbs .sep { color: var(--fg-subtle); }
+
+  /* 左面板：楼栋/企业 */
+  .panel {
+    position: fixed; z-index: 10; width: 218px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    backdrop-filter: blur(6px);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+    padding: 12px 14px;
+  }
+  .panel h3 {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.14em;
+    color: var(--accent); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .panel h3::before { content: ""; width: 3px; height: 12px; background: var(--accent); }
+  #left-panel { top: 104px; left: 26px; }
+  .b-item {
+    padding: 7px 9px; margin-bottom: 5px; cursor: pointer;
+    border: 1px solid transparent; border-left: 2px solid rgba(56,225,200,0.3);
+    transition: all 0.15s ease-out; font-size: 12px;
+  }
+  .b-item:hover { background: rgba(56,225,200,0.08); border-left-color: var(--accent); }
+  .b-item b { display: block; font-weight: 600; }
+  .b-item span { font-size: 10.5px; color: var(--fg-subtle); }
+
+  #right-panel { top: 104px; right: 26px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+  .stat-row .k { font-size: 11px; color: var(--fg-muted); }
+  .stat-row .v { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .stat-row .v.blue { color: var(--accent2); }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 54px; margin-top: 10px; }
+  .bars i {
+    flex: 1; background: linear-gradient(to top, rgba(56,225,200,0.25), var(--accent));
+    min-height: 3px; border-radius: 1px;
+    transition: height 0.6s ease-out;
+  }
+  .bars-label { font-size: 10px; color: var(--fg-subtle); margin-top: 5px; text-align: center; letter-spacing: 0.1em; }
+
+  /* tooltip */
+  .tip {
+    position: fixed; z-index: 15; pointer-events: none; display: none;
+    background: var(--panel); border: 1px solid var(--accent);
+    padding: 8px 12px; font-size: 12px;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+    box-shadow: 0 0 18px rgba(56,225,200,0.25);
+  }
+  .tip b { display: block; font-size: 12.5px; color: var(--accent); }
+  .tip span { color: var(--fg-muted); font-size: 11px; }
+
+  /* 员工卡 */
+  .card {
+    position: fixed; z-index: 20; width: 268px;
+    background: rgba(8, 18, 34, 0.94); border: 1px solid var(--panel-border);
+    box-shadow: 0 0 32px rgba(56,225,200,0.18), 0 14px 40px rgba(0,0,0,0.6);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+    padding: 16px; display: none;
+    animation: card-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+  @keyframes card-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } }
+  .card .head { display: flex; gap: 12px; align-items: center; }
+  .card .avatar {
+    width: 44px; height: 44px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 17px; font-weight: 600;
+    border: 1px solid var(--panel-border);
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+  }
+  .card .name { font-size: 14px; font-weight: 600; }
+  .card .role { font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+  .card .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; padding: 2px 8px; margin-top: 4px;
+    border: 1px solid; clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+  }
+  .card .pill i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .card .rows { margin-top: 12px; border-top: 1px solid rgba(56,225,200,0.18); }
+  .card .row {
+    display: flex; justify-content: space-between; padding: 7px 0;
+    font-size: 11.5px; border-bottom: 1px solid rgba(56,225,200,0.1);
+  }
+  .card .row:last-child { border-bottom: none; }
+  .card .row span { color: var(--fg-subtle); }
+  .card .row b { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .card .acts { display: flex; gap: 8px; margin-top: 12px; }
+  .card .acts button {
+    flex: 1; height: 30px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--panel-border); background: transparent; color: var(--fg-muted);
+    clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+    transition: all 0.15s ease-out;
+  }
+  .card .acts button:hover { border-color: var(--accent); color: var(--fg); }
+  .card .acts button.primary {
+    background: linear-gradient(135deg, #1fb89e, #38e1c8); border: none; color: #04211b; font-weight: 600;
+  }
+  .card .close {
+    position: absolute; top: 10px; right: 10px; width: 22px; height: 22px;
+    border: none; background: transparent; color: var(--fg-subtle);
+    font-size: 14px; cursor: pointer;
+  }
+  .card .close:hover { color: var(--accent); }
+
+  .hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    font-size: 11px; color: var(--fg-subtle); letter-spacing: 0.04em;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    padding: 5px 16px;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+    user-select: none; pointer-events: none;
+  }
+  .hint kbd {
+    font-family: ui-monospace, monospace; font-size: 10px;
+    background: rgba(56,225,200,0.12); border: 1px solid var(--panel-border);
+    padding: 0 4px; margin: 0 1px; color: var(--accent);
+  }
+  #loading {
+    position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+    background: var(--bg); font-size: 13px; color: var(--accent); letter-spacing: 0.3em;
+    transition: opacity 0.4s;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="loading">
+  <div id="loading-text">数字孪生园区初始化…</div>
+  <div id="loading-error" style="display:none;max-width:520px;margin-top:18px;padding:14px 18px;border:1px solid #ff8a7a;color:#ffb0a6;font-size:12px;line-height:1.7;text-align:left;border-radius:8px;background:rgba(40,12,8,0.4)"></div>
+</div>
+<script>
+  /* 加载失败自诊断：任何脚本错误都显示在 loading 层，避免白屏无提示 */
+  (function () {
+    var shown = [];
+    function showError(msg) {
+      var box = document.getElementById("loading-error");
+      var text = document.getElementById("loading-text");
+      if (text) text.textContent = "页面加载失败";
+      if (!box) return;
+      box.style.display = "block";
+      shown.push(msg);
+      box.innerHTML = "<b>错误信息：</b><br>" + shown.slice(-3).join("<br>") +
+        '<br><br><b>常见原因：</b>① 网络无法访问 CDN（three.js 来自 jsdelivr，需联网）② 浏览器过旧（需 Chrome 90+ / Edge 90+ / Safari 16+）③ 直接双击打开文件时部分浏览器受限，建议通过 <code>http://127.0.0.1:8777/campus.html</code> 访问';
+    }
+    window.addEventListener("error", function (e) {
+      showError((e.message || "脚本错误") + (e.filename ? " @" + e.filename.split("/").pop() + ":" + e.lineno : ""));
+    }, true);
+    window.addEventListener("unhandledrejection", function (e) {
+      showError("Promise 异常: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+    });
+    // importmap 不支持（旧浏览器）：module script 会静默失败，用兜底计时器暴露
+    setTimeout(function () {
+      if (!window.__rwLoaded && document.getElementById("loading")) {
+        showError("渲染引擎 6 秒内未就绪——疑似 three.js (CDN) 加载失败或浏览器不支持 importmap");
+      }
+    }, 6000);
+  })();
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+
+<div class="topbar">
+  <div class="logo">R</div>
+  <span class="title">RabbitWork · 数字员工园区数字孪生</span>
+  <span class="sub">DIGITAL TWIN CAMPUS</span>
+</div>
+
+<div class="crumbs" id="crumbs"></div>
+
+<div class="panel" id="left-panel">
+  <h3>楼栋 / 企业</h3>
+  <div id="b-list"></div>
+</div>
+
+<div class="panel" id="right-panel">
+  <h3>园区运行态势</h3>
+  <div class="stat-row"><span class="k">在岗数字员工</span><span class="v" id="st-online">0</span></div>
+  <div class="stat-row"><span class="k">对话中</span><span class="v blue" id="st-busy">0</span></div>
+  <div class="stat-row"><span class="k">今日对话总量</span><span class="v" id="st-talks">0</span></div>
+  <div class="bars" id="bars"></div>
+  <div class="bars-label">各楼栋在岗分布</div>
+</div>
+
+<div class="tip" id="tip"><b>–</b><span>–</span></div>
+
+<div class="card" id="card">
+  <button class="close" id="card-close">✕</button>
+  <div class="head">
+    <div class="avatar" id="c-avatar">员</div>
+    <div>
+      <div class="name" id="c-name">–</div>
+      <div class="role" id="c-role">–</div>
+      <div class="pill" id="c-pill"><i></i><span>–</span></div>
+    </div>
+  </div>
+  <div class="rows">
+    <div class="row"><span>所属企业</span><b id="c-company">–</b></div>
+    <div class="row"><span>工位</span><b id="c-seat">–</b></div>
+    <div class="row"><span>今日对话</span><b id="c-talks">–</b></div>
+    <div class="row"><span>当前任务</span><b id="c-task">–</b></div>
+  </div>
+  <div class="acts">
+    <button class="primary" id="c-btn-chat">发起对话</button>
+    <button id="c-btn-seat">安排工位</button>
+  </div>
+</div>
+
+<div class="hint"><kbd>拖拽</kbd>旋转 · <kbd>滚轮</kbd>缩放 · 点击楼层看员工 · 点击小人看状态</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+/* ═══════════════ 渲染基座（含 Bloom 泛光） ═══════════════ */
+const app = document.getElementById("app");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060d1a);
+scene.fog = new THREE.Fog(0x060d1a, 170, 330);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 600);
+camera.position.set(95, 80, 95);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI / 2.05;
+controls.minDistance = 6;
+controls.maxDistance = 240;
+controls.target.set(0, 0, 0);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.75, 0.5, 0.62);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* 冷色科技光照 + 办公室开灯室内照明 */
+scene.add(new THREE.AmbientLight(0x6b84a8, 0.9));
+scene.add(new THREE.HemisphereLight(0x8fb4dd, 0x22303f, 0.75));
+const sun = new THREE.DirectionalLight(0x9fd8ff, 1.1);
+sun.position.set(70, 100, 40);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -110, right: 110, top: 110, bottom: -110, far: 320 });
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+scene.add(new THREE.DirectionalLight(0x38e1c8, 0.25).translateX(-60).translateY(30).translateZ(-50));
+
+/* ═══════════════ 材质（科技全息风） ═══════════════ */
+const GLOW = 0x38e1c8, GLOW2 = 0x4aa8ff;
+const M = {
+  ground:  new THREE.MeshStandardMaterial({ color: 0x0a1524, roughness: 1 }),
+  grass:   new THREE.MeshStandardMaterial({ color: 0x0d2431, roughness: 1 }),
+  road:    new THREE.MeshStandardMaterial({ color: 0x101b2b, roughness: 0.9 }),
+  roadLine:new THREE.MeshBasicMaterial({ color: GLOW }),
+  plaza:   new THREE.MeshStandardMaterial({ color: 0x0e1a2c, roughness: 0.9 }),
+  slab:    new THREE.MeshStandardMaterial({ color: 0x12233a, roughness: 0.8 }),
+  innerFloor: new THREE.MeshStandardMaterial({ color: 0x2e3d4e, roughness: 0.85 }),
+  holo:    new THREE.MeshPhysicalMaterial({ color: 0x1a4a5e, roughness: 0.15, metalness: 0.3, transparent: true, opacity: 0.3, emissive: 0x0d3a44, emissiveIntensity: 0.5, side: THREE.DoubleSide }),
+  desk:    new THREE.MeshStandardMaterial({ color: 0xe9edef, roughness: 0.45 }),
+  deskLeg: new THREE.MeshStandardMaterial({ color: 0xb9c2c9, roughness: 0.35, metalness: 0.4 }),
+  chair:   new THREE.MeshStandardMaterial({ color: 0x9aa5ad, roughness: 0.7 }),
+  monitor: new THREE.MeshStandardMaterial({ color: 0x131c28, roughness: 0.35 }),
+  skin:    new THREE.MeshStandardMaterial({ color: 0xd9c3a8, roughness: 0.7 }),
+  pants:   new THREE.MeshStandardMaterial({ color: 0x1e2c3a, roughness: 0.85 }),
+  hair:    [0x1a222c, 0x2e2620, 0x40352a].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9 })),
+  shirt:   [0x4aa8ff, 0x38e1c8, 0xffd166, 0xff8a5c, 0xb48ce8, 0x62d3e8].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.75, emissive: c, emissiveIntensity: 0.12 })),
+  plantLeaf: new THREE.MeshStandardMaterial({ color: 0x14584a, roughness: 0.9 }),
+  plantPot: new THREE.MeshStandardMaterial({ color: 0x22303f, roughness: 0.9 }),
+  trunk:   new THREE.MeshStandardMaterial({ color: 0x1c2a22, roughness: 1 }),
+  leafBall:[0x0f4a3c, 0x135a48, 0x0d4236].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 })),
+  court:   new THREE.MeshStandardMaterial({ color: 0x0e2a24, roughness: 0.9 }),
+  courtHard: new THREE.MeshStandardMaterial({ color: 0x152232, roughness: 0.85 }),
+  line:    new THREE.MeshBasicMaterial({ color: GLOW }),
+  lineSoft:new THREE.MeshBasicMaterial({ color: 0x2a8f7f }),
+  water:   new THREE.MeshStandardMaterial({ color: 0x0d3a55, roughness: 0.08, metalness: 0.5, emissive: 0x0a2e4a, emissiveIntensity: 0.8 }),
+  lampPost:new THREE.MeshStandardMaterial({ color: 0x22303f, roughness: 0.5, metalness: 0.4 }),
+  lampHead:new THREE.MeshBasicMaterial({ color: 0x9ff5e5 }),
+  ringIdle: new THREE.MeshBasicMaterial({ color: GLOW, transparent: true, opacity: 0.5 }),
+};
+
+/* 发光边缘线（楼体描边——参考图核心效果） */
+function edgeLines(geo, color = GLOW, opacity = 0.9) {
+  const edges = new THREE.EdgesGeometry(geo, 20);
+  return new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
+}
+
+/* Canvas roundRect 兼容（旧 Safari/Firefox 无此 API，气泡绘制依赖） */
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+  };
+}
+
+/* ═══════════════ 屏幕内容纹理 ═══════════════ */
+const SCREEN_W = 512, SCREEN_H = 288;
+function screenCanvas() {
+  const cv = document.createElement("canvas");
+  cv.width = SCREEN_W; cv.height = SCREEN_H;
+  return [cv, cv.getContext("2d")];
+}
+function finalizeTex(cv) {
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+function texCode(variant) {
+  const [cv, ctx] = screenCanvas();
+  ctx.fillStyle = "#0b1118"; ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  ctx.fillStyle = "#0f1722"; ctx.fillRect(0, 0, SCREEN_W, 30);
+  ctx.fillStyle = "#38e1c8"; ctx.beginPath(); ctx.arc(18, 15, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = "#7286a0"; ctx.font = "11px ui-monospace, monospace";
+  ctx.fillText("chat-service.ts", 34, 19);
+  ctx.fillStyle = "#0d141d"; ctx.fillRect(0, 30, 34, SCREEN_H - 30);
+  const tokens = [["#c678dd", "#61afef"], ["#61afef", "#98c379"], ["#e5c07b", "#7c8f9c"], ["#98c379", "#c678dd"], ["#7c8f9c", "#61afef"]];
+  const lineH = 15, startY = 44 + variant * 3;
+  for (let i = 0; i < 17; i++) {
+    const y = startY + i * lineH;
+    if (y > SCREEN_H - 8) break;
+    ctx.fillStyle = "#435062"; ctx.font = "10px ui-monospace, monospace";
+    ctx.fillText(String(i + 1 + variant * 4), 8, y);
+    const rnd = (i * 7 + variant * 13) % 10;
+    let x = 44 + (rnd % 4) * 16;
+    const pair = tokens[(i + variant) % tokens.length];
+    for (let seg = 0; seg < 2 + (rnd % 3); seg++) {
+      const w = 14 + ((i * 11 + seg * 17 + variant * 7) % 46);
+      ctx.fillStyle = seg === 0 ? pair[0] : pair[1];
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(x, y - 8, w, 8);
+      x += w + 8;
+      if (x > SCREEN_W - 20) break;
+    }
+    ctx.globalAlpha = 1;
+  }
+  return finalizeTex(cv);
+}
+function texChart(variant) {
+  const [cv, ctx] = screenCanvas();
+  ctx.fillStyle = "#0a111a"; ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  ctx.fillStyle = "#101a28"; ctx.fillRect(0, 0, SCREEN_W, 34);
+  ctx.fillStyle = "#a8bccb"; ctx.font = "600 12px sans-serif";
+  ctx.fillText("运营概览 · 实时", 14, 22);
+  ctx.fillStyle = "#38e1c8"; ctx.font = "10px sans-serif";
+  ctx.fillText("● LIVE", SCREEN_W - 56, 22);
+  const kpis = [["任务", 3 + variant], ["对话", 12 + variant * 2], ["tokens", (8.2 + variant * 0.4).toFixed(1) + "k"]];
+  kpis.forEach(([k, v], i) => {
+    const x = 14 + i * 120;
+    ctx.fillStyle = "#101a28"; ctx.fillRect(x, 46, 108, 52);
+    ctx.fillStyle = "#61758a"; ctx.font = "10px sans-serif"; ctx.fillText(k, x + 10, 64);
+    ctx.fillStyle = "#d8f3ec"; ctx.font = "600 20px ui-monospace, monospace"; ctx.fillText(String(v), x + 10, 88);
+  });
+  ctx.fillStyle = "#101a28"; ctx.fillRect(14, 112, 300, 164);
+  for (let i = 0; i < 12; i++) {
+    const h = 24 + ((i * 37 + variant * 29) % 110);
+    ctx.fillStyle = i === 7 + (variant % 3) ? "#38e1c8" : "#1e3448";
+    ctx.fillRect(30 + i * 23, 264 - h, 14, h);
+  }
+  ctx.fillStyle = "#101a28"; ctx.fillRect(326, 112, 172, 164);
+  ctx.strokeStyle = "#4aa8ff"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= 10; i++) {
+    const x = 338 + i * 15;
+    const y = 240 - ((i * 53 + variant * 31) % 100);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  return finalizeTex(cv);
+}
+function texDoc(variant) {
+  const [cv, ctx] = screenCanvas();
+  ctx.fillStyle = "#161d27"; ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  ctx.fillStyle = "#dfe6df"; ctx.fillRect(16, 14, SCREEN_W - 32, SCREEN_H - 28);
+  ctx.fillStyle = "#28313c"; ctx.font = "600 15px sans-serif";
+  ctx.fillText(`PRD-${1042 + variant} 数字员工工作台`, 32, 44);
+  ctx.fillStyle = "#7a828b"; ctx.font = "10px sans-serif";
+  ctx.fillText("v1.3 · 评审中 · 负责人：产品组", 32, 60);
+  let y = 84;
+  const rnd = (n) => (n * 31 + variant * 17) % 90;
+  for (let p = 0; p < 2; p++) {
+    for (let l = 0; l < 2; l++) {
+      ctx.fillStyle = "#a9b0b8"; ctx.fillRect(32, y, 300 + rnd(p * 3 + l), 6);
+      y += 12;
+    }
+    y += 12;
+  }
+  const items = ["权限模型走 RBAC", "SSE 流式透传", "工位状态实时映射", "用量日聚合"];
+  items.forEach((it, i) => {
+    const iy = y + 6 + i * 22;
+    const done = i < 2 + (variant % 2);
+    ctx.strokeStyle = done ? "#2e8a64" : "#9aa1a8"; ctx.lineWidth = 1.6;
+    ctx.strokeRect(32, iy - 8, 12, 12);
+    if (done) { ctx.beginPath(); ctx.moveTo(34, iy - 3); ctx.lineTo(37, iy); ctx.lineTo(43, iy - 8); ctx.stroke(); }
+    ctx.fillStyle = "#333a42"; ctx.font = "11px sans-serif";
+    ctx.fillText(it, 54, iy + 1);
+  });
+  return finalizeTex(cv);
+}
+function texTable(variant) {
+  const [cv, ctx] = screenCanvas();
+  ctx.fillStyle = "#0b1118"; ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  ctx.fillStyle = "#0f1722"; ctx.fillRect(0, 0, SCREEN_W, 32);
+  ctx.fillStyle = "#a8bccb"; ctx.font = "600 12px sans-serif";
+  ctx.fillText("工单看板", 14, 21);
+  const cols = [90, 60, 120, 150], heads = ["工单", "优先级", "状态", "摘要"];
+  let x = 14;
+  ctx.fillStyle = "#16222f"; ctx.fillRect(14, 40, SCREEN_W - 28, 22);
+  heads.forEach((h, i) => { ctx.fillStyle = "#7286a0"; ctx.font = "600 10px sans-serif"; ctx.fillText(h, x + 6, 55); x += cols[i]; });
+  const st = [["处理中", "#ffd166"], ["已完成", "#38e1c8"], ["排队中", "#7c8f9c"], ["失败", "#ff8a7a"]];
+  for (let r = 0; r < 8; r++) {
+    const y = 66 + r * 26;
+    ctx.fillStyle = r % 2 ? "#0d1520" : "#0f1a26";
+    ctx.fillRect(14, y, SCREEN_W - 28, 24);
+    let cx = 14;
+    ctx.fillStyle = "#8ba0b2"; ctx.font = "10px ui-monospace, monospace";
+    ctx.fillText(`#${4800 + r * 3 + variant}`, cx + 6, y + 16); cx += cols[0];
+    ctx.fillText(["P0", "P1", "P2"][(r + variant) % 3], cx + 6, y + 16); cx += cols[1];
+    const s = st[(r + variant) % 4];
+    ctx.fillStyle = s[1]; ctx.font = "10px sans-serif";
+    ctx.fillText(s[0], cx + 6, y + 16); cx += cols[2];
+    ctx.fillStyle = "#6d8296"; ctx.font = "10px sans-serif";
+    ctx.fillText(["数据源连接超时", "报表字段缺失", "导出任务卡住", "权限校验异常", "消息堆积"][r % 5], cx + 6, y + 16);
+  }
+  return finalizeTex(cv);
+}
+const VARIANTS = 3;
+const SCREEN_TEX = {
+  code:  Array.from({ length: VARIANTS }, (_, v) => texCode(v)),
+  chart: Array.from({ length: VARIANTS }, (_, v) => texChart(v)),
+  doc:   Array.from({ length: VARIANTS }, (_, v) => texDoc(v)),
+  table: Array.from({ length: VARIANTS }, (_, v) => texTable(v)),
+};
+let screenVariant = 0;
+
+/* 幕墙亮窗纹理（青绿冷光系） */
+function makeFacadeTextures(b) {
+  const cols = Math.max(8, Math.round(b.w / 2.2));
+  const px = 24, py = 42;
+  const W = cols * px, H = b.floors * py;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const cvE = document.createElement("canvas"); cvE.width = W; cvE.height = H;
+  const ctxE = cvE.getContext("2d");
+  ctx.fillStyle = "#0c2233"; ctx.fillRect(0, 0, W, H);
+  const seedBase = b.x + b.floors * 7;
+  for (let f = 0; f < b.floors; f++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * px, y = f * py;
+      const r = (seedBase + f * 31 + c * 17) % 100;
+      ctx.fillStyle = "#1b3547"; ctx.fillRect(x, y, px, 4); ctx.fillRect(x, y + py - 4, px, 4);
+      ctx.fillRect(x, y, 4, py); ctx.fillRect(x + px - 4, y, 4, py);
+      if (r < 30) {
+        // 开灯：暖白亮窗为主
+        ctx.fillStyle = `rgba(255, 244, 214, ${0.75 + (r % 10) / 30})`;
+        ctxE.fillStyle = "rgba(255, 230, 160, 0.95)";
+      } else if (r < 82) {
+        ctx.fillStyle = `rgba(220, 236, 246, ${0.6 + (r % 8) / 20})`;
+        ctxE.fillStyle = "rgba(190, 220, 240, 0.75)";
+      } else {
+        ctx.fillStyle = `rgba(24, 40, 56, 0.6)`;
+        ctxE.fillStyle = "rgba(10,20,30,1)";
+      }
+      ctx.fillRect(x + 4, y + 4, px - 8, py - 8);
+      ctxE.fillRect(x + 4, y + 4, px - 8, py - 8);
+    }
+  }
+  return { map: finalizeTex(cv), emissive: finalizeTex(cvE) };
+}
+
+/* ═══════════════ 园区数据 ═══════════════ */
+const COMPANIES = [
+  "RabbitWork 数字员工", "云启智能", "星辰传媒", "绿洲生物", "远山资本",
+  "极客逻辑", "浪潮数据", "拾光咖啡", "微风设计", "原点法律", "天穹安防", "翼动新能源",
+];
+const ROLES = ["前端工程师", "后端工程师", "测试工程师", "产品助理", "数据分析师", "运营专员", "客服专员", "行政专员"];
+const TASKS = ["编写季度报告", "复核工单 #4821", "整理需求池", "分析昨日埋点", "回复客户咨询", "生成周报草稿", "校对文档 v3", "排查告警"];
+const NAMES = ["小钱","小赵","小孙","小李","小周","小吴","小郑","小王","小冯","小陈","小褚","小卫","小蒋","小沈","小韩","小杨","小朱","小秦","小尤","小许"];
+const STATES = ["chat", "think", "idle", "away"];
+const FLOOR_H = 3.8;
+
+/* 会议话术池（轮流发言用） */
+const MEETING_LINES = [
+  "这周的转化数据看了吗？", "我建议先跑一轮灰度。", "口径要统一，不然报表对不上。",
+  "风险主要在第三方依赖。", "那我下午出一版方案。", "用户反馈里也提到了这点。",
+  "预算这块我来盯。", "上次复盘的结论还记得吧？", "时间有点紧，得并行推进。",
+  "好，就这么定了。",
+];
+
+/* 对话气泡（参照 ai-office-react 的 Bubble：圆角框 + 尾巴 + 定时淡出；配色取本仓科技风） */
+function makeBubbleSprite() {
+  const cv = document.createElement("canvas");
+  cv.width = 512; cv.height = 160;
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(2.6, 0.8, 1);
+  sp.visible = false;
+  return {
+    sprite: sp, canvas: cv, tex, life: 0,
+    show(text, duration = 3.5) {
+      const ctx = cv.getContext("2d");
+      ctx.clearRect(0, 0, 512, 160);
+      ctx.font = "600 30px 'PingFang SC', sans-serif";
+      const w = Math.min(480, ctx.measureText(text).width + 44);
+      const h = 66;
+      const x = (512 - w) / 2, y = 150 - h;
+      ctx.fillStyle = "rgba(10, 24, 40, 0.94)";
+      ctx.strokeStyle = "rgba(56, 225, 200, 0.85)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 12);
+      ctx.fill(); ctx.stroke();
+      // 尾巴
+      ctx.beginPath();
+      ctx.moveTo(246, y + h); ctx.lineTo(256, y + h + 16); ctx.lineTo(266, y + h);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(10, 24, 40, 0.94)";
+      ctx.fill();
+      ctx.fillStyle = "#d8f3ec";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(text, 256, y + h / 2 + 1, 460);
+      tex.needsUpdate = true;
+      sp.visible = true;
+      this.life = duration;
+    },
+    tick(dt) {
+      if (!sp.visible) return;
+      this.life -= dt;
+      mat.opacity = Math.min(1, this.life / 0.5);
+      if (this.life <= 0) sp.visible = false;
+    },
+  };
+}
+
+const BUILDINGS = [
+  { id: "A", name: "RabbitWork 大厦", x: 0, z: -8, w: 26, d: 17, floors: 5, primary: true },
+  { id: "B", name: "云启中心", x: -46, z: -18, w: 20, d: 14, floors: 4, primary: false },
+  { id: "C", name: "星辰大楼", x: 46, z: -18, w: 20, d: 14, floors: 6, primary: false },
+  { id: "D", name: "绿洲楼", x: -46, z: 26, w: 17, d: 13, floors: 3, primary: false },
+  { id: "E", name: "翼动楼", x: 46, z: 26, w: 17, d: 13, floors: 3, primary: false },
+];
+let companySeq = 0;
+for (const b of BUILDINGS) {
+  b.floorCompanies = [];
+  for (let i = 0; i < b.floors; i++) {
+    b.floorCompanies.push(b.primary && i === 0 ? COMPANIES[0] : COMPANIES[(companySeq++ % (COMPANIES.length - 1)) + 1]);
+  }
+}
+
+const employees = [];
+const pickables = [];
+
+/* ═══════════════ 小工具 ═══════════════ */
+function box(w, h, d, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function cyl(rt, rb, h, mat, x = 0, y = 0, z = 0, seg = 12) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  return m;
+}
+function textTexture(text, opts = {}) {
+  const { w = 512, h = 128, size = 44, color = "#d8f3ec", bg = null, border = null } = opts;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext("2d");
+  if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h); }
+  if (border) { ctx.strokeStyle = border; ctx.lineWidth = 3; ctx.strokeRect(2, 2, w - 4, h - 4); }
+  ctx.fillStyle = color;
+  ctx.font = `600 ${size}px "PingFang SC", sans-serif`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(text, w / 2, h / 2 + 2);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* ═══════════════ 环境搭建 ═══════════════ */
+const campus = new THREE.Group();
+scene.add(campus);
+
+const lawn = new THREE.Mesh(new THREE.PlaneGeometry(300, 220), M.grass);
+lawn.rotation.x = -Math.PI / 2; lawn.position.y = -0.02; lawn.receiveShadow = true;
+campus.add(lawn);
+
+function road(w, d, x, z) {
+  const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.road);
+  r.rotation.x = -Math.PI / 2; r.position.set(x, 0.005, z); r.receiveShadow = true;
+  campus.add(r);
+  // 中央发光导流线
+  const lw = Math.min(w, d) > 8 ? 0.16 : 0.12;
+  const line = new THREE.Mesh(new THREE.PlaneGeometry(w > d ? w - 6 : lw, w > d ? lw : d - 6), M.roadLine);
+  line.rotation.x = -Math.PI / 2; line.position.set(x, 0.02, z);
+  campus.add(line);
+}
+road(200, 7, 0, -44); road(200, 7, 0, 52);
+road(7, 106, -72, 4); road(7, 106, 72, 4);
+road(7, 90, -24, 2); road(7, 90, 24, 2);
+road(130, 5, 0, 4);
+
+// 中央广场 + 水景
+const plaza = new THREE.Mesh(new THREE.CircleGeometry(15, 40), M.plaza);
+plaza.rotation.x = -Math.PI / 2; plaza.position.set(0, 0.01, 8); plaza.receiveShadow = true;
+campus.add(plaza);
+const pool = new THREE.Mesh(new THREE.CircleGeometry(6.5, 32), M.water);
+pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.03, 8);
+campus.add(pool);
+// 广场发光描边圈
+const plazaRing = new THREE.Mesh(new THREE.RingGeometry(14.2, 14.5, 48), M.lineSoft);
+plazaRing.rotation.x = -Math.PI / 2; plazaRing.position.set(0, 0.02, 8);
+campus.add(plazaRing);
+
+// 足球场
+function soccerField(x, z) {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(34, 22), M.court);
+  base.rotation.x = -Math.PI / 2; base.position.set(x, 0.01, z); base.receiveShadow = true;
+  g.add(base);
+  const mk = (w, d, lx, lz) => {
+    const l = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.lineSoft);
+    l.rotation.x = -Math.PI / 2; l.position.set(x + lx, 0.02, z + lz);
+    g.add(l);
+  };
+  mk(33, 0.18, 0, -10.5); mk(33, 0.18, 0, 10.5);
+  mk(0.18, 21, -16.5, 0); mk(0.18, 21, 16.5, 0); mk(0.18, 21, 0, 0);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(2.6, 2.75, 32), M.lineSoft);
+  ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.02, z);
+  g.add(ring);
+  return g;
+}
+campus.add(soccerField(-52, -56));
+
+// 篮球场
+function basketballCourt(x, z) {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(15, 26), M.courtHard);
+  base.rotation.x = -Math.PI / 2; base.position.set(x, 0.01, z); base.receiveShadow = true;
+  g.add(base);
+  const mk = (w, d, lx, lz) => {
+    const l = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.lineSoft);
+    l.rotation.x = -Math.PI / 2; l.position.set(x + lx, 0.02, z + lz);
+    g.add(l);
+  };
+  mk(14, 0.15, 0, -12.5); mk(14, 0.15, 0, 12.5);
+  mk(0.15, 25, -7, 0); mk(0.15, 25, 7, 0); mk(0.15, 25, 0, 0);
+  return g;
+}
+campus.add(basketballCourt(38, -56));
+
+// 树
+function tree(x, z, s = 1) {
+  const g = new THREE.Group();
+  g.add(cyl(0.22 * s, 0.3 * s, 1.6 * s, M.trunk, 0, 0.8 * s, 0, 8));
+  const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(1.3 * s, 1), M.leafBall[Math.floor(Math.random() * 3)]);
+  leaf.position.y = 2.2 * s; leaf.castShadow = true;
+  g.add(leaf);
+  g.position.set(x, 0, z);
+  return g;
+}
+const treeSpots = [
+  [-70, 60], [-58, 62], [-46, 58], [-34, 62], [-22, 58], [-10, 62], [10, 62], [22, 58], [34, 62], [46, 58], [58, 62], [70, 60],
+  [-64, -60], [-30, -62], [56, -62], [70, -58],
+  [-14, 26], [14, 26], [-16, -34], [16, -34], [-60, 6], [60, 6], [-62, -30], [62, 34],
+];
+for (const [tx, tz] of treeSpots) campus.add(tree(tx + (Math.random() - 0.5) * 3, tz + (Math.random() - 0.5) * 3, 0.8 + Math.random() * 0.7));
+
+// 路灯
+const lampSpots = [[-90, -44], [-45, -44], [0, -44], [45, -44], [90, -44], [-90, 52], [-45, 52], [0, 52], [45, 52], [90, 52], [-72, -20], [-72, 30], [72, -20], [72, 30]];
+for (const [lx, lz] of lampSpots) {
+  const g = new THREE.Group();
+  g.add(cyl(0.08, 0.12, 5, M.lampPost, 0, 2.5, 0, 8));
+  const head = box(0.9, 0.18, 0.35, M.lampHead, 0.45, 5, 0);
+  head.castShadow = false;
+  g.add(head);
+  g.position.set(lx, 0, lz);
+  campus.add(g);
+}
+
+/* ═══════════════ 楼层内部 ═══════════════ */
+function buildDesk() {
+  const g = new THREE.Group();
+  g.add(box(1.7, 0.06, 0.8, M.desk, 0, 0.74, 0));
+  g.add(box(0.06, 0.72, 0.7, M.deskLeg, -0.78, 0.37, 0));
+  g.add(box(0.06, 0.72, 0.7, M.deskLeg, 0.78, 0.37, 0));
+  const screens = [];
+  for (const dx of [-0.36, 0.36]) {
+    g.add(box(0.62, 0.38, 0.03, M.monitor, dx, 1.06, -0.18));
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.57, 0.33), new THREE.MeshBasicMaterial({ color: 0x070c12 }));
+    scr.position.set(dx, 1.06, -0.163);
+    scr.castShadow = false;
+    g.add(scr);
+    screens.push(scr);
+    g.add(cyl(0.02, 0.02, 0.12, M.deskLeg, dx, 0.83, -0.18));
+  }
+  const chair = new THREE.Group();
+  chair.add(box(0.5, 0.07, 0.48, M.chair, 0, 0.47, 0));
+  chair.add(box(0.48, 0.5, 0.06, M.chair, 0, 0.78, 0.24));
+  chair.add(cyl(0.025, 0.025, 0.4, M.deskLeg, 0, 0.26, 0));
+  chair.add(cyl(0.26, 0.26, 0.04, M.deskLeg, 0, 0.04, 0, 16));
+  chair.position.set(0, 0, 0.55);
+  g.add(chair);
+  g.userData = { screens, chair };
+  return g;
+}
+
+function buildPerson(shirt, hair) {
+  const g = new THREE.Group();
+  const legL = box(0.13, 0.13, 0.42, M.pants, -0.11, 0.55, 0.18);
+  const legR = box(0.13, 0.13, 0.42, M.pants, 0.11, 0.55, 0.18);
+  g.add(legL, legR);
+  g.add(cyl(0.055, 0.055, 0.3, M.pants, -0.11, 0.4, 0.36, 8).rotateX(Math.PI / 2));
+  g.add(cyl(0.055, 0.055, 0.3, M.pants, 0.11, 0.4, 0.36, 8).rotateX(Math.PI / 2));
+  g.add(box(0.4, 0.5, 0.24, shirt, 0, 0.82, 0.05));
+  const armGeo = new THREE.BoxGeometry(0.09, 0.34, 0.09);
+  armGeo.translate(0, -0.15, 0);
+  const armL = new THREE.Mesh(armGeo, shirt); armL.position.set(-0.26, 1.02, 0.05);
+  const armR = new THREE.Mesh(armGeo, shirt); armR.position.set(0.26, 1.02, 0.05);
+  armL.castShadow = armR.castShadow = true;
+  g.add(armL, armR);
+  const head = new THREE.Group();
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), M.skin));
+  const hairMesh = new THREE.Mesh(new THREE.SphereGeometry(0.145, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
+  hairMesh.position.y = 0.012;
+  head.add(hairMesh);
+  head.position.set(0, 1.22, 0.03);
+  g.add(head);
+  g.userData = { armL, armR, head, legL, legR };
+  return g;
+}
+
+function buildInterior(floorGroup, building, level, company, cols, rows) {
+  const seatW = 2.5, seatD = 2.0;
+  const base = (building.w - 3.6) / cols;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const x = (c - (cols - 1) / 2) * Math.max(seatW, base);
+      const z = (r - (rows - 1) / 2) * seatD - 0.8;
+      const facing = r % 2 === 0 ? 0 : Math.PI;
+      const seat = buildDesk();
+      seat.position.set(x, 0, z);
+      seat.rotation.y = facing;
+      floorGroup.add(seat);
+
+      const shirt = M.shirt[(idx + level * 3) % M.shirt.length];
+      const hair = M.hair[(idx + level) % M.hair.length];
+      const person = buildPerson(shirt, hair);
+      const px = x, pz = z + (facing === 0 ? 0.55 : -0.55);
+      person.position.set(px, 0, pz);
+      person.rotation.y = facing;
+      floorGroup.add(person);
+
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 24), M.ringIdle.clone());
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(px, 0.035, pz);
+      floorGroup.add(ring);
+
+      // 头顶对话气泡（会议发言用，挂 floorGroup 保证随层透明）
+      const bubble = makeBubbleSprite();
+      bubble.sprite.position.set(px, 1.85, pz);
+      floorGroup.add(bubble.sprite);
+
+      employees.push({
+        building, level, group: person, ring, bubble,
+        armL: person.userData.armL, armR: person.userData.armR, head: person.userData.head,
+        legL: person.userData.legL, legR: person.userData.legR,
+        screens: seat.userData.screens, chair: seat.userData.chair,
+        mainType: ["code", "chart", "doc", "table"][(idx + level) % 4],
+        sideType: ["table", "doc", "code", "chart"][(idx + level * 2) % 4],
+        state: STATES[(idx * 3 + level * 5 + building.x) % STATES.length],
+        phase: Math.random() * Math.PI * 2,
+        nextSwitch: 4 + Math.random() * 12,
+        baseY: 0,
+        // 移动系统（参照 ai-office-react deskVisit：goto → 说话 → 回工位）
+        seatPos: { x: px, z: pz, rotY: facing },
+        walkTarget: null,
+        walkSpeed: 1.7,
+        walkPhase: Math.random() * Math.PI * 2,
+        prevState: null,
+        data: {
+          name: NAMES[(idx + level * 7) % NAMES.length],
+          role: ROLES[(idx + level) % ROLES.length],
+          company,
+          seatNo: `${building.id}栋${level + 1}F-${String(idx + 1).padStart(2, "0")}`,
+          talks: 1 + ((idx * 7 + level * 11) % 15),
+          task: TASKS[(idx * 2 + level) % TASKS.length],
+        },
+        shirtColor: "#" + shirt.color.getHexString(),
+      });
+    }
+  }
+  for (const px of [-building.w / 2 + 1, building.w / 2 - 1]) {
+    floorGroup.add(cyl(0.24, 0.18, 0.34, M.plantPot, px, 0.17, building.d / 2 - 1.6, 8));
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.95, 8), M.plantLeaf);
+    leaf.position.set(px, 0.8, building.d / 2 - 1.6);
+    leaf.castShadow = true;
+    floorGroup.add(leaf);
+  }
+}
+
+/** 会议室：地毯 + 长桌 + 6 座 + 投影屏（楼层前部，入口内侧） */
+function buildMeetingRoom(floorGroup, b) {
+  const cz = b.d / 2 - 3.0;
+  const g = new THREE.Group();
+  g.position.set(0, 0, cz);
+  // 地毯
+  g.add(box(9.6, 0.02, 4.8, M.plaza, 0, 0.025, 0));
+  // 长桌（桌面 + 双柱腿）
+  g.add(box(4.6, 0.09, 1.6, M.desk, 0, 0.78, 0));
+  g.add(box(0.14, 0.74, 1.3, M.deskLeg, -1.9, 0.38, 0));
+  g.add(box(0.14, 0.74, 1.3, M.deskLeg, 1.9, 0.38, 0));
+  // 桌面发光中线（科技感）
+  const midLine = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.06), M.roadLine);
+  midLine.rotation.x = -Math.PI / 2;
+  midLine.position.set(0, 0.83, 0);
+  g.add(midLine);
+  // 桌面投影仪
+  g.add(box(0.4, 0.16, 0.4, M.monitor, 0, 1.9, -0.5));
+  g.add(cyl(0.02, 0.02, 0.9, M.deskLeg, 0, 1.35, -0.5, 6));
+  // 投影屏（挂前墙，发光）
+  const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(5.2, 2.6),
+    new THREE.MeshBasicMaterial({ map: SCREEN_TEX.doc[0], transparent: false }),
+  );
+  screen.position.set(0, 2.15, b.d / 2 - cz - 0.5);
+  screen.rotation.y = Math.PI;
+  screen.userData.isMeetingScreen = true;
+  g.add(screen);
+  const frame = edgeLines(new THREE.BoxGeometry(5.3, 2.7, 0.06), GLOW, 0.9);
+  frame.position.copy(screen.position);
+  frame.rotation.copy(screen.rotation);
+  g.add(frame);
+  floorGroup.add(g);
+
+  // 6 个座位（桌两侧各 3）：返回楼层局部坐标
+  const seats = [];
+  for (const x of [-1.5, 0, 1.5]) {
+    seats.push({ x, z: -1.35 + cz, rotY: 0 });       // 北侧，面向 +z（朝桌/屏）
+    seats.push({ x, z: 1.35 + cz, rotY: Math.PI });  // 南侧，面向 -z
+  }
+  return { seats, screen, frame, center: { x: 0, z: cz } };
+}
+
+/* ═══════════════ 楼栋（全息发光 + 描边 + 拾取层） ═══════════════ */
+function buildBuilding(b) {
+  const g = new THREE.Group();
+  g.position.set(b.x, 0, b.z);
+  b.floorsGroup = [];
+  const facade = makeFacadeTextures(b);
+  const accent = b.primary ? GLOW : GLOW2;
+
+  // 底座光晕
+  const halo = new THREE.Mesh(
+    new THREE.RingGeometry(Math.max(b.w, b.d) * 0.62, Math.max(b.w, b.d) * 0.72, 4),
+    new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.16, side: THREE.DoubleSide }),
+  );
+  halo.rotation.x = -Math.PI / 2;
+  halo.rotation.z = Math.PI / 4;
+  halo.position.y = 0.06;
+  g.add(halo);
+
+  for (let i = 0; i < b.floors; i++) {
+    const company = b.floorCompanies[i];
+    const fGroup = new THREE.Group();
+    fGroup.position.y = i * FLOOR_H;
+    fGroup.userData = { building: b, level: i, company, baseOpacity: 1, kind: "floor" };
+
+    // 楼板
+    fGroup.add(box(b.w, 0.3, b.d, M.slab, 0, 0, 0));
+    fGroup.add(box(b.w - 0.4, 0.02, b.d - 0.4, M.innerFloor, 0, 0.17, 0));
+
+    // 顶灯灯带（开灯）：两排长条发光灯 + 会议区吊灯
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0xfff6de });
+    for (const lz of [-b.d / 4, b.d / 4]) {
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(b.w - 4, 0.06, 0.5), lampMat);
+      strip.position.set(0, FLOOR_H - 0.42, lz);
+      fGroup.add(strip);
+    }
+    const meetingLamp = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.06, 0.4), lampMat);
+    meetingLamp.position.set(0, FLOOR_H - 0.42, b.d / 2 - 3.0);
+    fGroup.add(meetingLamp);
+    // 每层室内点光（白色暖光，照亮白桌面）
+    const roomLight = new THREE.PointLight(0xfff2d8, 30, b.w * 1.4, 1.6);
+    roomLight.position.set(0, FLOOR_H - 0.8, 0);
+    fGroup.add(roomLight);
+
+    // 全息外壳（半透明 + 亮窗贴图 + 发光描边）
+    const mkFace = (repX) => {
+      const map = facade.map.clone();
+      const emi = facade.emissive.clone();
+      for (const t of [map, emi]) {
+        t.repeat.set(repX, 1 / b.floors);
+        t.offset.set(0, i / b.floors);
+        t.needsUpdate = true;
+      }
+      return new THREE.MeshStandardMaterial({
+        map, emissiveMap: emi, emissive: 0xffffff, emissiveIntensity: 0.75,
+        roughness: 0.2, metalness: 0.4, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
+      });
+    };
+    const sideMat = mkFace(b.d / b.w);
+    const faceMat = mkFace(1);
+    const shellGeo = new THREE.BoxGeometry(b.w, FLOOR_H - 0.3, b.d);
+    const shell = new THREE.Mesh(shellGeo, [sideMat, sideMat, M.slab, M.slab, faceMat, faceMat]);
+    shell.position.y = (FLOOR_H - 0.3) / 2 + 0.3;
+    shell.castShadow = true;
+    fGroup.add(shell);
+    // 描边发光（参考图核心效果）
+    const edges = edgeLines(shellGeo, accent, i === 0 ? 1 : 0.75);
+    edges.position.copy(shell.position);
+    fGroup.add(edges);
+    fGroup.userData.edges = edges;
+
+    // 专用拾取层（比外壳大一点、极透明，保证稳定命中）
+    const hitbox = new THREE.Mesh(
+      new THREE.BoxGeometry(b.w + 0.12, FLOOR_H, b.d + 0.12),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.015, depthWrite: false }),
+    );
+    hitbox.position.y = FLOOR_H / 2;
+    hitbox.userData = { building: b, level: i, company, kind: "floorShell", baseOpacity: 0.015 };
+    fGroup.add(hitbox);
+    pickables.push(hitbox);
+
+    // 楼层公司标签（发光牌）
+    const labelTex = textTexture(`${i + 1}F · ${company}`, {
+      w: 640, h: 120, size: 46, color: b.primary ? "#aef7e9" : "#bcd9ff",
+      bg: "rgba(6,18,32,0.85)", border: b.primary ? "#38e1c8" : "#4aa8ff",
+    });
+    for (const lz of [b.d / 2 + 0.1, -b.d / 2 - 0.1]) {
+      const label = new THREE.Mesh(
+        new THREE.PlaneGeometry(Math.min(b.w - 2, 16), (Math.min(b.w - 2, 16)) * 120 / 640),
+        new THREE.MeshBasicMaterial({ map: labelTex, transparent: true }),
+      );
+      label.position.set(0, FLOOR_H * 0.58, lz);
+      if (lz < 0) label.rotation.y = Math.PI;
+      label.userData = { building: b, level: i, company, kind: "floorShell", baseOpacity: 1 };
+      fGroup.add(label);
+    }
+
+    const cols = b.primary ? 6 : 4;
+    const rows = b.primary ? 4 : 3;
+    buildInterior(fGroup, b, i, company, cols, rows);
+    fGroup.userData.meetingRoom = buildMeetingRoom(fGroup, b);
+
+    g.add(fGroup);
+    b.floorsGroup = [...(b.floorsGroup ?? []), fGroup];
+  }
+
+  // 楼顶：女儿墙描边 + 设备 + 航空灯
+  const roofY = b.floors * FLOOR_H + 0.2;
+  const roofEdges = edgeLines(new THREE.BoxGeometry(b.w + 0.24, 0.7, b.d + 0.24), accent, 0.9);
+  roofEdges.position.y = roofY + 0.2;
+  g.add(roofEdges);
+  const hvacMat = new THREE.MeshStandardMaterial({ color: 0x1b3040, roughness: 0.5, metalness: 0.4 });
+  g.add(box(2.6, 1.1, 1.8, hvacMat, -b.w / 4, roofY + 0.55, -b.d / 5));
+  g.add(box(2.2, 0.9, 1.6, hvacMat, b.w / 4, roofY + 0.45, b.d / 5));
+  g.add(cyl(0.05, 0.07, 4.5, M.lampPost, b.w / 2 - 1.4, roofY + 2.2, -b.d / 2 + 1.4, 6));
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff5a5a }));
+  beacon.position.set(b.w / 2 - 1.4, roofY + 4.5, -b.d / 2 + 1.4);
+  g.add(beacon);
+  b.beacon = beacon;
+
+  // 楼名发光牌（点击 → 楼栋视图）
+  const nameTex = textTexture(b.name, { w: 640, h: 128, size: 52, color: "#eafffa", bg: "rgba(6,18,32,0.9)", border: b.primary ? "#38e1c8" : "#4aa8ff" });
+  const namePlate = new THREE.Mesh(
+    new THREE.PlaneGeometry(12, 2.4),
+    new THREE.MeshBasicMaterial({ map: nameTex, transparent: true }),
+  );
+  namePlate.position.set(0, b.floors * FLOOR_H + 1.7, b.d / 2 + 0.32);
+  namePlate.userData = { building: b, kind: "buildingName", baseOpacity: 1 };
+  g.add(namePlate);
+  pickables.push(namePlate);
+
+  // 入口光门
+  const lobby = box(5.6, 2.9, 0.12, new THREE.MeshStandardMaterial({ color: 0x0a2438, emissive: 0x145283, emissiveIntensity: 1.2, roughness: 0.4 }), 0, 1.5, b.d / 2 - 0.02);
+  lobby.castShadow = false;
+  g.add(lobby);
+
+  b.rootGroup = g;
+  campus.add(g);
+  return g;
+}
+for (const b of BUILDINGS) buildBuilding(b);
+
+/* ═══════════════ 屏幕内容 / 状态机 / 动画 ═══════════════ */
+function applyScreen(emp) {
+  const [main, side] = emp.screens;
+  const set = (scr, tex, dim = 1) => {
+    scr.material.map = tex ?? null;
+    scr.material.color.setScalar(tex ? dim : 1);
+    if (!tex) scr.material.color.set(0x070c12);
+    scr.material.needsUpdate = true;
+  };
+  if (emp.state === "chat") {
+    set(main, SCREEN_TEX[emp.mainType][screenVariant]);
+    set(side, SCREEN_TEX[emp.sideType][screenVariant], 0.8);
+  } else if (emp.state === "think") {
+    set(main, SCREEN_TEX[emp.mainType][0], 0.85);
+    set(side, null);
+  } else if (emp.state === "idle") {
+    set(main, SCREEN_TEX[emp.mainType][0], 0.35);
+    set(side, null);
+  } else {
+    set(main, null);
+    set(side, null);
+  }
+}
+
+function applyState(emp) {
+  const s = emp.state;
+  applyScreen(emp);
+  const ring = emp.ring.material;
+  if (s === "chat") { ring.color.set(GLOW); ring.opacity = 0.95; }
+  else if (s === "think") { ring.color.set(0xffd166); ring.opacity = 0.55; }
+  else if (s === "idle") { ring.color.set(GLOW); ring.opacity = 0.35; }
+  else if (s === "meeting") { ring.color.set(GLOW2); ring.opacity = 0.75; }
+  else { ring.color.set(0x2a3a48); ring.opacity = 0.18; }
+  emp.group.visible = s !== "away";
+  emp.chair.position.z = s === "away" || s === "meeting" ? 0.3 : 0.55;
+}
+employees.forEach(applyState);
+
+const clock = new THREE.Clock();
+let simTime = 0;
+
+/* ── 会议调度（参照 ai-office-react deskVisit：goto → talk → 回工位） ── */
+const meetings = new Map();   // floorKey -> { phase, emps, seats, speakerIdx, rounds, timer, cooldown }
+
+function floorKey(b, level) { return `${b.id}-${level}`; }
+
+function startMeeting(b, level) {
+  const fg = b.floorsGroup[level];
+  const room = fg.userData.meetingRoom;
+  if (!room) return;
+  // 选 3-5 个在岗员工（避开 away / 已在会）
+  const pool = employees.filter((e) =>
+    e.building === b && e.level === level && e.state !== "away" && e.state !== "meeting" && !e.walkTarget);
+  const picked = pool.sort(() => Math.random() - 0.5).slice(0, Math.min(4, room.seats.length, pool.length));
+  if (picked.length < 2) return;
+  room.seats.sort(() => Math.random() - 0.5);
+  picked.forEach((emp, i) => {
+    const seat = room.seats[i % room.seats.length];
+    emp.prevState = emp.state;
+    emp.state = "meeting";
+    applyState(emp);
+    // 走向会议座位（先侧移出工位排，再向前——直线即可）
+    emp.walkTarget = { x: seat.x, z: seat.z, rotY: seat.rotY };
+    emp.onArrive = () => {
+      emp.group.rotation.y = seat.rotY;
+      emp.legL.rotation.x = 0; emp.legR.rotation.x = 0;
+      emp.group.position.y = emp.baseY;
+    };
+  });
+  // 投影屏切到议程画面
+  room.screen.material.map = SCREEN_TEX.doc[(level + 1) % VARIANTS];
+  meetings.set(floorKey(b, level), {
+    phase: "gather", emps: picked, room,
+    speakerIdx: -1, rounds: 3 + Math.floor(Math.random() * 3), timer: 0,
+    cooldownUntil: 0,
+  });
+}
+
+function endMeeting(mt, key) {
+  for (const emp of mt.emps) {
+    emp.walkTarget = { ...emp.seatPos };
+    emp.onArrive = () => {
+      emp.state = emp.prevState ?? "idle";
+      emp.prevState = null;
+      emp.bubble.sprite.visible = false;
+      applyState(emp);
+    };
+  }
+  mt.phase = "dismiss";
+  mt.timer = 0;
+  mt.cooldownUntil = simTime + 18 + Math.random() * 20;
+  void key;
+}
+
+function tickMeeting(key, mt, dt) {
+  mt.timer -= dt;
+  if (mt.phase === "gather") {
+    // 全员到达（无 walkTarget）即开始发言
+    if (mt.emps.every((e) => !e.walkTarget)) {
+      mt.phase = "talk";
+      mt.speakerIdx = -1;
+      mt.timer = 0.4;
+    }
+  } else if (mt.phase === "talk") {
+    if (mt.timer <= 0) {
+      // 下一轮发言：顺序轮换（气泡 + 面向说话者可省）
+      mt.rounds--;
+      if (mt.rounds <= 0) { endMeeting(mt, key); return; }
+      mt.speakerIdx = (mt.speakerIdx + 1) % mt.emps.length;
+      const speaker = mt.emps[mt.speakerIdx];
+      speaker.bubble.show(MEETING_LINES[Math.floor(Math.random() * MEETING_LINES.length)], 3.2);
+      // 发言时轻微手势
+      speaker.armR.rotation.x = -0.6;
+      mt.timer = 2.6 + Math.random() * 1.4;
+    }
+  } else if (mt.phase === "dismiss") {
+    if (mt.emps.every((e) => !e.walkTarget)) {
+      meetings.delete(key);
+    }
+  }
+}
+
+/* 会议调度循环：每层随机间隔开一场 */
+setInterval(() => {
+  for (const b of BUILDINGS) {
+    for (let lv = 0; lv < b.floorsGroup.length; lv++) {
+      const key = floorKey(b, lv);
+      if (meetings.has(key)) continue;
+      if (Math.random() < 0.14) startMeeting(b, lv);
+    }
+  }
+}, 3000);
+
+function tick(dt) {
+  simTime += dt;
+  for (const emp of employees) {
+    emp.phase += dt;
+    emp.bubble.tick(dt);
+
+    /* 移动系统：直线走向 walkTarget（参照 deskVisit 的 goto） */
+    if (emp.walkTarget) {
+      const g = emp.group;
+      const t = emp.walkTarget;
+      const dx = t.x - g.position.x, dz = t.z - g.position.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < 0.06) {
+        g.position.x = t.x; g.position.z = t.z;
+        emp.walkTarget = null;
+        g.rotation.y = t.rotY ?? g.rotation.y;
+        emp.onArrive?.();
+        emp.onArrive = null;
+      } else {
+        const step = Math.min(dist, emp.walkSpeed * dt);
+        g.position.x += (dx / dist) * step;
+        g.position.z += (dz / dist) * step;
+        // 面向移动方向
+        g.rotation.y = Math.atan2(dx, dz);
+        // 走路动画：摆腿 + 身体颠簸
+        emp.walkPhase += dt * 11;
+        emp.legL.rotation.x = Math.sin(emp.walkPhase) * 0.55;
+        emp.legR.rotation.x = -Math.sin(emp.walkPhase) * 0.55;
+        emp.armL.rotation.x = -0.35 + Math.sin(emp.walkPhase) * 0.3;
+        emp.armR.rotation.x = -0.35 - Math.sin(emp.walkPhase) * 0.3;
+        g.position.y = emp.baseY + Math.abs(Math.sin(emp.walkPhase)) * 0.035;
+        // 光环跟随
+        emp.ring.position.x = g.position.x;
+        emp.ring.position.z = g.position.z;
+        // 气泡跟随
+        emp.bubble.sprite.position.x = g.position.x;
+        emp.bubble.sprite.position.z = g.position.z;
+      }
+      continue;   // 移动中不做其他姿态
+    }
+
+    emp.nextSwitch -= dt;
+    if (emp.nextSwitch <= 0 && emp.state !== "meeting") {
+      emp.state = STATES[Math.floor(Math.random() * STATES.length)];
+      emp.nextSwitch = 4 + Math.random() * 12;
+      applyState(emp);
+    }
+    const s = emp.state;
+    if (s === "chat") {
+      emp.armL.rotation.x = -0.9 + Math.sin(simTime * 11 + emp.phase) * 0.16;
+      emp.armR.rotation.x = -0.9 + Math.sin(simTime * 11 + emp.phase + 1.4) * 0.16;
+      emp.head.rotation.x = 0.22 + Math.sin(simTime * 2.2) * 0.02;
+      emp.head.rotation.y = Math.sin(simTime * 0.8 + emp.phase) * 0.06;
+    } else if (s === "think") {
+      emp.armL.rotation.x += (-0.25 - emp.armL.rotation.x) * 0.1;
+      emp.armR.rotation.x += (-0.25 - emp.armR.rotation.x) * 0.1;
+      emp.group.rotation.x = -0.06;
+      emp.head.rotation.x = -0.08 + Math.sin(simTime * 1.1 + emp.phase) * 0.03;
+      emp.head.rotation.y = 0.18 + Math.sin(simTime * 0.6 + emp.phase) * 0.05;
+    } else if (s === "idle") {
+      emp.armL.rotation.x += (-0.45 - emp.armL.rotation.x) * 0.08;
+      emp.armR.rotation.x += (-0.45 - emp.armR.rotation.x) * 0.08;
+      emp.group.rotation.x = 0;
+      emp.head.rotation.x = Math.sin(simTime * 1.4 + emp.phase) * 0.03;
+      emp.head.rotation.y = Math.sin(simTime * 0.5 + emp.phase) * 0.12;
+      emp.group.position.y = emp.baseY + Math.sin(simTime * 1.8 + emp.phase) * 0.008;
+    } else if (s === "meeting") {
+      // 会议中轻微前倾听讲
+      emp.armL.rotation.x += (-0.5 - emp.armL.rotation.x) * 0.08;
+      emp.armR.rotation.x += (-0.5 - emp.armR.rotation.x) * 0.08;
+      emp.head.rotation.x = 0.06 + Math.sin(simTime * 1.2 + emp.phase) * 0.02;
+    }
+    if (s !== "away") {
+      emp.ring.scale.setScalar(1 + Math.sin(simTime * 2 + emp.phase) * 0.06);
+    }
+  }
+  // 会议推进
+  for (const [key, mt] of meetings) tickMeeting(key, mt, dt);
+  for (const b of BUILDINGS) {
+    if (b.beacon) b.beacon.scale.setScalar(0.75 + Math.abs(Math.sin(simTime * 1.6)) * 0.5);
+  }
+}
+
+/* ═══════════════ 相机飞行 ═══════════════ */
+const fly = { active: false, t: 0, dur: 1.2, fromPos: new THREE.Vector3(), toPos: new THREE.Vector3(), fromTgt: new THREE.Vector3(), toTgt: new THREE.Vector3() };
+function flyTo(pos, tgt, dur = 1.2) {
+  fly.active = true; fly.t = 0; fly.dur = dur;
+  fly.fromPos.copy(camera.position); fly.toPos.copy(pos);
+  fly.fromTgt.copy(controls.target); fly.toTgt.copy(tgt);
+  lastInteract = performance.now();   // 导航后 8s 内不自转，保证点位稳定可点
+}
+function tickFly(dt) {
+  if (!fly.active) return;
+  fly.t = Math.min(1, fly.t + dt / fly.dur);
+  const k = fly.t < 0.5 ? 2 * fly.t * fly.t : 1 - Math.pow(-2 * fly.t + 2, 2) / 2;
+  camera.position.lerpVectors(fly.fromPos, fly.toPos, k);
+  controls.target.lerpVectors(fly.fromTgt, fly.toTgt, k);
+  if (fly.t >= 1) fly.active = false;
+}
+
+/* ═══════════════ 视图状态 ═══════════════ */
+const view = { mode: "campus", building: null, level: null };
+
+function setOpacityDeep(root, factor) {
+  root.traverse((o) => {
+    const m = o.material;
+    if (!m) return;
+    if (o.userData.baseOpacity === undefined) o.userData.baseOpacity = m.opacity ?? 1;
+    const target = o.userData.baseOpacity * factor;
+    if (target < 0.999) m.transparent = true;
+    m.opacity = target;
+    o.castShadow = factor > 0.5 && o.userData.kind !== "floorShell";
+    if (o.userData.baseOpacity <= 0.02) o.visible = factor > 0.3;   // 拾取层隐藏但不消失
+  });
+}
+
+function updateBuilding(b) {
+  for (let i = 0; i < b.floorsGroup.length; i++) {
+    const fg = b.floorsGroup[i];
+    if (view.mode === "floor" && view.building === b) {
+      setOpacityDeep(fg, i === view.level ? 1 : 0.08);
+      // 目标层外壳更透（看内部）+ 描边加亮
+      fg.traverse((o) => {
+        if (o.userData.kind === "floorShell" && o.isMesh && o.material.length) {
+          o.material.forEach((mm) => { if (mm.opacity > 0.3) mm.opacity = 0.16; });
+        }
+      });
+      if (i === view.level && fg.userData.edges) fg.userData.edges.material.opacity = 1;
+    } else {
+      setOpacityDeep(fg, 1);
+    }
+  }
+}
+
+function goCampus() {
+  view.mode = "campus"; view.building = null; view.level = null;
+  for (const b of BUILDINGS) updateBuilding(b);
+  flyTo(new THREE.Vector3(95, 80, 95), new THREE.Vector3(0, 6, 0), 1.4);
+  renderCrumbs(); closeCard();
+}
+function goBuilding(b) {
+  view.mode = "building"; view.building = b; view.level = null;
+  for (const bb of BUILDINGS) updateBuilding(bb);
+  const dist = Math.max(b.w, b.d) * 2.1 + b.floors * 2;
+  const dir = new THREE.Vector3(0.55, 0, 1).normalize();
+  flyTo(
+    new THREE.Vector3(b.x + dir.x * dist, b.floors * FLOOR_H * 0.9 + 12, b.z + dir.z * dist),
+    new THREE.Vector3(b.x, b.floors * FLOOR_H * 0.45, b.z),
+    1.2,
+  );
+  renderCrumbs(); closeCard();
+}
+function goFloor(b, level) {
+  view.mode = "floor"; view.building = b; view.level = level;
+  for (const bb of BUILDINGS) updateBuilding(bb);
+  const dist = Math.max(b.w, b.d) * 1.15;
+  const dir = new THREE.Vector3(0.35, 0, 1).normalize();
+  const cy = level * FLOOR_H + FLOOR_H / 2;
+  flyTo(
+    new THREE.Vector3(b.x + dir.x * dist, cy + b.d * 0.35, b.z + dir.z * dist),
+    new THREE.Vector3(b.x, cy, b.z),
+    1.3,
+  );
+  renderCrumbs(); closeCard();
+}
+
+/* 面包屑 */
+const crumbs = document.getElementById("crumbs");
+function renderCrumbs() {
+  crumbs.innerHTML = "";
+  const home = document.createElement("button");
+  home.textContent = "🌐 园区总览";
+  home.onclick = goCampus;
+  crumbs.appendChild(home);
+  if (view.building) {
+    const sep = document.createElement("span"); sep.className = "sep"; sep.textContent = "／";
+    crumbs.appendChild(sep);
+    if (view.mode === "building") {
+      const cur = document.createElement("span"); cur.className = "cur"; cur.textContent = view.building.name;
+      crumbs.appendChild(cur);
+    } else {
+      const btn = document.createElement("button"); btn.textContent = view.building.name;
+      btn.onclick = () => goBuilding(view.building);
+      crumbs.appendChild(btn);
+      const sep2 = document.createElement("span"); sep2.className = "sep"; sep2.textContent = "／";
+      crumbs.appendChild(sep2);
+      const cur = document.createElement("span");
+      cur.className = "cur";
+      cur.textContent = `${view.level + 1}F · ${view.building.floorCompanies[view.level]}`;
+      crumbs.appendChild(cur);
+    }
+  }
+}
+renderCrumbs();
+
+/* 左面板楼栋列表 */
+const bList = document.getElementById("b-list");
+for (const b of BUILDINGS) {
+  const item = document.createElement("div");
+  item.className = "b-item";
+  item.innerHTML = `<b>${b.name}</b><span>${b.floors} 层 · ${b.floorCompanies[0]}${b.floors > 1 ? " 等" : ""}</span>`;
+  item.onclick = () => goBuilding(b);
+  bList.appendChild(item);
+}
+
+/* ═══════════════ 拾取（单射线取最近 + 命中调试） ═══════════════ */
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const tip = document.getElementById("tip");
+const card = document.getElementById("card");
+let downXY = null;
+
+function isDesc(root, obj) {
+  for (let o = obj; o; o = o.parent) if (o === root) return true;
+  return false;
+}
+function pickAt(cx, cy) {
+  pointer.x = (cx / innerWidth) * 2 - 1;
+  pointer.y = -(cy / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const all = [
+    ...employees.filter((w) => w.group.visible
+      && (view.mode !== "floor" || w.building === view.building)   // 楼层视图只拾当前楼
+      && (view.mode !== "floor" || w.level === view.level)         // 且当前层（幽灵层不响应）
+    ).map((w) => w.group),
+    ...pickables.filter((o) => {
+      if (o.visible === false) return false;
+      // 楼层视图：当前层的拾取层/标签不参与（hitbox 包裹整层会挡住楼内小人）
+      if (view.mode === "floor" && o.userData.kind === "floorShell" && o.userData.building === view.building && o.userData.level === view.level) return false;
+      return true;
+    }),
+  ];
+  const hits = raycaster.intersectObjects(all, true);
+  window.__lastPick = hits.length ? { dist: hits[0].distance, kind: hits[0].object.userData?.kind ?? "other" } : null;
+  if (!hits.length) return null;
+  const obj = hits[0].object;
+  const emp = employees.find((w) => isDesc(w.group, obj));
+  if (emp) return { kind: "emp", emp };
+  for (let o = obj; o; o = o.parent) {
+    const u = o.userData;
+    if (u?.kind === "floorShell" || u?.kind === "buildingName") return { kind: u.kind, u };
+  }
+  return null;
+}
+
+renderer.domElement.addEventListener("pointermove", (e) => {
+  lastInteract = performance.now();
+  const hit = pickAt(e.clientX, e.clientY);
+  if (hit?.kind === "emp") {
+    renderer.domElement.style.cursor = "pointer";
+    tip.style.display = "none";
+  } else if (hit?.kind === "floorShell" || hit?.kind === "buildingName") {
+    renderer.domElement.style.cursor = "pointer";
+    tip.style.display = "block";
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - 220) + "px";
+    tip.style.top = (e.clientY + 12) + "px";
+    tip.querySelector("b").textContent = hit.kind === "buildingName"
+      ? hit.u.building.name
+      : `${hit.u.building.name} · ${hit.u.level + 1}F`;
+    tip.querySelector("span").textContent = hit.kind === "buildingName"
+      ? `${hit.u.building.floors} 层 · 点击查看楼层`
+      : `${hit.u.company} · 点击进入楼层`;
+  } else {
+    renderer.domElement.style.cursor = "";
+    tip.style.display = "none";
+  }
+});
+renderer.domElement.addEventListener("pointerdown", (e) => { downXY = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener("pointerup", (e) => {
+  if (!downXY || Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 6) { downXY = null; return; }
+  downXY = null;
+  const hit = pickAt(e.clientX, e.clientY);
+  if (hit?.kind === "emp") openCard(hit.emp, e.clientX, e.clientY);
+  else if (hit?.kind === "buildingName") goBuilding(hit.u.building);
+  else if (hit?.kind === "floorShell") goFloor(hit.u.building, hit.u.level);
+  else closeCard();
+});
+
+/* 员工卡 */
+function openCard(emp, x, y) {
+  const d = emp.data;
+  const av = document.getElementById("c-avatar");
+  av.textContent = d.name.slice(0, 1);
+  av.style.background = `linear-gradient(135deg, ${emp.shirtColor}33, ${emp.shirtColor}66)`;
+  document.getElementById("c-name").textContent = d.name;
+  document.getElementById("c-role").textContent = d.role;
+  const pill = document.getElementById("c-pill");
+  const [txt, color, bg] = statePill(emp.state);
+  pill.querySelector("span").textContent = txt;
+  pill.style.color = color; pill.style.borderColor = color; pill.style.background = bg;
+  document.getElementById("c-company").textContent = d.company;
+  document.getElementById("c-seat").textContent = d.seatNo;
+  document.getElementById("c-talks").textContent = d.talks;
+  document.getElementById("c-task").textContent = d.task;
+  card.style.display = "block";
+  card.style.left = Math.min(x + 18, innerWidth - 288) + "px";
+  card.style.top = Math.max(90, Math.min(y - 20, innerHeight - 330)) + "px";
+}
+function statePill(s) {
+  return s === "chat"    ? ["对话中 · 打字中", "#38e1c8", "rgba(56,225,200,0.1)"]
+       : s === "think"   ? ["思考中", "#ffd166", "rgba(255,209,102,0.1)"]
+       : s === "idle"    ? ["空闲 · 可安排", "#8ba3b8", "rgba(139,163,184,0.1)"]
+       : s === "meeting" ? ["会议中", "#4aa8ff", "rgba(74,168,255,0.12)"]
+       :                   ["离线", "#5c7186", "rgba(92,113,134,0.1)"];
+}
+function closeCard() { card.style.display = "none"; }
+document.getElementById("card-close").onclick = closeCard;
+document.getElementById("c-btn-chat").onclick = () => toast("（演示）打开对话窗口");
+document.getElementById("c-btn-seat").onclick = () => toast("（演示）打开工位安排");
+function toast(text) {
+  const t = document.createElement("div");
+  t.textContent = text;
+  t.style.cssText = "position:fixed;z-index:30;top:18px;left:50%;transform:translateX(-50%);background:rgba(10,22,40,0.95);border:1px solid #38e1c8;color:#d8f3ec;padding:8px 18px;font-size:12.5px;";
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+/* 统计与柱状图 */
+const barsEl = document.getElementById("bars");
+for (let i = 0; i < BUILDINGS.length; i++) {
+  const bar = document.createElement("i");
+  bar.style.height = "20%";
+  barsEl.appendChild(bar);
+}
+function refreshStats() {
+  const on = employees.filter((e) => e.state !== "away").length;
+  const busy = employees.filter((e) => e.state === "chat").length;
+  document.getElementById("st-online").textContent = on;
+  document.getElementById("st-busy").textContent = busy;
+  document.getElementById("st-talks").textContent = employees.reduce((s, e) => s + e.data.talks, 0);
+  BUILDINGS.forEach((b, i) => {
+    const n = employees.filter((e) => e.building === b && e.state !== "away").length;
+    const max = b.floors * (b.primary ? 24 : 12);
+    barsEl.children[i].style.height = Math.max(6, (n / max) * 100) + "%";
+  });
+}
+refreshStats();
+setInterval(refreshStats, 2000);
+
+setInterval(() => {
+  screenVariant = (screenVariant + 1) % VARIANTS;
+  for (const emp of employees) {
+    if (emp.state === "chat") applyScreen(emp);
+  }
+}, 1400);
+
+/* idle 自转 */
+let lastInteract = performance.now();
+renderer.domElement.addEventListener("wheel", () => { lastInteract = performance.now(); });
+function tickIdle(dt) {
+  if (view.mode === "campus" && performance.now() - lastInteract > 8000 && !fly.active) {
+    const angle = dt * 0.04;
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    const dx = camera.position.x - controls.target.x, dz = camera.position.z - controls.target.z;
+    camera.position.x = controls.target.x + dx * cos - dz * sin;
+    camera.position.z = controls.target.z + dx * sin + dz * cos;
+  }
+}
+
+/* ═══════════════ 主循环 ═══════════════ */
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+document.getElementById("loading").style.opacity = "0";
+setTimeout(() => document.getElementById("loading").remove(), 450);
+window.__rw = { THREE, scene, camera, controls, BUILDINGS, view, employees, pickables };
+window.__rwLoaded = true;   // 加载成功标志（供错误面板的兜底计时器判断）
+
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  tick(dt);
+  tickFly(dt);
+  tickIdle(dt);
+  controls.update();
+  composer.render();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RabbitWork · 3D 办公室 Spike（一次性原型）</title>
+<style>
+  :root {
+    --rw-bg: #101214;
+    --rw-card: #1a1d20;
+    --rw-border: #2a2e33;
+    --rw-fg: #e8eaec;
+    --rw-fg-muted: #9aa1a8;
+    --rw-fg-subtle: #6b7178;
+    --rw-accent: #22c55e;
+    --rw-accent-subtle: rgba(34, 197, 94, 0.12);
+    --rw-warn: #e2b93b;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--rw-bg); color: var(--rw-fg);
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* 顶部标题条 */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    background: linear-gradient(to bottom, rgba(16,18,20,0.92), rgba(16,18,20,0));
+    pointer-events: none;
+  }
+  .topbar .title { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+  .topbar .sub { font-size: 12px; color: var(--rw-fg-subtle); }
+  .topbar .spacer { flex: 1; }
+
+  /* 楼层切换 */
+  .floors {
+    position: fixed; top: 52px; left: 20px; z-index: 10;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .floor-btn {
+    width: 52px; height: 44px; border-radius: 8px;
+    background: var(--rw-card); border: 1px solid var(--rw-border);
+    color: var(--rw-fg-muted); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s ease-out;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .floor-btn small { font-size: 9px; font-weight: 400; color: var(--rw-fg-subtle); }
+  .floor-btn:hover { border-color: var(--rw-accent); color: var(--rw-fg); }
+  .floor-btn.active {
+    border-color: var(--rw-accent); color: var(--rw-accent);
+    background: var(--rw-accent-subtle);
+  }
+
+  /* 统计卡 */
+  .stats {
+    position: fixed; top: 52px; right: 20px; z-index: 10;
+    display: flex; gap: 8px;
+  }
+  .stat {
+    background: var(--rw-card); border: 1px solid var(--rw-border);
+    border-radius: 8px; padding: 8px 14px; text-align: right;
+  }
+  .stat b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 10.5px; color: var(--rw-fg-subtle); }
+  .stat.ok b { color: var(--rw-accent); }
+
+  /* 员工状态卡（点击小人弹出） */
+  .card {
+    position: fixed; z-index: 20; width: 264px;
+    background: var(--rw-card); border: 1px solid var(--rw-border);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    padding: 16px; display: none;
+    animation: card-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+  @keyframes card-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } }
+  .card .head { display: flex; gap: 12px; align-items: center; }
+  .card .avatar {
+    width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0;
+    background: linear-gradient(135deg, #2a2e33, #3a4046);
+    display: grid; place-items: center; font-size: 17px; font-weight: 600;
+    border: 1px solid var(--rw-border);
+  }
+  .card .name { font-size: 14px; font-weight: 600; }
+  .card .role { font-size: 11px; color: var(--rw-fg-muted); margin-top: 2px; }
+  .card .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid; margin-top: 4px;
+  }
+  .card .pill i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .card .rows { margin-top: 12px; border-top: 1px solid var(--rw-border); }
+  .card .row {
+    display: flex; justify-content: space-between; padding: 7px 0;
+    font-size: 11.5px; border-bottom: 1px solid var(--rw-border);
+  }
+  .card .row:last-child { border-bottom: none; }
+  .card .row span { color: var(--rw-fg-subtle); }
+  .card .row b { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .card .acts { display: flex; gap: 8px; margin-top: 12px; }
+  .card .acts button {
+    flex: 1; height: 30px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--rw-border); background: transparent; color: var(--rw-fg-muted);
+    transition: all 0.15s ease-out;
+  }
+  .card .acts button:hover { border-color: var(--rw-accent); color: var(--rw-fg); }
+  .card .acts button.primary {
+    background: var(--rw-accent); border-color: var(--rw-accent); color: #08130b; font-weight: 600;
+  }
+  .card .acts button.primary:hover { background: #2fd66a; }
+  .card .close {
+    position: absolute; top: 10px; right: 10px; width: 22px; height: 22px;
+    border: none; background: transparent; color: var(--rw-fg-subtle);
+    font-size: 14px; cursor: pointer; border-radius: 4px;
+  }
+  .card .close:hover { color: var(--rw-fg); background: var(--rw-border); }
+
+  /* 底部提示 */
+  .hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    font-size: 11px; color: var(--rw-fg-subtle);
+    background: rgba(26,29,32,0.8); border: 1px solid var(--rw-border);
+    padding: 5px 14px; border-radius: 999px;
+    user-select: none; pointer-events: none;
+  }
+  .hint kbd {
+    font-family: ui-monospace, monospace; font-size: 10px;
+    background: #23262a; border: 1px solid var(--rw-border); border-radius: 3px;
+    padding: 0 4px; margin: 0 1px;
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<div class="topbar">
+  <span class="title">RabbitWork · 数字员工办公楼</span>
+  <span class="sub">3D 数字孪生 spike · 数据为演示模拟</span>
+  <span class="spacer"></span>
+</div>
+
+<div class="floors" id="floors"></div>
+
+<div class="stats">
+  <div class="stat ok"><b id="st-online">0</b><span>在岗</span></div>
+  <div class="stat"><b id="st-busy">0</b><span>对话中</span></div>
+  <div class="stat"><b id="st-talks">0</b><span>今日对话</span></div>
+</div>
+
+<div class="card" id="card">
+  <button class="close" id="card-close">✕</button>
+  <div class="head">
+    <div class="avatar" id="c-avatar">员</div>
+    <div>
+      <div class="name" id="c-name">–</div>
+      <div class="role" id="c-role">–</div>
+      <div class="pill" id="c-pill"><i></i><span>–</span></div>
+    </div>
+  </div>
+  <div class="rows">
+    <div class="row"><span>工位</span><b id="c-seat">–</b></div>
+    <div class="row"><span>今日对话</span><b id="c-talks">–</b></div>
+    <div class="row"><span>今日 tokens</span><b id="c-tokens">–</b></div>
+    <div class="row"><span>当前任务</span><b id="c-task">–</b></div>
+  </div>
+  <div class="acts">
+    <button class="primary" id="c-btn-chat">发起对话</button>
+    <button id="c-btn-seat">安排工位</button>
+  </div>
+</div>
+
+<div class="hint"><kbd>拖拽</kbd>旋转 · <kbd>滚轮</kbd>缩放 · <kbd>右键</kbd>平移 · 点击小人看状态 · 左侧切层</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+/* ───────────────────────── 基础场景 ───────────────────────── */
+const app = document.getElementById("app");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x101214);
+scene.fog = new THREE.Fog(0x101214, 34, 70);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 200);
+camera.position.set(17, 13, 17);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI / 2.06;   // 不钻地下
+controls.minDistance = 5;
+controls.maxDistance = 46;
+controls.target.set(0, 3.4, 0);
+
+/* 灯光：柔和主光 + 环境补光 + 天光 */
+scene.add(new THREE.AmbientLight(0xbfd0e0, 0.55));
+const hemi = new THREE.HemisphereLight(0xcfe0f0, 0x14181c, 0.5);
+scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffffff, 1.35);
+key.position.set(14, 22, 9);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -20; key.shadow.camera.right = 20;
+key.shadow.camera.top = 20; key.shadow.camera.bottom = -20;
+key.shadow.camera.far = 60;
+key.shadow.bias = -0.0004;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x88a0c0, 0.35);
+fill.position.set(-12, 10, -8);
+scene.add(fill);
+
+/* ───────────────────────── 材质库（低模 + 灰阶 + 绿点缀） ───────────────────────── */
+const M = {
+  floor:     new THREE.MeshStandardMaterial({ color: 0x23262a, roughness: 0.9 }),
+  floorTop:  new THREE.MeshStandardMaterial({ color: 0x2a2e33, roughness: 0.85 }),
+  slabEdge:  new THREE.MeshStandardMaterial({ color: 0x33383e, roughness: 0.8 }),
+  wall:      new THREE.MeshStandardMaterial({ color: 0x2d3237, roughness: 0.95, transparent: true }),
+  glass:     new THREE.MeshStandardMaterial({ color: 0x3d5a52, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.22 }),
+  pillar:    new THREE.MeshStandardMaterial({ color: 0x3a4046, roughness: 0.7 }),
+  desk:      new THREE.MeshStandardMaterial({ color: 0x4a5057, roughness: 0.6 }),
+  deskLeg:   new THREE.MeshStandardMaterial({ color: 0x33383e, roughness: 0.5, metalness: 0.3 }),
+  chair:     new THREE.MeshStandardMaterial({ color: 0x35393f, roughness: 0.8 }),
+  monitor:   new THREE.MeshStandardMaterial({ color: 0x1c1f22, roughness: 0.4 }),
+  screenOff: new THREE.MeshStandardMaterial({ color: 0x181b1e, roughness: 0.3, emissive: 0x0a0c0e, emissiveIntensity: 0.4 }),
+  screenOn:  new THREE.MeshStandardMaterial({ color: 0x10251a, emissive: 0x1f9d55, emissiveIntensity: 1.6, roughness: 0.3 }),
+  skin:      new THREE.MeshStandardMaterial({ color: 0xe7c9a9, roughness: 0.7 }),
+  shirt:     [0x5b8def, 0x22c55e, 0xe2b93b, 0xef8354, 0xb48ce8, 0x62c3d3].map(c =>
+               new THREE.MeshStandardMaterial({ color: c, roughness: 0.75 })),
+  pants:     new THREE.MeshStandardMaterial({ color: 0x2e3338, roughness: 0.85 }),
+  hair:      [0x22262a, 0x3d2f26, 0x584839, 0x1a1d20].map(c =>
+               new THREE.MeshStandardMaterial({ color: c, roughness: 0.9 })),
+  plantPot:  new THREE.MeshStandardMaterial({ color: 0x4a3f35, roughness: 0.9 }),
+  plantLeaf: new THREE.MeshStandardMaterial({ color: 0x2f7d4f, roughness: 0.9 }),
+  carpet:    new THREE.MeshStandardMaterial({ color: 0x262b30, roughness: 1 }),
+  ringIdle:  new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.5 }),
+  ringBusy:  new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.95 }),
+};
+
+/* ───────────────────────── 楼栋参数 ───────────────────────── */
+const FLOOR_COUNT = 3;
+const FLOOR_H = 3.6;          // 层高
+const ROOM_W = 17, ROOM_D = 11; // 楼板尺寸
+const COLS = 5, ROWS = 4;     // 20 工位
+const SEAT_W = 2.5, SEAT_D = 2.0;
+
+const NAMES = ["小钱","小赵","小孙","小李","小周","小吴","小郑","小王","小冯","小陈",
+               "小褚","小卫","小蒋","小沈","小韩","小杨","小朱","小秦","小尤","小许"];
+const ROLES = ["前端工程师","后端工程师","测试工程师","产品助理","数据分析师","运营专员","客服专员","文档工程师"];
+const TASKS = ["编写季度报告","复核工单 #4821","整理需求池","分析昨日埋点","回复客户咨询","生成周报草稿","校对文档 v3","排查告警"];
+
+/* 状态机：chat(对话中→打字) think(思考) idle(空闲) away(离线) */
+const STATES = ["chat", "think", "idle", "away"];
+
+/* ───────────────────────── 建楼 ───────────────────────── */
+const building = new THREE.Group();
+scene.add(building);
+const employees = [];   // { mesh 组, armL, armR, head, screen, ring, seatLabel, state, phase, data }
+
+function box(w, h, d, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  return m;
+}
+function cyl(rt, rb, h, mat, x = 0, y = 0, z = 0, seg = 14) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  return m;
+}
+
+/** 工位：桌 + 双显示器 + 椅 + 桌垫 */
+function buildDesk() {
+  const g = new THREE.Group();
+  g.add(box(1.7, 0.06, 0.8, M.desk, 0, 0.74, 0));                 // 桌面
+  g.add(box(0.06, 0.72, 0.7, M.deskLeg, -0.78, 0.37, 0));         // 左腿板
+  g.add(box(0.06, 0.72, 0.7, M.deskLeg, 0.78, 0.37, 0));          // 右腿板
+  // 显示器 ×2
+  for (const dx of [-0.36, 0.36]) {
+    g.add(box(0.62, 0.38, 0.03, M.monitor, dx, 1.06, -0.18));
+    const scr = box(0.57, 0.33, 0.012, M.screenOff, dx, 1.06, -0.163);
+    scr.castShadow = false;
+    g.add(scr);
+    g.userData.screens = (g.userData.screens ?? []);
+    g.userData.screens.push(scr);
+    g.add(cyl(0.02, 0.02, 0.12, M.deskLeg, dx, 0.83, -0.18));
+  }
+  // 椅子（座 + 靠背 + 杆 + 底座）
+  const chair = new THREE.Group();
+  chair.add(box(0.5, 0.07, 0.48, M.chair, 0, 0.47, 0));
+  chair.add(box(0.48, 0.5, 0.06, M.chair, 0, 0.78, 0.24));
+  chair.add(cyl(0.025, 0.025, 0.4, M.deskLeg, 0, 0.26, 0));
+  chair.add(cyl(0.26, 0.26, 0.04, M.deskLeg, 0, 0.04, 0, 18));
+  chair.position.set(0, 0, 0.55);
+  g.add(chair);
+  g.userData.chair = chair;
+  return g;
+}
+
+/** 小人（低模）：头 + 躯干 + 双臂（打字摆动）+ 腿 */
+function buildPerson(shirtMat, hairMat) {
+  const g = new THREE.Group();
+  // 腿（坐下形态：大腿前伸）
+  const legL = box(0.13, 0.13, 0.42, M.pants, -0.11, 0.55, 0.18);
+  const legR = box(0.13, 0.13, 0.42, M.pants, 0.11, 0.55, 0.18);
+  legL.castShadow = legR.castShadow = false;
+  g.add(legL, legR);
+  g.add(cyl(0.055, 0.055, 0.3, M.pants, -0.11, 0.4, 0.36, 8).rotateX(Math.PI / 2));
+  g.add(cyl(0.055, 0.055, 0.3, M.pants, 0.11, 0.4, 0.36, 8).rotateX(Math.PI / 2));
+  // 躯干
+  g.add(box(0.4, 0.5, 0.24, shirtMat, 0, 0.82, 0.05));
+  // 手臂（枢轴在肩）
+  const armGeo = new THREE.BoxGeometry(0.09, 0.34, 0.09);
+  armGeo.translate(0, -0.15, 0);
+  const armL = new THREE.Mesh(armGeo, shirtMat);
+  armL.position.set(-0.26, 1.02, 0.05);
+  const armR = new THREE.Mesh(armGeo, shirtMat);
+  armR.position.set(0.26, 1.02, 0.05);
+  armL.castShadow = armR.castShadow = true;
+  g.add(armL, armR);
+  // 头 + 发
+  const head = new THREE.Group();
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), M.skin));
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.145, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+  hair.position.y = 0.012;
+  head.add(hair);
+  head.position.set(0, 1.22, 0.03);
+  g.add(head);
+  g.userData = { armL, armR, head };
+  return g;
+}
+
+/** 一个楼层：楼板 + 外圈梁 + 玻璃幕墙 + 柱 + 工位×20 + 绿植 */
+function buildFloor(level) {
+  const floor = new THREE.Group();
+  floor.position.y = level * FLOOR_H;
+  const y0 = level * FLOOR_H;
+
+  // 楼板（带 6cm 厚边缘）
+  const slab = box(ROOM_W, 0.14, ROOM_D, M.floor, 0, y0 - 0.07, 0);
+  floor.add(slab);
+  const top = box(ROOM_W - 0.3, 0.02, ROOM_D - 0.3, M.floorTop, 0, y0 + 0.01, 0);
+  top.castShadow = false;
+  floor.add(top);
+  // 地毯走道
+  floor.add(box(ROOM_W - 1.2, 0.015, 1.7, M.carpet, 0, y0 + 0.025, 0));
+
+  // 后侧实墙 + 其余玻璃幕
+  floor.add(box(ROOM_W, FLOOR_H - 0.14, 0.1, M.wall, 0, y0 + (FLOOR_H - 0.14) / 2, -ROOM_D / 2 + 0.05));
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W, FLOOR_H - 0.5, 0.05), M.glass.clone());
+  glass.position.set(0, y0 + (FLOOR_H - 0.5) / 2 + 0.1, ROOM_D / 2 - 0.05);
+  glass.castShadow = false;
+  floor.add(glass);
+  // 角柱
+  for (const [px, pz] of [[-ROOM_W/2+0.15, -ROOM_D/2+0.15], [ROOM_W/2-0.15, -ROOM_D/2+0.15], [-ROOM_W/2+0.15, ROOM_D/2-0.15], [ROOM_W/2-0.15, ROOM_D/2-0.15]])
+    floor.add(box(0.22, FLOOR_H - 0.14, 0.22, M.pillar, px, y0 + (FLOOR_H - 0.14) / 2, pz));
+
+  // 工位网格 5×4：偶数行朝 -z、奇数行背对背
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const idx = r * COLS + c;
+      const x = (c - (COLS - 1) / 2) * SEAT_W;
+      const z = (r - (ROWS - 1) / 2) * SEAT_D - 0.6;
+      const facing = r % 2 === 0 ? 0 : Math.PI;   // 相邻行面对面/背靠背
+      const seat = buildDesk();
+      seat.position.set(x, y0, z);
+      seat.rotation.y = facing;
+      floor.add(seat);
+
+      // 员工
+      const shirt = M.shirt[(level * 7 + idx) % M.shirt.length];
+      const hair = M.hair[(level * 3 + idx) % M.hair.length];
+      const person = buildPerson(shirt, hair);
+      person.position.set(x, y0, z + (facing === 0 ? 0.55 : -0.55));
+      person.rotation.y = facing;
+      floor.add(person);
+
+      // 状态光环（地面）
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 28), M.ringIdle.clone());
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(x, y0 + 0.035, z + (facing === 0 ? 0.55 : -0.55));
+      floor.add(ring);
+
+      // 名牌 sprite
+      const label = makeLabel(NAMES[(level * 20 + idx) % NAMES.length]);
+      label.position.set(x, y0 + 1.75, z + (facing === 0 ? 0.55 : -0.55));
+      floor.add(label);
+
+      const data = {
+        name: NAMES[(level * 20 + idx) % NAMES.length],
+        role: ROLES[(level * 5 + idx) % ROLES.length],
+        seatNo: `${level + 1}F-${String(idx + 1).padStart(2, "0")}`,
+        talks: 2 + ((level * 13 + idx * 7) % 14),
+        tokens: (0.4 + ((level * 31 + idx * 17) % 90) / 10).toFixed(1) + "k",
+        task: TASKS[(level * 3 + idx) % TASKS.length],
+      };
+      employees.push({
+        floor: level, group: person, desk: seat, ring, label,
+        armL: person.userData.armL, armR: person.userData.armR, head: person.userData.head,
+        screens: seat.userData.screens, chair: seat.userData.chair,
+        state: STATES[(level * 11 + idx * 3) % STATES.length],
+        phase: Math.random() * Math.PI * 2,
+        nextSwitch: 4 + Math.random() * 10,
+        data,
+        shirtColor: "#" + shirt.color.getHexString(),
+      });
+    }
+  }
+  // 绿植点缀（角落）
+  for (const [px, pz] of [[-ROOM_W/2+0.7, -ROOM_D/2+0.9], [ROOM_W/2-0.7, -ROOM_D/2+0.9], [-ROOM_W/2+0.7, ROOM_D/2-1.0], [ROOM_W/2-0.7, ROOM_D/2-1.0]]) {
+    floor.add(cyl(0.22, 0.16, 0.3, M.plantPot, px, y0 + 0.15, pz, 10));
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.85, 8), M.plantLeaf);
+    leaf.position.set(px, y0 + 0.72, pz);
+    leaf.castShadow = true;
+    floor.add(leaf);
+  }
+  building.add(floor);
+  return floor;
+}
+
+function makeLabel(text) {
+  const cv = document.createElement("canvas");
+  cv.width = 256; cv.height = 72;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "rgba(20,23,26,0.85)";
+  roundRect(ctx, 48, 8, 160, 52, 10);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(90,97,104,0.9)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, 48, 8, 160, 52, 10);
+  ctx.stroke();
+  ctx.fillStyle = "#e8eaec";
+  ctx.font = "600 26px PingFang SC, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(text, 128, 35);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  sp.scale.set(1.15, 0.32, 1);
+  return sp;
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+const floors = [];
+for (let i = 0; i < FLOOR_COUNT; i++) floors.push(buildFloor(i));
+
+/* 地面基座 + 网格 */
+const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 48), new THREE.MeshStandardMaterial({ color: 0x17191c, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.4;
+ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(60, 60, 0x23262a, 0x1c1f22);
+grid.position.y = -0.39;
+scene.add(grid);
+
+/* ───────────────────────── 切层 ───────────────────────── */
+let activeFloor = null; // null = 整栋
+const floorBtns = document.getElementById("floors");
+const btnAll = mkBtn("整栋", `${FLOOR_COUNT} 层`, true);
+btnAll.onclick = () => setFloor(null);
+floorBtns.appendChild(btnAll);
+for (let i = 0; i < FLOOR_COUNT; i++) {
+  const b = mkBtn(`${i + 1}F`, `${(i === 0 ? 7 : i === 1 ? 6 : 3)} 人在岗`, false);
+  b.onclick = () => setFloor(i);
+  floorBtns.appendChild(b);
+  floors[i].userData.btn = b;
+}
+function mkBtn(t, s, active) {
+  const b = document.createElement("button");
+  b.className = "floor-btn" + (active ? " active" : "");
+  b.innerHTML = `${t}<small>${s}</small>`;
+  return b;
+}
+function setFloor(level) {
+  activeFloor = level;
+  btnAll.classList.toggle("active", level === null);
+  floors.forEach((f, i) => {
+    f.userData.btn.classList.toggle("active", i === level);
+    const dim = level !== null && i !== level;
+    f.traverse((o) => {
+      if (o.material && o.material.transparent !== undefined) {
+        const target = dim ? 0.08 : (o.userData.baseOpacity ?? o.material.opacity);
+        if (o.userData.baseOpacity === undefined) o.userData.baseOpacity = o.material.opacity;
+        o.material.transparent = true;
+        o.material.opacity = target;
+        o.visible = target > 0.02 || o === o; // 弱化层仍占位（半透明幽灵层）
+        o.castShadow = !dim;
+      }
+      if (o.isSprite) o.material.opacity = dim ? 0.06 : 1;
+    });
+  });
+  // 相机推近目标层
+  const ty = level === null ? FLOOR_H : level * FLOOR_H + 1.4;
+  camTween.targetY = ty;
+  if (level !== null) camTween.dist = 12;
+  else camTween.dist = 26;
+}
+
+/* 相机缓动（简单 lerp tween） */
+const camTween = { targetY: controls.target.y, dist: camera.position.distanceTo(controls.target), t: 1 };
+
+/* ───────────────────────── 拾取 + 状态卡 ───────────────────────── */
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let hovered = null;
+const card = document.getElementById("card");
+let selected = null;
+
+renderer.domElement.addEventListener("pointermove", (e) => {
+  pointer.x = (e.clientX / innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(employees.map((w) => w.group), true);
+  const hitEmp = hits.length ? employees.find((w) => isDescendant(w.group, hits[0].object)) : null;
+  if (hovered && hovered !== hitEmp) setRingScale(hovered, 1);
+  hovered = hitEmp;
+  if (hovered) {
+    setRingScale(hovered, 1.35);
+    renderer.domElement.style.cursor = "pointer";
+  } else {
+    renderer.domElement.style.cursor = "";
+  }
+});
+function isDescendant(root, obj) {
+  for (let o = obj; o; o = o.parent) if (o === root) return true;
+  return false;
+}
+function setRingScale(emp, s) {
+  if (emp.state !== "away") emp.ring.scale.setScalar(s);
+}
+renderer.domElement.addEventListener("click", (e) => {
+  if (e.detail === 0) return;
+  pointer.x = (e.clientX / innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(employees.map((w) => w.group), true);
+  if (hits.length) {
+    const emp = employees.find((w) => isDescendant(w.group, hits[0].object));
+    if (emp) openCard(emp, e.clientX, e.clientY);
+  } else {
+    closeCard();
+  }
+});
+function openCard(emp, x, y) {
+  selected = emp;
+  const d = emp.data;
+  document.getElementById("c-avatar").textContent = d.name.slice(0, 1);
+  document.getElementById("c-avatar").style.background = `linear-gradient(135deg, ${emp.shirtColor}33, ${emp.shirtColor}66)`;
+  document.getElementById("c-name").textContent = d.name;
+  document.getElementById("c-role").textContent = d.role;
+  const pill = document.getElementById("c-pill");
+  const [txt, color, bg] = statePill(emp.state);
+  pill.querySelector("span").textContent = txt;
+  pill.style.color = color;
+  pill.style.borderColor = color;
+  pill.style.background = bg;
+  document.getElementById("c-seat").textContent = d.seatNo;
+  document.getElementById("c-talks").textContent = d.talks;
+  document.getElementById("c-tokens").textContent = d.tokens;
+  document.getElementById("c-task").textContent = d.task;
+  card.style.display = "block";
+  const cx = Math.min(x + 18, innerWidth - 284);
+  const cy = Math.min(y - 20, innerHeight - 340);
+  card.style.left = cx + "px";
+  card.style.top = Math.max(60, cy) + "px";
+}
+function statePill(s) {
+  return s === "chat"  ? ["对话中 · 打字中", "#22c55e", "rgba(34,197,94,0.1)"]
+       : s === "think" ? ["思考中", "#e2b93b", "rgba(226,185,59,0.1)"]
+       : s === "idle"  ? ["空闲 · 可安排", "#9aa1a8", "rgba(154,161,168,0.1)"]
+       :                 ["离线", "#6b7178", "rgba(107,113,120,0.1)"];
+}
+function closeCard() { card.style.display = "none"; selected = null; }
+document.getElementById("card-close").onclick = closeCard;
+document.getElementById("c-btn-chat").onclick = () => {
+  if (selected) cardMsg(`（演示）打开与 ${selected.data.name} 的对话`);
+};
+document.getElementById("c-btn-seat").onclick = () => {
+  if (selected) cardMsg(`（演示）为 ${selected.data.name} 安排工位`);
+};
+function cardMsg(text) {
+  const t = document.createElement("div");
+  t.textContent = text;
+  t.style.cssText = "position:fixed;z-index:30;top:18px;left:50%;transform:translateX(-50%);background:#1a1d20;border:1px solid #22c55e;color:#e8eaec;padding:8px 18px;border-radius:8px;font-size:12.5px;";
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+/* ───────────────────────── 状态机与动画 ───────────────────────── */
+const clock = new THREE.Clock();
+let simTime = 0;
+
+function applyState(emp) {
+  const s = emp.state;
+  // 屏幕
+  const scrMat = s === "chat" ? M.screenOn : M.screenOff;
+  emp.screens.forEach((scr) => { scr.material = scrMat; });
+  // 光环
+  const ring = emp.ring.material;
+  if (s === "chat") { ring.color.set(0x22c55e); ring.opacity = 0.95; }
+  else if (s === "think") { ring.color.set(0xe2b93b); ring.opacity = 0.55; }
+  else if (s === "idle") { ring.color.set(0x22c55e); ring.opacity = 0.35; }
+  else { ring.color.set(0x565b61); ring.opacity = 0.18; }
+  // 人在/离座
+  emp.group.visible = s !== "away";
+  emp.label.material.opacity = s === "away" ? 0.35 : 1;
+  // 椅子推进/拉出
+  emp.chair.position.z = s === "away" ? 0.3 : 0.55;
+}
+
+function tick(dt) {
+  simTime += dt;
+  for (const emp of employees) {
+    emp.phase += dt;
+    // 状态轮换（演示用随机流转）
+    emp.nextSwitch -= dt;
+    if (emp.nextSwitch <= 0) {
+      emp.state = STATES[Math.floor(Math.random() * STATES.length)];
+      emp.nextSwitch = 4 + Math.random() * 12;
+      applyState(emp);
+    }
+    const s = emp.state;
+    if (s === "chat") {
+      // 双臂交替打字
+      emp.armL.rotation.x = -0.9 + Math.sin(simTime * 11 + emp.phase) * 0.16;
+      emp.armR.rotation.x = -0.9 + Math.sin(simTime * 11 + emp.phase + 1.4) * 0.16;
+      emp.head.rotation.x = 0.22 + Math.sin(simTime * 2.2) * 0.02; // 低头看屏
+      emp.head.rotation.y = Math.sin(simTime * 0.8 + emp.phase) * 0.06;
+    } else if (s === "think") {
+      // 后仰 + 头微偏
+      emp.armL.rotation.x += ( -0.25 - emp.armL.rotation.x) * 0.1;
+      emp.armR.rotation.x += ( -0.25 - emp.armR.rotation.x) * 0.1;
+      emp.group.rotation.x = -0.06;
+      emp.head.rotation.x = -0.08 + Math.sin(simTime * 1.1 + emp.phase) * 0.03;
+      emp.head.rotation.y = 0.18 + Math.sin(simTime * 0.6 + emp.phase) * 0.05;
+    } else if (s === "idle") {
+      // 轻微呼吸起伏
+      emp.armL.rotation.x += (-0.45 - emp.armL.rotation.x) * 0.08;
+      emp.armR.rotation.x += (-0.45 - emp.armR.rotation.x) * 0.08;
+      emp.group.rotation.x = 0;
+      emp.head.rotation.x = Math.sin(simTime * 1.4 + emp.phase) * 0.03;
+      emp.head.rotation.y = Math.sin(simTime * 0.5 + emp.phase) * 0.12;
+      emp.group.position.y = Math.sin(simTime * 1.8 + emp.phase) * 0.008 + emp.group.userData.baseY0;
+    } else {
+      // away：无小人
+    }
+    // 光环呼吸
+    if (s !== "away") {
+      const k = 1 + Math.sin(simTime * 2 + emp.phase) * 0.06;
+      emp.ring.scale.x = emp.ring.scale.y = k * (emp === hovered ? 1.35 : 1);
+    }
+  }
+  // 相机 tween
+  camTween.t = Math.min(1, camTween.t + dt * 2.2);
+  const k = 1 - Math.pow(1 - camTween.t, 3);
+  controls.target.y += (camTween.targetY - controls.target.y) * (k < 1 ? 0.06 : 0);
+  const curDist = camera.position.distanceTo(controls.target);
+  if (Math.abs(curDist - camTween.dist) > 0.05) {
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    camera.position.copy(controls.target.clone().add(dir.multiplyScalar(curDist + (camTween.dist - curDist) * 0.06)));
+  }
+}
+// 记录 baseY（idle 呼吸基准）——建人时 position.y 已含层高，用 userData 记录
+for (const emp of employees) emp.group.userData.baseY0 = emp.group.position.y;
+// 初始状态应用
+employees.forEach(applyState);
+
+/* 统计卡刷新 */
+function refreshStats() {
+  const on = employees.filter((e) => e.state !== "away").length;
+  const busy = employees.filter((e) => e.state === "chat").length;
+  document.getElementById("st-online").textContent = on;
+  document.getElementById("st-busy").textContent = busy;
+  document.getElementById("st-talks").textContent = employees.reduce((s, e) => s + e.data.talks, 0);
+}
+refreshStats();
+setInterval(refreshStats, 2000);
+
+/* ───────────────────────── 主循环 ───────────────────────── */
+function resize() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener("resize", resize);
+
+renderer.setAnimationLoop(() => {
+  tick(Math.min(clock.getDelta(), 0.05));
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
