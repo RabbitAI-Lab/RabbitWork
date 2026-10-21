@@ -3,13 +3,15 @@ import { describe, expect, it } from "vitest";
 import { deriveSyncState, toSyncErrorText } from "../team-dto";
 
 describe("deriveSyncState（TEAM-001 §2.1 状态机派生）", () => {
-  it("无 asTeamId → LOCAL_ONLY(无论历史错误)", () => {
-    expect(deriveSyncState({ asTeamId: null, asSyncError: null })).toBe("LOCAL_ONLY");
-    expect(deriveSyncState({ asTeamId: null, asSyncError: "HTTP 503" })).toBe("LOCAL_ONLY");
-  });
-  it("asTeamId 有 + 无错误 → SYNCED;有错误 → SYNC_FAILED", () => {
-    expect(deriveSyncState({ asTeamId: "as-1", asSyncError: null })).toBe("SYNCED");
+  it("有 asSyncError → SYNC_FAILED（建队失败的 asTeamId 空态同样算失败尝试）", () => {
+    expect(deriveSyncState({ asTeamId: null, asSyncError: "HTTP 503" })).toBe("SYNC_FAILED");
     expect(deriveSyncState({ asTeamId: "as-1", asSyncError: "x" })).toBe("SYNC_FAILED");
+  });
+  it("无错误 + 无 asTeamId → LOCAL_ONLY（从未推送）", () => {
+    expect(deriveSyncState({ asTeamId: null, asSyncError: null })).toBe("LOCAL_ONLY");
+  });
+  it("无错误 + asTeamId → SYNCED", () => {
+    expect(deriveSyncState({ asTeamId: "as-1", asSyncError: null })).toBe("SYNCED");
   });
 });
 

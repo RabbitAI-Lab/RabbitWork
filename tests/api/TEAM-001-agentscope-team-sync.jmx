@@ -17,16 +17,6 @@
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <!-- 同名标识单点求值：全计划仅此处 __time 求值一次（RabbitAITest PR#47 秒级跨秒教训） -->
-          <elementProp name="NAME_SUFFIX" elementType="Argument">
-            <stringProp name="Argument.name">NAME_SUFFIX</stringProp>
-            <stringProp name="Argument.value">${__time(yyyyMMddHHmmss)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
-          <elementProp name="TEAM_NAME" elementType="Argument">
-            <stringProp name="Argument.name">TEAM_NAME</stringProp>
-            <stringProp name="Argument.value">JM-同步组-${NAME_SUFFIX}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
         </collectionProp>
       </elementProp>
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
@@ -38,6 +28,7 @@
         <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
           <stringProp name="LoopController.loops">1</stringProp>
+            <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
@@ -173,7 +164,11 @@
 
         <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="props 传递(跨线程组)" enabled="true">
           <stringProp name="scriptLanguage">groovy</stringProp>
-          <stringProp name="script">props.put("TOKEN", vars.get("TOKEN")); props.put("STAFF_ID", vars.get("STAFF_ID")); return "props ready"</stringProp>
+          <stringProp name="script">def suffix = new Date().format('yyyyMMddHHmmssSSS')
+props.put("TOKEN", vars.get("TOKEN"))
+props.put("STAFF_ID", vars.get("STAFF_ID"))
+props.put("TEAM_NAME", "JM-同步组-" + suffix)
+return "props ready"</stringProp>
         </JSR223Sampler>
         <hashTree/>
       </hashTree>
@@ -183,6 +178,7 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
           <stringProp name="LoopController.loops">1</stringProp>
+            <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
@@ -198,7 +194,7 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
-                <stringProp name="Argument.value">{&quot;name&quot;:&quot;${TEAM_NAME}&quot;,&quot;leaderEmployeeId&quot;:&quot;${__P(STAFF_ID)}&quot;,&quot;syncToRuntime&quot;:true}</stringProp>
+                <stringProp name="Argument.value">{&quot;name&quot;:&quot;${__P(TEAM_NAME)}&quot;,&quot;leaderEmployeeId&quot;:&quot;${__P(STAFF_ID)}&quot;,&quot;syncToRuntime&quot;:true}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -234,13 +230,13 @@
           <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="code==0+asTeamId+SYNCED" enabled="true">
             <stringProp name="scriptLanguage">groovy</stringProp>
             <stringProp name="script">def j = new groovy.json.JsonSlurper().parseText(prev.getResponseDataAsString());
-assert j.code == 0 : "code=" + j.code
+assert j.code == 0 : "code=" + j.code + " body=" + prev.getResponseDataAsString().take(300)
 assert j.data?.asTeamId : "asTeamId 为空"
 assert j.data?.syncState == "SYNCED" : "syncState=" + j.data?.syncState
-assert j.data?.name == vars.get("TEAM_NAME") : "name 不符"</stringProp>
+assert j.data?.name == props.get("TEAM_NAME") : "name 不符"</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<3000ms" enabled="true">
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间&lt;3000ms" enabled="true">
             <stringProp name="DurationAssertion.duration">3000</stringProp>
           </DurationAssertion>
           <hashTree/>
@@ -291,12 +287,12 @@ assert j.data?.name == vars.get("TEAM_NAME") : "name 不符"</stringProp>
           <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="code==0+items数组+非降级" enabled="true">
             <stringProp name="scriptLanguage">groovy</stringProp>
             <stringProp name="script">def j = new groovy.json.JsonSlurper().parseText(prev.getResponseDataAsString());
-assert j.code == 0 : "code=" + j.code
+assert j.code == 0 : "code=" + j.code + " body=" + prev.getResponseDataAsString().take(300)
 assert j.data?.items != null &amp;&amp; j.data.items.class.name.contains("List") : "items 非数组"
 assert j.data?.degraded == false : "degraded=" + j.data?.degraded</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<3000ms" enabled="true">
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间&lt;3000ms" enabled="true">
             <stringProp name="DurationAssertion.duration">3000</stringProp>
           </DurationAssertion>
           <hashTree/>
@@ -334,11 +330,11 @@ assert j.data?.degraded == false : "degraded=" + j.data?.degraded</stringProp>
           <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="code==0+SYNCED" enabled="true">
             <stringProp name="scriptLanguage">groovy</stringProp>
             <stringProp name="script">def j = new groovy.json.JsonSlurper().parseText(prev.getResponseDataAsString());
-assert j.code == 0 : "code=" + j.code
+assert j.code == 0 : "code=" + j.code + " body=" + prev.getResponseDataAsString().take(300)
 assert j.data?.syncState == "SYNCED" : "syncState=" + j.data?.syncState</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<3000ms" enabled="true">
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间&lt;3000ms" enabled="true">
             <stringProp name="DurationAssertion.duration">3000</stringProp>
           </DurationAssertion>
           <hashTree/>
@@ -349,7 +345,7 @@ assert j.data?.syncState == "SYNCED" : "syncState=" + j.data?.syncState</stringP
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
-                <stringProp name="Argument.value">{&quot;name&quot;:&quot;${TEAM_NAME}-noauth&quot;}</stringProp>
+                <stringProp name="Argument.value">{&quot;name&quot;:&quot;${__P(TEAM_NAME)}-noauth&quot;}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -384,7 +380,7 @@ assert j.data?.syncState == "SYNCED" : "syncState=" + j.data?.syncState</stringP
             <stringProp name="script">def j = new groovy.json.JsonSlurper().parseText(prev.getResponseDataAsString()); assert j.code == 10001 : "code=" + j.code</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<2000ms" enabled="true">
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间&lt;2000ms" enabled="true">
             <stringProp name="DurationAssertion.duration">2000</stringProp>
           </DurationAssertion>
           <hashTree/>
@@ -440,7 +436,7 @@ vars.put("JM_LONG_NAME", props.get("JM_LONG_NAME"))</stringProp>
             <stringProp name="script">def j = new groovy.json.JsonSlurper().parseText(prev.getResponseDataAsString()); assert j.code != 0 : "超长名未被拒绝 code=0"</stringProp>
           </JSR223Assertion>
           <hashTree/>
-          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<2000ms" enabled="true">
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间&lt;2000ms" enabled="true">
             <stringProp name="DurationAssertion.duration">2000</stringProp>
           </DurationAssertion>
           <hashTree/>
@@ -452,6 +448,7 @@ vars.put("JM_LONG_NAME", props.get("JM_LONG_NAME"))</stringProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
           <stringProp name="LoopController.loops">1</stringProp>
+            <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>

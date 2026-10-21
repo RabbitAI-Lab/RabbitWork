@@ -22,19 +22,21 @@ function toMemberDto(m: TeamWithMembers["members"][number]): TeamMemberDto {
   };
 }
 
-/** 同步状态派生（TEAM-001 §2.1 状态机；纯函数供单测） */
+/** 同步状态派生（TEAM-001 §2.1 状态机；纯函数供单测）。
+ *  asSyncError 仅在「尝试过且失败」时存在（成功即清空）→ 有错误即 SYNC_FAILED；
+ *  无错误无 asTeamId = 从未推送（LOCAL_ONLY）。 */
 export function deriveSyncState(team: {
   asTeamId: string | null;
   asSyncError: string | null;
 }): "SYNCED" | "LOCAL_ONLY" | "SYNC_FAILED" {
+  if (team.asSyncError) return "SYNC_FAILED";
   if (!team.asTeamId) return "LOCAL_ONLY";
-  return team.asSyncError ? "SYNC_FAILED" : "SYNCED";
+  return "SYNCED";
 }
 
 /** 同步失败原因归一（AgentScopeError → 截断 512 落库；不含凭据——client 层已截断 body） */
 export function toSyncErrorText(e: unknown): string {
-  const raw =
-    e instanceof Error ? e.message : e instanceof Object ? JSON.stringify(e) : String(e);
+  const raw = e instanceof Error ? e.message : e instanceof Object ? JSON.stringify(e) : String(e);
   return raw.slice(0, 512);
 }
 

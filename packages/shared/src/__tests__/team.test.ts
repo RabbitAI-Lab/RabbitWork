@@ -1,11 +1,6 @@
 /** team 域 schema round-trip（TEAM-001；rules/testing §4.2 合法/非法样例）。 */
 import { describe, expect, it } from "vitest";
-import {
-  teamCreateInput,
-  teamDto,
-  teamTasksResultDto,
-  teamUpdateInput,
-} from "../team";
+import { teamCreateInput, teamDto, teamTasksResultDto, teamUpdateInput } from "../team";
 
 describe("teamCreateInput（TEAM-001：leaderEmployeeId + syncToRuntime）", () => {
   it("合法:基础字段 + 可选同步参数", () => {
@@ -61,7 +56,9 @@ describe("teamDto / teamTasksResultDto（运行面字段）", () => {
       updatedAt: "2026-10-21T00:00:00Z",
     };
     expect(teamDto.parse(base).syncState).toBe("LOCAL_ONLY");
-    expect(teamDto.parse({ ...base, syncState: "SYNC_FAILED", asSyncError: "HTTP 503" }).asSyncError).toBe("HTTP 503");
+    expect(
+      teamDto.parse({ ...base, syncState: "SYNC_FAILED", asSyncError: "HTTP 503" }).asSyncError,
+    ).toBe("HTTP 503");
     expect(teamDto.safeParse({ ...base, syncState: "BAD" }).success).toBe(false);
   });
 

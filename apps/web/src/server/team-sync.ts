@@ -17,8 +17,7 @@ export async function syncTeamRuntime(teamId: string) {
     include: { members: { include: { employee: true } } },
   });
   if (!team || team.deletedAt) return null;
-  const leaderAgentId =
-    team.members.find((m) => m.role === "LEADER")?.employee.asAgentId ?? null;
+  const leaderAgentId = team.members.find((m) => m.role === "LEADER")?.employee.asAgentId ?? null;
   if (!leaderAgentId) return team;
 
   try {

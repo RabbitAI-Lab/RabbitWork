@@ -167,14 +167,80 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-  # JMeter api-test 作业随首个 tests/api/*.jmx 加入（分片口径 rules/testing §2.5，先例 RabbitAITest ci.yml）
+  # JMeter api-test 作业（随首个 tests/api/*.jmx 加入，TEAM-001；分片口径 rules/testing §2.5）
+  api-test:
+    name: JMeter 接口（四类×四断言）
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    # 不 needs build：自带 web 构建，与 quality/build 并行起跑（INFRA-011 先例）
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rabbitwork_jm
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version: 20 }
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @rabbit/db generate
+      - run: pnpm --filter web build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rabbitwork_jm
+      - name: 缓存 JMeter 发行包（rules/security §5.3 复用）
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/apache-jmeter-5.6.3
+          key: jmeter-5.6.3-${{ runner.os }}
+      - name: 安装 JRE + JMeter（官方 sha512 校验，rules/security §5.3）
+        run: |
+          if [ ! -x "$HOME/apache-jmeter-5.6.3/bin/jmeter" ]; then
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends openjdk-21-jre-headless
+            curl -fsSLO "https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz"
+            curl -fsSLO "https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz.sha512"
+            sha512sum -c apache-jmeter-5.6.3.tgz.sha512
+            tar -xzf apache-jmeter-5.6.3.tgz -C "$HOME"
+          fi
+          echo "$HOME/apache-jmeter-5.6.3/bin" >> "$GITHUB_PATH"
+          java -version && jmeter --version 2>&1 | head -2
+      - name: 起 jm 栈（service PG + web:3800 mock）并执行接口用例
+        run: |
+          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/rabbitwork_jm
+          node scripts/jm-stack.mjs > /tmp/jm-stack.log 2>&1 &
+          STACK_PID=$!
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:3800/api/v1/system/health >/dev/null 2>&1 && break
+            sleep 2
+          done
+          curl -sf http://localhost:3800/api/v1/system/health >/dev/null || { cat /tmp/jm-stack.log; exit 1; }
+          pnpm test:api
+          RESULT=$?
+          kill "$STACK_PID" 2>/dev/null || true
+          exit $RESULT
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: jmeter-jtl
+          path: test-results/api/
+          retention-days: 30
+          if-no-files-found: ignore
+
 
   # 门禁锚点（分支保护必需检查的恒定名锚）：聚合全部上游结果——failure/cancelled 即红，
   # skipped（docs-only 直通）视为通过。矩阵作业在被跳过时只报单个无后缀名、与带分片后缀的
   # 必需上下文永不匹配（RabbitAITest PR#46 实证）——必需检查改认本锚点即兼容两态。
   ci-gate:
     name: ci 门禁（必需检查锚点）
-    needs: [changes, quality, build, migrate-replay, e2e]
+    needs: [changes, quality, build, migrate-replay, e2e, api-test]
     if: always()
     runs-on: ubuntu-latest
     steps:

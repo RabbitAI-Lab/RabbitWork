@@ -147,7 +147,10 @@ export class AgentScopeClient {
     return data.team;
   }
 
-  async updateTeam(teamId: string, input: { name: string; leaderAgentId: string }): Promise<AsTeam> {
+  async updateTeam(
+    teamId: string,
+    input: { name: string; leaderAgentId: string },
+  ): Promise<AsTeam> {
     // 上游 PATCH 实测要求 name+leaderAgentId 两者必填（缺一 400）
     const data = await this.api<{ team?: AsTeam }>(
       `/api/v1/teams/${encodeURIComponent(teamId)}?${this.scope()}`,

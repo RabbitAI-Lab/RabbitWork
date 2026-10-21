@@ -72,7 +72,6 @@ export interface AsAgentTask {
   updatedAt: string | null;
 }
 
-
 // ───── 事件（上游信封 → 平台归一化） ─────
 
 /** 上游事件信封（replay 数组元素 / SSE data 帧同构；防御式全可选） */

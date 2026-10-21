@@ -61,7 +61,10 @@ export class MockAgentScope {
     return this.upsertTeam(undefined, input);
   }
 
-  async updateTeam(teamId: string, input: { name: string; leaderAgentId: string }): Promise<AsTeam> {
+  async updateTeam(
+    teamId: string,
+    input: { name: string; leaderAgentId: string },
+  ): Promise<AsTeam> {
     return this.upsertTeam(teamId, input);
   }
 
@@ -70,7 +73,10 @@ export class MockAgentScope {
     return [...(this.tasks.get(teamId) ?? [])];
   }
 
-  private upsertTeam(teamId: string | undefined, input: { name: string; leaderAgentId: string }): AsTeam {
+  private upsertTeam(
+    teamId: string | undefined,
+    input: { name: string; leaderAgentId: string },
+  ): AsTeam {
     if (input.name.startsWith("FAIL:")) {
       // 故障注入（确定性）：同步失败态的 e2e/jmx 演练开关
       throw new AgentScopeError(503, "mock injected failure", "AgentScope 上游不可用（mock 注入）");
@@ -93,13 +99,22 @@ export class MockAgentScope {
     };
     this.teams.set(id, team);
     if (!existing) {
-      this.tasks.set(
-        id,
-        [
-          { id: `mock-task-${id}-1`, title: "Mock 演练任务·撰写复盘初稿", status: "active", assignee: null, updatedAt: new Date().toISOString() },
-          { id: `mock-task-${id}-2`, title: "Mock 演练任务·竞品监测周报", status: "pending", assignee: null, updatedAt: new Date().toISOString() },
-        ],
-      );
+      this.tasks.set(id, [
+        {
+          id: `mock-task-${id}-1`,
+          title: "Mock 演练任务·撰写复盘初稿",
+          status: "active",
+          assignee: null,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: `mock-task-${id}-2`,
+          title: "Mock 演练任务·竞品监测周报",
+          status: "pending",
+          assignee: null,
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
     }
     return { ...team };
   }

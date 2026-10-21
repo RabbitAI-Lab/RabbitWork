@@ -41,9 +41,9 @@ describe("MockAgentScope teams（确定性约定）", () => {
 
   it("FAIL: 前缀故障注入(同步失败态演练开关)", async () => {
     const mock = new MockAgentScope(opts);
-    await expect(
-      mock.createTeam({ name: "FAIL:演练", leaderAgentId: "agent-1" }),
-    ).rejects.toThrow(/mock 注入/u);
+    await expect(mock.createTeam({ name: "FAIL:演练", leaderAgentId: "agent-1" })).rejects.toThrow(
+      /mock 注入/u,
+    );
   });
 
   it("LOCAL_ONLY 团队无任务(空态口径)", async () => {

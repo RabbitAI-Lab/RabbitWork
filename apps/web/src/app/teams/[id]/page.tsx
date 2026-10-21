@@ -320,7 +320,9 @@ export default function TeamDetailPage() {
                             size={38}
                             className="avatar-accent !flex !shrink-0 !items-center !justify-center"
                           >
-                            <span className="text-sm font-medium">{m.employeeName.slice(0, 1)}</span>
+                            <span className="text-sm font-medium">
+                              {m.employeeName.slice(0, 1)}
+                            </span>
                           </Avatar>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
@@ -369,7 +371,9 @@ export default function TeamDetailPage() {
                       size="small"
                       icon={<ReloadOutlined />}
                       loading={tasks.isFetching}
-                      onClick={() => void queryClient.invalidateQueries({ queryKey: ["team", id, "tasks"] })}
+                      onClick={() =>
+                        void queryClient.invalidateQueries({ queryKey: ["team", id, "tasks"] })
+                      }
                       data-testid="team-tasks-refresh"
                     >
                       刷新

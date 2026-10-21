@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-team-1 |
 | 优先级     | P1 |
 | 所属模块   | team |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-21；单测 54 / e2e 10 / jmx 全绿；走查批次②待人工） |
 | 最后更新日期 | 2026-10-21 |
 | 上游依赖   | SYS（认证/权限）· STAFF（员工发布写 asAgentId）· AgentScope 实例（teams/agent-tasks 端点） |
 | 下游消费   | TEAM-002（任务分派/竞标，深编排）· CHAT（团队会话，远期） |

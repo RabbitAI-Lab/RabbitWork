@@ -10,21 +10,8 @@ import { expect, test } from "./fixtures";
  * 数据自建自清（rules/testing §3.2.3）；从首页经真实导航进入（§3.2.2）。
  */
 
-const ADMIN = { email: "admin@rabbitwork.local", password: "rabbit123" };
-
 let seq = 0;
 const uniq = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(seq++).toString(36)}`;
-
-/** API 级登录并注入会话 cookie（鉴权准备,非被测功能；authedPage fixture 随 SYS 规格引入前的过渡写法） */
-async function login(page: import("@playwright/test").Page) {
-  const res = await page.request.post("/api/v1/auth/login", { data: ADMIN });
-  expect(res.status()).toBe(200);
-  const raw = res.headers()["set-cookie"] ?? "";
-  const [name, value] = raw.split(";")[0]!.split("=");
-  await page.context().addCookies([
-    { name: name!, value: value!, domain: "localhost", path: "/" },
-  ]);
-}
 
 /** 造一名已发布员工（mock 模式下 publish 即得 asAgentId） */
 async function createPublishedStaff(page: import("@playwright/test").Page, tag: string) {
@@ -49,11 +36,10 @@ async function navToTeams(page: import("@playwright/test").Page) {
 }
 
 test("TEAM-001-01 创建团队随建同步运行面(徽标已同步)", async ({
-  page,
+  authedPage: page,
   expectNoConsoleErrors,
   expectApi,
 }) => {
-  await login(page);
   const staffId = await createPublishedStaff(page, uniq("TL"));
   const teamName = uniq("E2E同步组");
 
@@ -67,7 +53,7 @@ test("TEAM-001-01 创建团队随建同步运行面(徽标已同步)", async ({
   const created = expectApi("**/api/v1/teams", "POST");
   await page.getByRole("button", { name: /^(确\s*定|创\s*建|OK)$/ }).click();
   const res = await created;
-  expect(res.status()).toBe(201);
+  expect(res.status).toBe(201);
   expect(res.code).toBe(0);
   expect((res.data as { asTeamId: string | null }).asTeamId).toBeTruthy();
   expect((res.data as { syncState: string }).syncState).toBe("SYNCED");
@@ -78,16 +64,15 @@ test("TEAM-001-01 创建团队随建同步运行面(徽标已同步)", async ({
   await expect(page.getByTestId(`team-sync-badge-${teamName}`)).toHaveText(/运行面已同步/u);
 
   await expectNoConsoleErrors();
-  await cleanupTeam(page, ((res.data as { id: string }).id));
+  await cleanupTeam(page, (res.data as { id: string }).id);
   await page.request.delete(`/api/v1/staffs/${staffId}`);
 });
 
 test("TEAM-001-02 详情页运行面状态行 + 任务Tab(只读浅映射)", async ({
-  page,
+  authedPage: page,
   expectNoConsoleErrors,
   expectApi,
 }) => {
-  await login(page);
   const staffId = await createPublishedStaff(page, uniq("TL"));
   const teamName = uniq("E2E任务组");
   // API 建队(带 TL,同步开)——本用例主链路是详情页,建队链路已由 01 覆盖
@@ -95,6 +80,9 @@ test("TEAM-001-02 详情页运行面状态行 + 任务Tab(只读浅映射)", asy
     data: { name: teamName, leaderEmployeeId: staffId, syncToRuntime: true },
   });
   const teamId = ((await created.json()) as { data: { id: string } }).data.id;
+
+  // 任务接口监听先行:tasks 查询在页面挂载即发(不等 Tab 点击),晚监听会错过(§3.5.1 状态翻转强信号)
+  const tasksApi = expectApi("**/api/v1/teams/*/tasks", "GET");
 
   await navToTeams(page);
   await page.getByTestId(`team-card-${teamName}`).click();
@@ -106,7 +94,6 @@ test("TEAM-001-02 详情页运行面状态行 + 任务Tab(只读浅映射)", asy
   await expect(page.getByTestId("team-sync-pill")).toBeVisible();
 
   // 任务 Tab:mock 建队自动挂 2 条任务
-  const tasksApi = expectApi("**/api/v1/teams/*/tasks", "GET");
   await page.getByRole("tab", { name: /任务/u }).click();
   const tasks = await tasksApi;
   expect(tasks.code).toBe(0);
@@ -120,10 +107,9 @@ test("TEAM-001-02 详情页运行面状态行 + 任务Tab(只读浅映射)", asy
 });
 
 test("TEAM-001-03 仅本地建队(无TL):徽标未同步 + 任务空态", async ({
-  page,
+  authedPage: page,
   expectNoConsoleErrors,
 }) => {
-  await login(page);
   const teamName = uniq("E2E本地组");
 
   await navToTeams(page);
@@ -151,11 +137,10 @@ test("TEAM-001-03 仅本地建队(无TL):徽标未同步 + 任务空态", async 
 });
 
 test("TEAM-001-04 同步失败横幅(FAIL:注入) + 改名恢复", async ({
-  page,
+  authedPage: page,
   expectNoConsoleErrors,
   expectApi,
 }) => {
-  await login(page);
   const staffId = await createPublishedStaff(page, uniq("TL"));
   const failName = `FAIL:${uniq("E2E失败组")}`;
   const okName = uniq("E2E恢复组");
@@ -177,9 +162,10 @@ test("TEAM-001-04 同步失败横幅(FAIL:注入) + 改名恢复", async ({
 
   // 编辑改名(去掉 FAIL: 前缀) → PATCH 触发同步 → 横幅消失、状态恢复 SYNCED
   const patched = expectApi("**/api/v1/teams/*", "PATCH");
-  await page.getByRole("button", { name: /^(编\s*辑|Edit)$/ }).click();
+  // 按钮可访问名含图标前缀（"edit 编辑"）——用非锚定正则（§3.2.3 中文按钮空格）
+  await page.getByRole("button", { name: /编\s*辑/u }).click();
   await page.getByLabel("团队名称").fill(okName);
-  await page.getByRole("button", { name: /^(保\s*存|OK)$/ }).click();
+  await page.getByRole("button", { name: /保\s*存/u }).click();
   const patchRes = await patched;
   expect(patchRes.code).toBe(0);
   expect((patchRes.data as { syncState: string }).syncState).toBe("SYNCED");

@@ -6,7 +6,7 @@
 
 | 文档 | 主题 | 状态 |
 | ---- | ---- | ---- |
-| [TEAM-001-agentscope-team-sync](./TEAM-001-agentscope-team-sync.md) | 团队 CRUD 同步 AgentScope teams + 任务只读视图 | Prototyped |
+| [TEAM-001-agentscope-team-sync](./TEAM-001-agentscope-team-sync.md) | 团队 CRUD 同步 AgentScope teams + 任务只读视图 | Implemented（2026-10-21 本地三腿全绿：单测 54 / e2e 10 / jmx；待远端 CI） |
 
 ## 验收标准
 
