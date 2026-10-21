@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TEAM-001 团队协作复用 AgentScope teams（浅映射）— RabbitWork 高保真原型</title>
+    <title>OBS-001 消息反馈 + 运行留痕 + 最小看板 — RabbitWork 高保真原型</title>
+    <style>
+      /* =========================================================
+         RabbitWork DS v2.1 tokens（与 apps/web/src/app/theme/tokens.css 同源）
+         ========================================================= */
+      :root {
+        --rw-bg: #fafafa;
+        --rw-card: #ffffff;
+        --rw-fg: #0f172a;
+        --rw-fg-muted: #64748b;
+        --rw-fg-subtle: #94a3b8;
+        --rw-border: #e4e8ee;
+        --rw-border-strong: #cbd5e1;
+        --rw-accent: #10b981;
+        --rw-accent-hover: #059669;
+        --rw-accent-fg: #ffffff;
+        --rw-accent-subtle: #ecfdf5;
+        --rw-success: #10b981;
+        --rw-success-subtle: #ecfdf5;
+        --rw-warning: #d97706;
+        --rw-warning-subtle: #fef3e2;
+        --rw-danger: #dc2626;
+        --rw-danger-subtle: #fdecec;
+        --rw-muted-subtle: #f1f5f9;
+        --rw-ring: rgba(16, 185, 129, 0.45);
+        --rw-shadow-float: 0 8px 24px rgba(15, 23, 42, 0.12);
+        --font-display: "Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-body: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --t-fast: 140ms;
+        --t-base: 200ms;
+        --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .dark {
+        --rw-bg: #0b0f1a;
+        --rw-card: #111827;
+        --rw-fg: #f1f5f9;
+        --rw-fg-muted: #94a3b8;
+        --rw-fg-subtle: #5b6b82;
+        --rw-border: #1e293b;
+        --rw-border-strong: #334155;
+        --rw-accent: #34d399;
+        --rw-accent-hover: #6ee7b7;
+        --rw-accent-fg: #052e21;
+        --rw-accent-subtle: rgba(52, 211, 153, 0.12);
+        --rw-success: #34d399;
+        --rw-success-subtle: rgba(52, 211, 153, 0.12);
+        --rw-warning: #f59e0b;
+        --rw-warning-subtle: rgba(245, 158, 11, 0.14);
+        --rw-danger: #f87171;
+        --rw-danger-subtle: rgba(248, 113, 113, 0.12);
+        --rw-muted-subtle: rgba(148, 163, 184, 0.1);
+        --rw-ring: rgba(52, 211, 153, 0.5);
+        --rw-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      html { font-size: 16px; }
+      body {
+        background: var(--rw-bg);
+        color: var(--rw-fg);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        transition: background 200ms var(--ease-out), color 200ms var(--ease-out);
+      }
+      .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+      .font-mono { font-family: var(--font-mono); }
+      .num { font-variant-numeric: tabular-nums; }
+      .rw-card { background: var(--rw-card); border: 1px solid var(--rw-border); border-radius: var(--radius-md); }
+      .rw-hover { transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+      .rw-hover:hover { transform: translateY(-3px); border-color: var(--rw-border-strong); box-shadow: var(--rw-shadow-float); }
+      .btn-primary {
+        background: var(--rw-accent); color: var(--rw-accent-fg); border-radius: var(--radius-sm);
+        padding: 0 16px; height: 32px; font-size: 14px; font-weight: 500;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-primary:hover { background: var(--rw-accent-hover); box-shadow: 0 0 0 4px var(--rw-ring); }
+      .btn-primary:active { transform: scale(0.96); }
+      .btn-default {
+        background: var(--rw-card); color: var(--rw-fg); border: 1px solid var(--rw-border-strong);
+        border-radius: var(--radius-sm); padding: 0 16px; height: 32px; font-size: 14px;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-default:hover { border-color: var(--rw-accent); color: var(--rw-accent); }
+      .btn-text { color: var(--rw-fg-muted); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 14px; transition: all 140ms var(--ease-out); }
+      .btn-text:hover { background: var(--rw-muted-subtle); color: var(--rw-fg); }
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+        padding: 2px 10px; font-size: 12px; font-weight: 500; line-height: 20px;
+      }
+      .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+      .pill-success { background: var(--rw-success-subtle); color: var(--rw-success); }
+      .pill-success .pill-dot { background: var(--rw-success); animation: breathe 2.4s ease-in-out infinite; }
+      .pill-warning { background: var(--rw-warning-subtle); color: var(--rw-warning); }
+      .pill-warning .pill-dot { background: var(--rw-warning); }
+      .pill-muted { background: var(--rw-muted-subtle); color: var(--rw-fg-muted); }
+      .pill-muted .pill-dot { background: var(--rw-fg-subtle); }
+      .pill-danger { background: var(--rw-danger-subtle); color: var(--rw-danger); }
+      .pill-danger .pill-dot { background: var(--rw-danger); }
+      @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+      .tab {
+        padding: 8px 4px; margin-right: 24px; font-size: 14px; color: var(--rw-fg-muted);
+        border-bottom: 2px solid transparent; transition: all 140ms var(--ease-out); cursor: pointer;
+      }
+      .tab:hover { color: var(--rw-fg); }
+      .tab.active { color: var(--rw-accent); border-bottom-color: var(--rw-accent); font-weight: 500; }
+      .tab .num { margin-left: 4px; color: var(--rw-fg-subtle); font-size: 12px; }
+      .modal-mask { background: rgba(15, 23, 42, 0.45); }
+      .modal {
+        background: var(--rw-card); border-radius: var(--radius-lg); box-shadow: var(--rw-shadow-float);
+        border: 1px solid var(--rw-border);
+      }
+      .input {
+        background: var(--rw-card); border: 1px solid var(--rw-border-strong); border-radius: var(--radius-sm);
+        height: 32px; padding: 0 12px; font-size: 14px; color: var(--rw-fg); width: 100%;
+        transition: all 140ms var(--ease-out); outline: none;
+      }
+      .input:focus { border-color: var(--rw-accent); box-shadow: 0 0 0 3px var(--rw-ring); }
+      .avatar {
+        width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--rw-accent-subtle);
+        color: var(--rw-accent); display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 500; flex-shrink: 0;
+      }
+    <main class="mx-auto max-w-[1080px] px-8 py-8 space-y-12">
+
+      <!-- ═════════ A. chat 消息气泡反馈 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">A</span>
+          <h2 class="font-display text-[15px] font-semibold">对话消息反馈 —— 员工消息 hover 出现 👍/👎（antdx 气泡操作区）</h2>
+        </div>
+        <div class="rw-card space-y-4 p-6">
+          <!-- 用户消息（右，accent 实心） -->
+          <div class="flex justify-end">
+            <div class="max-w-[70%] rounded-[8px] px-4 py-2.5 text-sm" style="background: var(--rw-accent); color: var(--rw-accent-fg)">帮我写一份 Q4 增长复盘初稿</div>
+          </div>
+          <!-- 员工消息（左，card 底）+ 反馈操作区 -->
+          <div class="flex items-start gap-2.5">
+            <div class="avatar">夏</div>
+            <div class="min-w-0">
+              <div class="max-w-[520px] rounded-[8px] border px-4 py-2.5 text-sm" style="border-color: var(--rw-border); background: var(--rw-card)">已生成 Q4 增长复盘初稿，要点：一、渠道环比…（正文省略）</div>
+              <!-- 反馈操作条：hover 显现；已反馈态常驻 -->
+              <div class="mt-1.5 flex items-center gap-1 text-xs" style="color: var(--rw-fg-subtle)" data-testid="msg-feedback-bar">
+                <span class="text-[11px]">这条回答有帮助吗</span>
+                <button class="btn-text !px-1.5 !py-0.5" data-testid="msg-feedback-up" title="有帮助">👍</button>
+                <button class="btn-text !px-1.5 !py-0.5" data-testid="msg-feedback-down" title="没帮助">👎</button>
+              </div>
+            </div>
+          </div>
+          <!-- 已反馈态：👍 高亮常驻，可点击取消/切换 -->
+          <div class="flex items-start gap-2.5">
+            <div class="avatar">夏</div>
+            <div class="min-w-0">
+              <div class="max-w-[520px] rounded-[8px] border px-4 py-2.5 text-sm" style="border-color: var(--rw-border); background: var(--rw-card)">补充了渠道拆解表与预算建议…</div>
+              <div class="mt-1.5 flex items-center gap-1.5 text-xs" style="color: var(--rw-fg-subtle)">
+                <span class="pill pill-success" style="animation:none"><span class="pill-dot" style="animation:none"></span>已反馈 · 有帮助</span>
+                <button class="btn-text !px-1.5 !py-0.5 !text-[11px]">撤销</button>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs" style="color: var(--rw-fg-subtle)">仅员工（assistant）消息可反馈；自己的消息（用户侧）无操作区。反馈经 PUT /api/v1/messages/{id}/feedback upsert（重复点按=切换，撤销=删除）。</p>
+        </div>
+      </section>
+
+      <!-- ═════════ B. 👎 评语弹层 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">B</span>
+          <h2 class="font-display text-[15px] font-semibold">👎 反馈评语（可选，≤1024 字）</h2>
+        </div>
+        <div class="modal-mask rounded-[12px] p-12">
+          <div class="modal mx-auto w-[480px] p-6">
+            <h3 class="font-display mb-1 text-[15px] font-semibold">告诉我们哪里没帮上</h3>
+            <p class="mb-4 text-xs" style="color: var(--rw-fg-subtle)">评语可选;它会进入反馈看板,用于改进员工表现</p>
+            <textarea class="input !h-auto w-full rounded-[4px] p-3 text-sm" rows="3" placeholder="如:数据引用过时/格式不符合要求…">结论太笼统,缺少数据支撑</textarea>
+            <div class="mt-4 flex justify-end gap-2">
+              <button class="btn-default">跳过</button>
+              <button class="btn-primary">提交反馈</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═════════ C. /runs 运行留痕页（页头=最小看板） ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">C</span>
+          <h2 class="font-display text-[15px] font-semibold">运行观测页 /runs —— 页头统计看板（count-up）+ 留痕列表</h2>
+        </div>
+        <!-- 统计看板 -->
+        <div class="mb-4 grid grid-cols-4 gap-4">
+          <div class="rw-card p-5">
+            <p class="text-xs" style="color: var(--rw-fg-muted)">今日调用</p>
+            <p class="font-display num mt-1 text-[26px] font-semibold">128</p>
+          </div>
+          <div class="rw-card p-5">
+            <p class="text-xs" style="color: var(--rw-fg-muted)">成功率(7日)</p>
+            <p class="font-display num mt-1 text-[26px] font-semibold" style="color: var(--rw-success)">96.2%</p>
+          </div>
+          <div class="rw-card p-5">
+            <p class="text-xs" style="color: var(--rw-fg-muted)">平均时长</p>
+            <p class="font-display num mt-1 text-[26px] font-semibold">3.4s</p>
+          </div>
+          <div class="rw-card p-5">
+            <p class="text-xs" style="color: var(--rw-fg-muted)">Token 消耗(7日)</p>
+            <p class="font-display num mt-1 text-[26px] font-semibold">1.2M</p>
+          </div>
+        </div>
+        <!-- 过滤 + 列表 -->
+        <div class="rw-card p-6">
+          <div class="mb-4 flex items-center justify-between">
+            <div class="flex items-center gap-1 text-[13px]" style="color: var(--rw-fg-muted)">
+              <span class="tab active" style="margin:0;padding:4px 12px;border-radius:999px;border:1px solid var(--rw-accent)">全部 156</span>
+              <span class="tab" style="margin:0;padding:4px 12px;border-radius:999px;border:1px solid var(--rw-border)">成功 142</span>
+              <span class="tab" style="margin:0;padding:4px 12px;border-radius:999px;border:1px solid var(--rw-border)">失败 9</span>
+              <span class="tab" style="margin:0;padding:4px 12px;border-radius:999px;border:1px solid var(--rw-border)">已中断 5</span>
+            </div>
+            <span class="text-xs" style="color: var(--rw-fg-subtle)">RunRecord 留痕 · 每 30s 自动刷新</span>
+          </div>
+          <div class="overflow-hidden rounded-[8px] border" style="border-color: var(--rw-border)">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs" style="background: var(--rw-muted-subtle); color: var(--rw-fg-muted)">
+                  <th class="px-4 py-2.5 font-medium">状态</th>
+                  <th class="px-4 py-2.5 font-medium">员工 · 会话</th>
+                  <th class="px-4 py-2.5 font-medium text-right">时长</th>
+                  <th class="px-4 py-2.5 font-medium text-right">Token(in/out)</th>
+                  <th class="px-4 py-2.5 font-medium text-right">开始时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-hover" style="border-top: 1px solid var(--rw-border)">
+                  <td class="px-4 py-2.5"><span class="pill pill-success"><span class="pill-dot"></span>SUCCEEDED</span></td>
+                  <td class="px-4 py-2.5 text-[13px]">林夏 · <span style="color: var(--rw-accent)">Q4 复盘</span></td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]">3.2s</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-muted)">1,204 / 8,377</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-subtle)">10-21 14:02</td>
+                </tr>
+                <tr class="row-hover" style="border-top: 1px solid var(--rw-border)">
+                  <td class="px-4 py-2.5"><span class="pill pill-danger"><span class="pill-dot"></span>FAILED</span></td>
+                  <td class="px-4 py-2.5 text-[13px]">苏晴 · <span style="color: var(--rw-accent)">落地页文案</span></td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]">12.7s</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-muted)">986 / 0</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-subtle)">10-21 13:44</td>
+                </tr>
+                <tr class="row-hover" style="border-top: 1px solid var(--rw-border)">
+                  <td class="px-4 py-2.5"><span class="pill pill-muted"><span class="pill-dot"></span>INTERRUPTED</span></td>
+                  <td class="px-4 py-2.5 text-[13px]">陈北 · <span style="color: var(--rw-accent)">数据巡检</span></td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]">5.1s</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-muted)">510 / 1,208</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-subtle)">10-21 11:20</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 失败行展开：真实错误透出 -->
+          <div class="mt-3 rounded-[8px] px-4 py-3 font-mono text-xs" style="background: var(--rw-danger-subtle); color: var(--rw-danger)" data-testid="run-error-detail">
+            run 9f2c… FAILED · AgentScope 上游错误（HTTP 503）：upstream unavailable after 3 retries
+          </div>
+        </div>
+
+        <!-- C2 空态 -->
+        <div class="rw-card mt-4 p-6">
+          <div class="mb-3 flex items-center gap-2"><span class="section-tag">C2</span><span class="text-[13px]" style="color: var(--rw-fg-muted)">空态（尚无运行记录）</span></div>
+          <div class="flex flex-col items-center justify-center py-10 text-center">
+            <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-[8px]" style="background: var(--rw-muted-subtle); color: var(--rw-fg-subtle); font-size: 20px">📈</div>
+            <p class="mb-1 text-sm" style="color: var(--rw-fg-muted)">还没有运行记录</p>
+            <p class="text-xs" style="color: var(--rw-fg-subtle)">发起第一轮对话后,这里会留下执行留痕</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>
