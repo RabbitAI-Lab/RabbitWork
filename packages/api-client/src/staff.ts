@@ -2,10 +2,14 @@
 import { del, get, patch, post, put } from "./client";
 import type {
   ConversationDto,
+  FeedbackDto,
+  FeedbackInput,
   LoginInput,
   MeDto,
   MessageDto,
   MessageSendInput,
+  RunDto,
+  RunStatsDto,
   StaffCreateInput,
   StaffDto,
   StaffUpdateInput,
@@ -110,4 +114,28 @@ export const teamApi = {
   sync: (id: string) => post<TeamDetailDto>(`/api/v1/teams/${id}/sync`, {}),
   /** 任务只读视图（agent-tasks 浅映射，TEAM-001） */
   tasks: (id: string) => get<TeamTasksResultDto>(`/api/v1/teams/${id}/tasks`),
+};
+
+// ───── obs（OBS-001：反馈 + 运行留痕 + 看板） ─────
+
+export interface RunsResult {
+  items: RunDto[];
+  counts: Record<string, number>;
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export const obsApi = {
+  /** 消息反馈 upsert（rating=null 撤销） */
+  feedback: (mirrorId: string, input: FeedbackInput) =>
+    put<FeedbackDto>(`/api/v1/messages/${mirrorId}/feedback`, input),
+  runs: (params: { status?: string; page?: number; pageSize?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (params.status) q.set("status", params.status);
+    q.set("page", String(params.page ?? 1));
+    q.set("pageSize", String(params.pageSize ?? 20));
+    return get<RunsResult>(`/api/v1/runs?${q.toString()}`);
+  },
+  runStats: () => get<RunStatsDto>("/api/v1/runs/stats"),
 };

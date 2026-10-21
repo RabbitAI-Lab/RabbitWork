@@ -61,7 +61,8 @@
 
 | 编号 | 规格 | 状态 |
 | ---- | ---- | ---- |
-| TEAM-001 | [团队协作复用 AgentScope teams（浅映射）](./sprint-team-1/TEAM-001-agentscope-team-sync.md) | Prototyped |
+| TEAM-001 | [团队协作复用 AgentScope teams（浅映射）](./sprint-team-1/TEAM-001-agentscope-team-sync.md) | Implemented |
+| OBS-001 | [消息反馈 + 运行留痕 + 最小看板](./sprint-obs-1/OBS-001-feedback-rundashboard.md) | Implemented |
 
 ## 七、支撑文档
 

@@ -41,13 +41,18 @@ export function toConversationDto(
   };
 }
 
-export function toMessageDto(m: MessageMirror): MessageDto {
+/** m.feedback 由调用方 include（OBS-001：会话详情带反馈态；unique 约束下至多 1 条） */
+export function toMessageDto(
+  m: MessageMirror & { feedback?: Array<{ rating: string; comment: string | null }> },
+): MessageDto {
+  const fb = m.feedback?.[0];
   return {
     id: m.id,
     seq: m.seq,
     role: m.role as MessageDto["role"],
     content: m.content,
     tokenUsage: m.tokenUsage ?? null,
+    feedback: fb ? { rating: fb.rating as "UP" | "DOWN", comment: fb.comment } : null,
     createdAt: m.createdAt.toISOString(),
   };
 }

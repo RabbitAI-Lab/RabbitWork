@@ -10,13 +10,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { App, Avatar } from "antd";
+import { App, Avatar, Input, Modal } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { AppShell } from "@/components/AppShell";
 import { ChatPersonaCard } from "@/components/ChatPersonaCard";
 import { ChatBubble, ChatStreamingBubble } from "@/components/ChatBubble";
 import { ChatComposer } from "@/components/ChatComposer";
-import { chatApi, conversationEventsUrl } from "@rabbit/api-client";
+import { chatApi, conversationEventsUrl, obsApi } from "@rabbit/api-client";
 import type { ChatEvent, MessageDto } from "@rabbit/shared";
 import "../chat.css";
 
@@ -43,20 +43,31 @@ export default function ChatPage() {
   });
 
   const [messages, setMessages] = useState<MessageDto[]>([]);
+  /** OBS-001 👎 评语弹层目标消息 */
+  const [feedbackTarget, setFeedbackTarget] = useState<MessageDto | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
   const [streamingText, setStreamingText] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [input, setInput] = useState("");
   const [lastUsage, setLastUsage] = useState<TokenUsage | null>(null);
   const esRef = useRef<EventSource | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  /** 用户上翻看历史时不强制吸底（距底 <80px 才跟随；流式中 instant 防动画竞态） */
+  const isNearBottom = useCallback(() => {
+    const el = scrollRef.current;
+    return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }, []);
 
   useEffect(() => {
     if (detail.data) setMessages(detail.data.messages);
   }, [detail.data]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingText]);
+    if (isNearBottom()) {
+      bottomRef.current?.scrollIntoView({ behavior: streaming ? "auto" : "smooth" });
+    }
+  }, [messages, streamingText, streaming, isNearBottom]);
 
   const closeStream = useCallback(() => {
     esRef.current?.close();
@@ -90,6 +101,7 @@ export default function ChatPage() {
               role: "ASSISTANT",
               content: event.text,
               tokenUsage: null,
+              feedback: null,
               createdAt: new Date().toISOString(),
             },
           ]);
@@ -116,6 +128,9 @@ export default function ChatPage() {
           break;
         case "done":
           setStreaming(false);
+          // 终态清空流式文本：message_completed 竞态漏掉时，不留"无反馈按钮的
+          // 僵尸气泡"（invalidate 后由镜像消息补全——OBS-001 e2e 实证的缺陷）
+          setStreamingText("");
           closeStream();
           void queryClient.invalidateQueries({ queryKey: ["conversation", id] });
           void queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -124,6 +139,7 @@ export default function ChatPage() {
     };
     es.onerror = () => {
       setStreaming(false);
+      setStreamingText("");
       closeStream();
     };
   }, [id, closeStream, ctxMessage, queryClient]);
@@ -166,13 +182,43 @@ export default function ChatPage() {
     [onCopy],
   );
 
-  const onFeedback = useCallback(
-    (msg: MessageDto, score: "up" | "down") => {
-      ctxMessage.info(`已记录反馈：${score === "up" ? "👍" : "👎"}`);
-      // M2 接 chatApi.feedback(msg.id, score)
-      void msg;
+  /** 反馈提交：乐观更新 + 失败回滚并透出真实原因（rules/react-nextjs §5.7） */
+  const submitFeedback = useCallback(
+    async (msg: MessageDto, rating: "UP" | "DOWN" | null, comment?: string) => {
+      const prev = msg.feedback ?? null;
+      setMessages((rows) =>
+        rows.map((m) =>
+          m.id === msg.id
+            ? { ...m, feedback: rating ? { rating, comment: comment ?? null } : null }
+            : m,
+        ),
+      );
+      try {
+        await obsApi.feedback(msg.id, { rating, comment });
+        ctxMessage.success(rating === null ? "已撤销反馈" : "已记录反馈");
+      } catch (e) {
+        setMessages((rows) => rows.map((m) => (m.id === msg.id ? { ...m, feedback: prev } : m)));
+        ctxMessage.error(e instanceof Error ? e.message : "反馈失败");
+      }
     },
     [ctxMessage],
+  );
+
+  const onFeedback = useCallback(
+    (msg: MessageDto, next: "UP" | "DOWN" | null) => {
+      // 再点当前评分 = 撤销；DOWN 走评语弹层（可选填）；UP 直接提交（OBS-001 §2.1）
+      if (next === null) {
+        void submitFeedback(msg, null);
+        return;
+      }
+      if (next === "DOWN") {
+        setFeedbackComment("");
+        setFeedbackTarget(msg);
+        return;
+      }
+      void submitFeedback(msg, "UP");
+    },
+    [submitFeedback],
   );
 
   const onRegenerate = useCallback(() => {
@@ -252,7 +298,7 @@ export default function ChatPage() {
           </header>
 
           {/* 消息流 */}
-          <div className="rw-chat-messages scroll-slim" data-testid="chat-messages">
+          <div ref={scrollRef} className="rw-chat-messages scroll-slim" data-testid="chat-messages">
             {messages.length === 0 && !streamingText && !streaming ? (
               <WelcomeBlock onPickSuggestion={setInput} />
             ) : null}
@@ -264,10 +310,11 @@ export default function ChatPage() {
                 content={m.content}
                 usage={m.tokenUsage as TokenUsage | null}
                 name={employeeName}
+                feedback={m.feedback ?? null}
                 onCopy={() => onCopy(m.content)}
                 onEdit={() => ctxMessage.info("编辑（M2 接真实接口）")}
                 onRegenerate={m.role === "ASSISTANT" ? onRegenerate : undefined}
-                onFeedback={m.role === "ASSISTANT" ? (score) => onFeedback(m, score) : undefined}
+                onFeedback={m.role === "ASSISTANT" ? (next) => onFeedback(m, next) : undefined}
                 onCopyMarkdown={
                   m.role === "ASSISTANT" ? () => onCopyMarkdown(m.content) : undefined
                 }
@@ -302,6 +349,33 @@ export default function ChatPage() {
             sending={send.isPending}
           />
         </section>
+
+        {/* 👎 反馈评语弹层（OBS-001 §2.1：评语可选，仅 DOWN） */}
+        <Modal
+          title="告诉我们哪里没帮上"
+          open={feedbackTarget !== null}
+          onCancel={() => setFeedbackTarget(null)}
+          okText="提交反馈"
+          cancelText="取消"
+          onOk={() => {
+            const target = feedbackTarget;
+            setFeedbackTarget(null);
+            if (target) void submitFeedback(target, "DOWN", feedbackComment || undefined);
+          }}
+          destroyOnHidden
+        >
+          <p className="text-rw-fg-subtle mb-3 text-xs">
+            评语可选；它会进入反馈看板，用于改进员工表现
+          </p>
+          <Input.TextArea
+            data-testid="feedback-comment-input"
+            rows={3}
+            maxLength={1024}
+            value={feedbackComment}
+            onChange={(e) => setFeedbackComment(e.target.value)}
+            placeholder="如：结论太笼统，缺少数据支撑…"
+          />
+        </Modal>
       </div>
     </AppShell>
   );

@@ -3,6 +3,7 @@ export type { Envelope } from "./envelope";
 export { isValidPermission, PERMISSIONS } from "./permissions";
 export type { Permission, PermissionAction } from "./permissions";
 export * from "./resource";
+export * from "./obs";
 export * from "./staff";
 export * from "./team";
 export { SESSION_COOKIE, SESSION_TTL_SEC, signSession, verifySession } from "./token";

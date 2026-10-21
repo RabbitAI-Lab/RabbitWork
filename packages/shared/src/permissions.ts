@@ -46,6 +46,8 @@ export const PERMISSIONS = [
   // resource 域（技能/知识库等员工可配置资源）
   "ORG_RESOURCE:READ",
   "ORG_RESOURCE:WRITE",
+  // obs 域（运行观测；反馈写走既有 ORG_CHAT:SEND）
+  "ORG_RUN:READ",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

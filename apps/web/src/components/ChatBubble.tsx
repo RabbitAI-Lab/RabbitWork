@@ -13,16 +13,21 @@ import { formatUsageLine } from "@/app/chat/utils";
 
 type Role = "USER" | "ASSISTANT";
 
+/** OBS-001 反馈语义：再点当前评分 = 撤销（null）；👍/👎 互斥切换 */
+type FeedbackNext = "UP" | "DOWN" | null;
+
 interface ChatBubbleProps {
   role: Role;
   content: string;
   streaming?: boolean;
   usage?: { model?: string; input?: number; output?: number; total?: number } | null;
   name?: string;
+  /** 本条消息既有反馈（OBS-001；用户消息恒 undefined） */
+  feedback?: { rating: "UP" | "DOWN"; comment: string | null } | null;
   onCopy?: () => void;
   onEdit?: () => void;
   onRegenerate?: () => void;
-  onFeedback?: (score: "up" | "down") => void;
+  onFeedback?: (next: FeedbackNext) => void;
   onCopyMarkdown?: () => void;
 }
 
@@ -32,6 +37,7 @@ export function ChatBubble({
   streaming,
   usage,
   name,
+  feedback,
   onCopy,
   onEdit,
   onRegenerate,
@@ -127,8 +133,11 @@ export function ChatBubble({
           <button
             type="button"
             aria-label="点赞"
-            title="有帮助"
-            onClick={() => onFeedback?.("up")}
+            title={feedback?.rating === "UP" ? "撤销反馈" : "有帮助"}
+            aria-pressed={feedback?.rating === "UP"}
+            data-state={feedback?.rating === "UP" ? "active" : undefined}
+            data-testid="msg-feedback-up"
+            onClick={() => onFeedback?.(feedback?.rating === "UP" ? null : "UP")}
             className="rw-icon-btn"
           >
             👍
@@ -136,8 +145,11 @@ export function ChatBubble({
           <button
             type="button"
             aria-label="点踩"
-            title="没帮助"
-            onClick={() => onFeedback?.("down")}
+            title={feedback?.rating === "DOWN" ? "撤销反馈" : "没帮助"}
+            aria-pressed={feedback?.rating === "DOWN"}
+            data-state={feedback?.rating === "DOWN" ? "active" : undefined}
+            data-testid="msg-feedback-down"
+            onClick={() => onFeedback?.(feedback?.rating === "DOWN" ? null : "DOWN")}
             className="rw-icon-btn"
           >
             👎

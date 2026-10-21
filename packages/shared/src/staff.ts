@@ -87,6 +87,8 @@ export const messageDto = z.object({
   role: z.enum(["USER", "ASSISTANT", "SYSTEM"]),
   content: z.string(),
   tokenUsage: z.unknown().nullable(),
+  /** OBS-001：本条消息的反馈（无反馈为 null；用户消息恒 null） */
+  feedback: z.object({ rating: z.enum(["UP", "DOWN"]), comment: z.string().nullable() }).nullable(),
   createdAt: z.string(),
 });
 export type MessageDto = z.infer<typeof messageDto>;

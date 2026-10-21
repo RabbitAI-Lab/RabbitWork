@@ -10,12 +10,13 @@ import {
   UserOutlined,
   HomeOutlined,
   AppstoreOutlined,
+  LineChartOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export type MenuKey = "office" | "staffs" | "teams";
+export type MenuKey = "office" | "staffs" | "teams" | "runs";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -44,6 +45,13 @@ const MENUS: Array<{
     label: "办公室",
     icon: <HomeOutlined />,
     match: /^\/(office|chat|conversations)(\/|$)/,
+  },
+  {
+    key: "runs",
+    href: "/runs",
+    label: "运行观测",
+    icon: <LineChartOutlined />,
+    match: /^\/runs(\/|$)/,
   },
 ];
 

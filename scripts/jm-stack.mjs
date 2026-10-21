@@ -91,7 +91,22 @@ function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
+/** 端口占用 fail-fast（rules/git-workflow §9.4）：next start 进程名会被改写为
+ * next-server，pkill 按名匹配不可靠——启动前按端口检测，指名冲突而非静默抢占。 */
+function assertPortFree(port, label) {
+  const used = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], { encoding: "utf8" });
+  if ((used.stdout ?? "").trim().length > 0) {
+    console.error(
+      `[jm] 端口 ${port}（${label}）已被占用：\n${used.stdout}\n` +
+        `先清理本槽位残留（kill $(lsof -ti :${port})）再启动；占用者 cwd 属其他 worktree 时须换槽位。`,
+    );
+    process.exit(2);
+  }
+}
+
 async function main() {
+  assertPortFree(ENV.jm.webPort, "jm web");
+  assertPortFree(ENV.jm.pgPort, "jm pg");
   await startEmbeddedPostgres();
   run("pnpm", ["db:migrate"], { DATABASE_URL: process.env.DATABASE_URL });
   run("pnpm", ["db:seed"], { DATABASE_URL: process.env.DATABASE_URL });

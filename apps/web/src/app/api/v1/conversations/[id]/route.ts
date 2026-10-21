@@ -21,6 +21,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       where: { conversationId: id },
       orderBy: { seq: "asc" },
       take: 200,
+      include: { feedback: true }, // OBS-001：消息反馈态随详情返回
     });
     return jsonOk({
       conversation: toConversationDto(conversation, conversation.employee),

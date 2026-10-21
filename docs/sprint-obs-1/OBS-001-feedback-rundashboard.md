@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-obs-1（蓝图 S2 欠账回补） |
 | 优先级     | P1 |
 | 所属模块   | obs |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-22；单测 61 / e2e 13 / jmx 2 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-21 |
 | 上游依赖   | CHAT-001/002（消息镜像与 RunRecord 落库已就绪：conversations events 路由写 message_mirrors / run_records） |
 | 下游消费   | OBS-002 用量统计与审计（S5）· STAFF 员工表现视图（远期） |
@@ -168,6 +168,8 @@ stats 聚合 ≤ 500ms（7 日窗口）；评语文本入参数化（Prisma 天�
 **交付清单**：shared obs zod + 权限点 → API（feedback/runs/stats + jmx）→ ChatBubble 反馈 UI + /runs 页 + 菜单（e2e）→ 文档流转。
 
 **DoD**：单测/jmx/e2e 绿 → 远端 CI 绿 → push（用户已授权自动提交）。
+
+**二态豁免登记**：e2e 确定性覆盖 SUCCEEDED/INTERRUPTED 两态（mock 无法确定性产出 FAILED run）；FAILED 行错误透出（C5）由 jmx 404 信封 + 人工走查覆盖，mock 故障注入（FAIL: 前缀）随 TEAM-002 深编排评估补齐。
 
 **演示脚本**：对话一轮 → 👍 → 切 👎 附评语 → 撤销 → /runs 看板 + 失败行错误。
 

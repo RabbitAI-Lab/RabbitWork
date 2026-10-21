@@ -531,3 +531,11 @@
 .rw-welcome-pill:active {
   transform: scale(0.97);
 }
+
+/* OBS-001 反馈态：当前评分按钮常驻 accent（rw-bubble-actions hover 显隐不变） */
+.rw-icon-btn[data-state="active"] {
+  color: var(--rw-accent);
+  border-color: var(--rw-accent);
+  background: var(--rw-accent-subtle);
+  opacity: 1;
+}
