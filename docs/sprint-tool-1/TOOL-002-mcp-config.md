@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-tool-1（蓝图 S4 收尾） |
 | 优先级     | P1 |
 | 所属模块   | tool |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-22；单测 71 / e2e 24 / jmx 5 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-22 |
 | 上游依赖   | McpServerConfig 表（已一次建齐,零 DDL） |
 | 下游消费   | 运行时 MCP 工具消费（随引擎引入）;员工绑定（type=MCP） |

@@ -67,6 +67,7 @@
 | STAFF-002 | [人设模板](./sprint-staff-2/STAFF-002-persona-templates.md) | Implemented |
 | SKILL-001 | [技能管理页](./sprint-skill-1/SKILL-001-skill-page.md) | Implemented |
 | TOOL-001 | [HTTP 工具与试运行](./sprint-tool-1/TOOL-001-http-tool.md) | Implemented |
+| TOOL-002 | [MCP 服务器配置](./sprint-tool-1/TOOL-002-mcp-config.md) | Implemented |
 
 ## 七、支撑文档
 

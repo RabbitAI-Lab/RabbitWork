@@ -1,6 +1,10 @@
 /** 资源域（技能/知识库/员工绑定）API（RESOURCE-001）。 */
 import { del, get, patch, post, put } from "./client";
 import type {
+  McpCreateInput,
+  McpDto,
+  McpTestResultDto,
+  McpUpdateInput,
   ToolCreateInput,
   ToolDto,
   ToolTestRunInput,
@@ -65,4 +69,14 @@ export const toolApi = {
   remove: (id: string) => del<{ ok: boolean }>(`/api/v1/tools/${id}`),
   testRun: (id: string, input: ToolTestRunInput) =>
     post<ToolTestRunResultDto>(`/api/v1/tools/${id}/test-run`, input),
+};
+
+// ───── mcp（TOOL-002 MCP 服务器配置） ─────
+
+export const mcpApi = {
+  list: () => get<{ items: McpDto[]; total: number }>("/api/v1/mcp-servers"),
+  create: (input: McpCreateInput) => post<McpDto>("/api/v1/mcp-servers", input),
+  update: (id: string, input: McpUpdateInput) => patch<McpDto>(`/api/v1/mcp-servers/${id}`, input),
+  remove: (id: string) => del<{ ok: boolean }>(`/api/v1/mcp-servers/${id}`),
+  test: (id: string) => post<McpTestResultDto>(`/api/v1/mcp-servers/${id}/test`, {}),
 };

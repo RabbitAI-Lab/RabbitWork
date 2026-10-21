@@ -5,6 +5,7 @@ export { isValidPermission, PERMISSIONS } from "./permissions";
 export type { Permission, PermissionAction } from "./permissions";
 export * from "./resource";
 export * from "./knowledge";
+export * from "./mcp";
 export * from "./obs";
 export * from "./persona-templates";
 export * from "./staff";

@@ -14,12 +14,21 @@ import {
   BookOutlined,
   ThunderboltOutlined,
   ToolOutlined,
+  ApiOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export type MenuKey = "office" | "staffs" | "teams" | "runs" | "knowledge" | "skills" | "tools";
+export type MenuKey =
+  | "office"
+  | "staffs"
+  | "teams"
+  | "runs"
+  | "knowledge"
+  | "skills"
+  | "tools"
+  | "mcp";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -76,6 +85,13 @@ const MENUS: Array<{
     label: "工具",
     icon: <ToolOutlined />,
     match: /^\/tools(\/|$)/,
+  },
+  {
+    key: "mcp",
+    href: "/mcp",
+    label: "MCP 服务",
+    icon: <ApiOutlined />,
+    match: /^\/mcp(\/|$)/,
   },
 ];
 
