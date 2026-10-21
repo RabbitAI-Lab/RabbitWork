@@ -2,24 +2,26 @@ import { expect, test } from "./fixtures";
 
 /**
  * INFRA-001 脚手架冒烟（三类断言齐备：UI + Console + 接口，rules/testing §3.1）。
- * 用户路径完整（§3.2.2）：从首页 `/` 出发。
+ * 2026-10-21 对齐现状：`/` 已改为 redirect → /office（首页改版，home-* testid 移除）；
+ * Tailwind 红线断言（rules/react-nextjs §5.5）迁至 office 页 font-mono 元素。
  */
-test("INFRA-001-01 脚手架冒烟：首页渲染 + Tailwind 生效 + health/ready 可用", async ({
-  page,
+test("INFRA-001-01 脚手架冒烟：首页重定向 office + Tailwind 生效 + health/ready 可用", async ({
+  authedPage: page,
   expectNoConsoleErrors,
 }) => {
   await page.goto("/");
 
-  // ── UI 断言 ──
-  await expect(page.getByTestId("home-title")).toHaveText("RabbitWork");
-  await expect(page.getByTestId("home-subtitle")).toBeVisible();
+  // ── UI 断言：`/` 重定向至办公室（首页改版后的固定行为）──
+  await expect(page).toHaveURL(/\/office/u);
+  await expect(page.getByTestId("office-page")).toBeVisible();
 
   // 样式加载红线（rules/react-nextjs §5.5）：Tailwind 未安装/构建丢失立即红灯
-  // （bg-slate-50 在 Tailwind v4 为 oklch 色；RabbitAITest「类名写了但 Tailwind 未安装」事故的守门断言）
-  const bg = await page
-    .getByTestId("home-main")
-    .evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).toBe("oklch(0.984 0.003 247.858)");
+  // （楼层计数 span 使用 font-mono 工具类；原 home-main 元素随首页改版移除）
+  const mono = await page
+    .getByText(/工位在用/u)
+    .first()
+    .evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(mono.toLowerCase()).toContain("jetbrains mono");
 
   // ── Console 断言 ──
   await expectNoConsoleErrors();

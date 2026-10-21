@@ -23,6 +23,8 @@ export const test = base.extend<{
     urlGlob: string,
     method?: string,
   ) => Promise<{ status: number; code: number; data: unknown; body: unknown }>;
+  /** 已登录页（种子管理员 API 登录 + 会话 cookie 注入；rules/testing §3.2.4 authedPage） */
+  authedPage: import("@playwright/test").Page;
 }>({
   page: async ({ page: basePage }, use, testInfo) => {
     await use(basePage);
@@ -75,6 +77,21 @@ export const test = base.extend<{
       const body = (await res.json().catch(() => ({}))) as { code?: number; data?: unknown };
       return { status: res.status(), code: body.code ?? -1, data: body.data ?? null, body };
     });
+  },
+  authedPage: async ({ page }, use) => {
+    // 种子管理员（packages/db/prisma/seed.ts）；API 级鉴权准备,非被测功能
+    const res = await page.request.post("/api/v1/auth/login", {
+      data: { email: "admin@rabbitwork.local", password: "rabbit123" },
+    });
+    if (res.status() !== 200) {
+      throw new Error(`authedPage 登录失败：HTTP ${res.status()}（检查 e2e 栈 seed）`);
+    }
+    const raw = res.headers()["set-cookie"] ?? "";
+    const [name, value] = raw.split(";")[0]!.split("=");
+    await page
+      .context()
+      .addCookies([{ name: name!, value: value!, domain: "localhost", path: "/" }]);
+    await use(page);
   },
 });
 
