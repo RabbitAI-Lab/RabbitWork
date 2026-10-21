@@ -1,4 +1,4 @@
-/** team 域 DTO 映射与成员查询 include(路由共用)。 */
+/** team 域 DTO 映射与成员查询 include(路由共用)；TEAM-001 运行面同步态派生。 */
 import { Prisma } from "@prisma/client";
 import type { TeamDetailDto, TeamDto, TeamMemberDto } from "@rabbit/shared";
 
@@ -22,6 +22,22 @@ function toMemberDto(m: TeamWithMembers["members"][number]): TeamMemberDto {
   };
 }
 
+/** 同步状态派生（TEAM-001 §2.1 状态机；纯函数供单测） */
+export function deriveSyncState(team: {
+  asTeamId: string | null;
+  asSyncError: string | null;
+}): "SYNCED" | "LOCAL_ONLY" | "SYNC_FAILED" {
+  if (!team.asTeamId) return "LOCAL_ONLY";
+  return team.asSyncError ? "SYNC_FAILED" : "SYNCED";
+}
+
+/** 同步失败原因归一（AgentScopeError → 截断 512 落库；不含凭据——client 层已截断 body） */
+export function toSyncErrorText(e: unknown): string {
+  const raw =
+    e instanceof Error ? e.message : e instanceof Object ? JSON.stringify(e) : String(e);
+  return raw.slice(0, 512);
+}
+
 export function toTeamDto(team: TeamWithMembers): TeamDto {
   const members = team.members.map(toMemberDto);
   return {
@@ -32,6 +48,10 @@ export function toTeamDto(team: TeamWithMembers): TeamDto {
     status: team.status,
     memberCount: members.length,
     leaderName: members.find((m) => m.role === "LEADER")?.employeeName ?? null,
+    asTeamId: team.asTeamId,
+    asSyncedAt: team.asSyncedAt?.toISOString() ?? null,
+    asSyncError: team.asSyncError,
+    syncState: deriveSyncState(team),
     createdAt: team.createdAt.toISOString(),
     updatedAt: team.updatedAt.toISOString(),
   };

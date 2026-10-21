@@ -38,6 +38,41 @@ export interface ChatHandle {
   eventsUrl?: string;
 }
 
+// ───── teams 浅映射（TEAM-001；契约 2026-10-21 实测冻结） ─────
+
+/** GET/POST /api/v1/teams 的 team 形态（实测：policy 可默认 {}，version 随 PATCH 自增） */
+export interface AsTeam {
+  id: string;
+  tenant?: string;
+  namespace?: string;
+  name: string;
+  status?: string; // active | …（实测仅见 active）
+  leaderAgentId: string;
+  policy?: {
+    maxActiveTasks?: number;
+    maxHops?: number;
+    maxChildDepth?: number;
+    maxChildIssues?: number;
+    maxFanout?: number;
+  };
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * agent-tasks 归一化条目（TEAM-001 §4.1 R-TASK-SHAPE：实例暂无任务数据，上游原始形状
+ * 未冻结——此处已是平台归一化形态，字段全可选防御，映射规则见 client.normalizeTasks）。
+ */
+export interface AsAgentTask {
+  id: string;
+  title: string | null;
+  status: string | null;
+  assignee: string | null;
+  updatedAt: string | null;
+}
+
+
 // ───── 事件（上游信封 → 平台归一化） ─────
 
 /** 上游事件信封（replay 数组元素 / SSE data 帧同构；防御式全可选） */

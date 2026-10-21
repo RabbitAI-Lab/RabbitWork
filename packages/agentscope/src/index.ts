@@ -5,14 +5,23 @@
  */
 import { AgentScopeClient, AgentScopeError } from "./client";
 import { MockAgentScope } from "./mock";
-import type { AgentScopeOptions, AsAgent, AsRawEvent, ChatHandle, ProviderMode } from "./types";
+import type {
+  AgentScopeOptions,
+  AsAgent,
+  AsAgentTask,
+  AsRawEvent,
+  ChatHandle,
+  ProviderMode,
+} from "./types";
 
 export { AgentScopeError } from "./client";
 export { normalizeEvent, normalizeEvents, summarizeRun } from "./events";
 export type {
   AgentScopeOptions,
   AsAgent,
+  AsAgentTask,
   AsRawEvent,
+  AsTeam,
   ChatEvent,
   ChatHandle,
   EventMeta,
@@ -34,9 +43,25 @@ export interface EnsureAgentResult {
   usedFallback: boolean;
 }
 
+/** TEAM-001 浅映射：建队/改队归一入口（asTeamId 空则建，非空则改；同名复用） */
+export interface EnsureTeamInput {
+  name: string;
+  leaderAgentId: string;
+  /** 已关联的上游团队 id；空 = 需要创建 */
+  asTeamId?: string | null;
+}
+
+export interface EnsureTeamResult {
+  teamId: string;
+  /** true = 未发起新建，命中既有上游团队（同名匹配/更新既有） */
+  reusedExisting: boolean;
+}
+
 export interface AgentScopeProvider {
   readonly mode: ProviderMode;
   ensureAgent(input: EnsureAgentInput): Promise<EnsureAgentResult>;
+  ensureTeam(input: EnsureTeamInput): Promise<EnsureTeamResult>;
+  listAgentTasks(teamId?: string): Promise<AsAgentTask[]>;
   startChat(agentId: string, firstMessage?: string): Promise<ChatHandle>;
   sendTurn(chatId: string, agentId: string, message: string): Promise<ChatHandle>;
   fetchEvents(sessionId: string, chatId: string): Promise<AsRawEvent[]>;
@@ -72,7 +97,7 @@ export function createAgentScopeProvider(
 
 // ───── real ─────
 
-class RealProvider implements AgentScopeProvider {
+export class RealProvider implements AgentScopeProvider {
   readonly mode = "real" as const;
   constructor(
     private opts: AgentScopeOptions,
@@ -110,6 +135,45 @@ class RealProvider implements AgentScopeProvider {
       agentStatus: agent.status ?? "unknown",
       usedFallback: false,
     };
+  }
+
+  async ensureTeam(input: EnsureTeamInput): Promise<EnsureTeamResult> {
+    // 已关联 → 更新；上游团队丢失（404）→ 落到建队路径重建关联
+    if (input.asTeamId) {
+      try {
+        const team = await this.client.updateTeam(input.asTeamId, {
+          name: input.name,
+          leaderAgentId: input.leaderAgentId,
+        });
+        return { teamId: team.id, reusedExisting: true };
+      } catch (e) {
+        if (!(e instanceof AgentScopeError) || e.status !== 404) throw e;
+      }
+    }
+    try {
+      const team = await this.client.createTeam({
+        name: input.name,
+        leaderAgentId: input.leaderAgentId,
+      });
+      return { teamId: team.id, reusedExisting: false };
+    } catch (e) {
+      // 同名冲突（如本地未同步过的重建）→ 列表匹配既有团队回写关联（TEAM-001 §2.2.4）
+      if (!(e instanceof AgentScopeError)) throw e;
+      const teams = await this.client.listTeams();
+      const match = teams.find((t) => t.name === input.name);
+      if (!match) throw e;
+      await this.client.updateTeam(match.id, {
+        name: input.name,
+        leaderAgentId: input.leaderAgentId,
+      });
+      return { teamId: match.id, reusedExisting: true };
+    }
+  }
+
+  async listAgentTasks(_teamId?: string): Promise<AsAgentTask[]> {
+    // 上游暂无按团队过滤的已冻结参数（TEAM-001 §4.1 R-TASK-SHAPE）——返回 namespace 全量，
+    // 形状冻结后在此接过滤；_teamId 保留形参以对齐 Provider 接口
+    return this.client.listAgentTasks();
   }
 
   async startChat(agentId: string, firstMessage?: string): Promise<ChatHandle> {
@@ -150,6 +214,25 @@ class MockProvider implements AgentScopeProvider {
       agentStatus: "active",
       usedFallback: false,
     };
+  }
+
+  async ensureTeam(input: EnsureTeamInput): Promise<EnsureTeamResult> {
+    if (input.asTeamId) {
+      const team = await this.mock.updateTeam(input.asTeamId, {
+        name: input.name,
+        leaderAgentId: input.leaderAgentId,
+      });
+      return { teamId: team.id, reusedExisting: true };
+    }
+    const team = await this.mock.createTeam({
+      name: input.name,
+      leaderAgentId: input.leaderAgentId,
+    });
+    return { teamId: team.id, reusedExisting: false };
+  }
+
+  async listAgentTasks(teamId?: string): Promise<AsAgentTask[]> {
+    return this.mock.listAgentTasks(teamId);
   }
 
   async startChat(agentId: string, firstMessage?: string): Promise<ChatHandle> {

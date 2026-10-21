@@ -10,10 +10,11 @@ export type PermissionAction =
   | "UPDATE"
   | "DELETE"
   | "PUBLISH" // 域专用：数字员工发布/下线（STAFF-001）
-  | "SEND"; // 域专用：会话发消息/打断（CHAT-001）
+  | "SEND" // 域专用：会话发消息/打断（CHAT-001）
+  | "WRITE"; // 域专用：资源域变更类合一（技能/知识库建档与改档，RESOURCE 域）
 
 const PERMISSION_RE =
-  /^(SYSTEM|ORG|PROJECT)_[A-Z][A-Z_]*:(READ|CREATE|UPDATE|DELETE|PUBLISH|SEND)$/;
+  /^(SYSTEM|ORG|PROJECT)_[A-Z][A-Z_]*:(READ|CREATE|UPDATE|DELETE|PUBLISH|SEND|WRITE)$/;
 
 /** S0 基线 + S1 staff/chat 域权限点；后续域随规格登记。 */
 export const PERMISSIONS = [

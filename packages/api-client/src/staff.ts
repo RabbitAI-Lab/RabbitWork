@@ -13,6 +13,7 @@ import type {
   TeamDetailDto,
   TeamDto,
   TeamMemberAddInput,
+  TeamTasksResultDto,
   TeamUpdateInput,
 } from "@rabbit/shared";
 
@@ -105,4 +106,8 @@ export const teamApi = {
     post<TeamDetailDto>(`/api/v1/teams/${id}/members`, input),
   removeMember: (id: string, employeeId: string) =>
     del<TeamDetailDto>(`/api/v1/teams/${id}/members?employeeId=${encodeURIComponent(employeeId)}`),
+  /** 手动同步/重试运行面（TEAM-001） */
+  sync: (id: string) => post<TeamDetailDto>(`/api/v1/teams/${id}/sync`, {}),
+  /** 任务只读视图（agent-tasks 浅映射，TEAM-001） */
+  tasks: (id: string) => get<TeamTasksResultDto>(`/api/v1/teams/${id}/tasks`),
 };

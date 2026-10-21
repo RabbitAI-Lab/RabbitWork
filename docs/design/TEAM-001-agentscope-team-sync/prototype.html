@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TEAM-001 团队协作复用 AgentScope teams（浅映射）— RabbitWork 高保真原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* =========================================================
+         RabbitWork DS v2.1 tokens（与 apps/web/src/app/theme/tokens.css 同源）
+         ========================================================= */
+      :root {
+        --rw-bg: #fafafa;
+        --rw-card: #ffffff;
+        --rw-fg: #0f172a;
+        --rw-fg-muted: #64748b;
+        --rw-fg-subtle: #94a3b8;
+        --rw-border: #e4e8ee;
+        --rw-border-strong: #cbd5e1;
+        --rw-accent: #10b981;
+        --rw-accent-hover: #059669;
+        --rw-accent-fg: #ffffff;
+        --rw-accent-subtle: #ecfdf5;
+        --rw-success: #10b981;
+        --rw-success-subtle: #ecfdf5;
+        --rw-warning: #d97706;
+        --rw-warning-subtle: #fef3e2;
+        --rw-danger: #dc2626;
+        --rw-danger-subtle: #fdecec;
+        --rw-muted-subtle: #f1f5f9;
+        --rw-ring: rgba(16, 185, 129, 0.45);
+        --rw-shadow-float: 0 8px 24px rgba(15, 23, 42, 0.12);
+        --font-display: "Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-body: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --t-fast: 140ms;
+        --t-base: 200ms;
+        --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .dark {
+        --rw-bg: #0b0f1a;
+        --rw-card: #111827;
+        --rw-fg: #f1f5f9;
+        --rw-fg-muted: #94a3b8;
+        --rw-fg-subtle: #5b6b82;
+        --rw-border: #1e293b;
+        --rw-border-strong: #334155;
+        --rw-accent: #34d399;
+        --rw-accent-hover: #6ee7b7;
+        --rw-accent-fg: #052e21;
+        --rw-accent-subtle: rgba(52, 211, 153, 0.12);
+        --rw-success: #34d399;
+        --rw-success-subtle: rgba(52, 211, 153, 0.12);
+        --rw-warning: #f59e0b;
+        --rw-warning-subtle: rgba(245, 158, 11, 0.14);
+        --rw-danger: #f87171;
+        --rw-danger-subtle: rgba(248, 113, 113, 0.12);
+        --rw-muted-subtle: rgba(148, 163, 184, 0.1);
+        --rw-ring: rgba(52, 211, 153, 0.5);
+        --rw-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      html { font-size: 16px; }
+      body {
+        background: var(--rw-bg);
+        color: var(--rw-fg);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        transition: background 200ms var(--ease-out), color 200ms var(--ease-out);
+      }
+      .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+      .font-mono { font-family: var(--font-mono); }
+      .num { font-variant-numeric: tabular-nums; }
+      .rw-card { background: var(--rw-card); border: 1px solid var(--rw-border); border-radius: var(--radius-md); }
+      .rw-hover { transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+      .rw-hover:hover { transform: translateY(-3px); border-color: var(--rw-border-strong); box-shadow: var(--rw-shadow-float); }
+      .btn-primary {
+        background: var(--rw-accent); color: var(--rw-accent-fg); border-radius: var(--radius-sm);
+        padding: 0 16px; height: 32px; font-size: 14px; font-weight: 500;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-primary:hover { background: var(--rw-accent-hover); box-shadow: 0 0 0 4px var(--rw-ring); }
+      .btn-primary:active { transform: scale(0.96); }
+      .btn-default {
+        background: var(--rw-card); color: var(--rw-fg); border: 1px solid var(--rw-border-strong);
+        border-radius: var(--radius-sm); padding: 0 16px; height: 32px; font-size: 14px;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-default:hover { border-color: var(--rw-accent); color: var(--rw-accent); }
+      .btn-text { color: var(--rw-fg-muted); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 14px; transition: all 140ms var(--ease-out); }
+      .btn-text:hover { background: var(--rw-muted-subtle); color: var(--rw-fg); }
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+        padding: 2px 10px; font-size: 12px; font-weight: 500; line-height: 20px;
+      }
+      .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+      .pill-success { background: var(--rw-success-subtle); color: var(--rw-success); }
+      .pill-success .pill-dot { background: var(--rw-success); animation: breathe 2.4s ease-in-out infinite; }
+      .pill-warning { background: var(--rw-warning-subtle); color: var(--rw-warning); }
+      .pill-warning .pill-dot { background: var(--rw-warning); }
+      .pill-muted { background: var(--rw-muted-subtle); color: var(--rw-fg-muted); }
+      .pill-muted .pill-dot { background: var(--rw-fg-subtle); }
+      .pill-danger { background: var(--rw-danger-subtle); color: var(--rw-danger); }
+      .pill-danger .pill-dot { background: var(--rw-danger); }
+      @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+      .tab {
+        padding: 8px 4px; margin-right: 24px; font-size: 14px; color: var(--rw-fg-muted);
+        border-bottom: 2px solid transparent; transition: all 140ms var(--ease-out); cursor: pointer;
+      }
+      .tab:hover { color: var(--rw-fg); }
+      .tab.active { color: var(--rw-accent); border-bottom-color: var(--rw-accent); font-weight: 500; }
+      .tab .num { margin-left: 4px; color: var(--rw-fg-subtle); font-size: 12px; }
+      .modal-mask { background: rgba(15, 23, 42, 0.45); }
+      .modal {
+        background: var(--rw-card); border-radius: var(--radius-lg); box-shadow: var(--rw-shadow-float);
+        border: 1px solid var(--rw-border);
+      }
+      .input {
+        background: var(--rw-card); border: 1px solid var(--rw-border-strong); border-radius: var(--radius-sm);
+        height: 32px; padding: 0 12px; font-size: 14px; color: var(--rw-fg); width: 100%;
+        transition: all 140ms var(--ease-out); outline: none;
+      }
+      .input:focus { border-color: var(--rw-accent); box-shadow: 0 0 0 3px var(--rw-ring); }
+      .avatar {
+        width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--rw-accent-subtle);
+        color: var(--rw-accent); display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 500; flex-shrink: 0;
+      }
+      .row-hover { transition: background 140ms var(--ease-out); }
+      .row-hover:hover { background: var(--rw-muted-subtle); }
+      .section-tag {
+        font-family: var(--font-mono); font-size: 12px; color: var(--rw-accent);
+        background: var(--rw-accent-subtle); border-radius: var(--radius-sm); padding: 2px 8px;
+      }
+      .sync-banner {
+        background: var(--rw-warning-subtle); border: 1px solid var(--rw-warning); border-radius: var(--radius-md);
+      }
+      .kbd { font-family: var(--font-mono); font-size: 11px; background: var(--rw-muted-subtle); border-radius: var(--radius-sm); padding: 1px 6px; color: var(--rw-fg-muted); }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- ═════════ 走查板头 ═════════ -->
+    <header class="sticky top-0 z-10 backdrop-blur-[16px] saturate-[1.4]" style="background: color-mix(in srgb, var(--rw-bg) 82%, transparent); border-bottom: 1px solid var(--rw-border)">
+      <div class="mx-auto flex max-w-[1080px] items-center justify-between px-8 py-3">
+        <div class="flex items-center gap-3">
+          <span class="section-tag">TEAM-001</span>
+          <h1 class="font-display text-[15px] font-semibold">团队协作复用 AgentScope teams · 高保真原型（浅映射）</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs" style="color: var(--rw-fg-subtle)">走查板 · 2026-10-21</span>
+          <button id="themeToggle" class="btn-default !h-8" onclick="document.documentElement.classList.toggle('dark')">🌗 主题切换</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-[1080px] px-8 py-8 space-y-12">
+
+      <!-- ═════════ A. 团队列表卡片：同步徽标 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">A</span>
+          <h2 class="font-display text-[15px] font-semibold">团队列表卡片 — 运行面同步徽标（两态）</h2>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <!-- 已同步 -->
+          <div class="rw-card rw-hover p-5">
+            <div class="mb-3 flex items-start justify-between">
+              <span class="font-display text-[15px] font-semibold">增长策划组</span>
+              <span class="pill pill-success"><span class="pill-dot"></span>运行面已同步</span>
+            </div>
+            <p class="mb-4 text-[13px]" style="color: var(--rw-fg-muted)">季度内容增长与活动策划</p>
+            <div class="flex items-center justify-between text-xs" style="color: var(--rw-fg-subtle)">
+              <span>TL · 林夏</span><span class="num">4 名成员</span>
+            </div>
+          </div>
+          <!-- 未同步（上游失败） -->
+          <div class="rw-card rw-hover p-5">
+            <div class="mb-3 flex items-start justify-between">
+              <span class="font-display text-[15px] font-semibold">数据看护组</span>
+              <span class="pill pill-warning"><span class="pill-dot"></span>同步失败</span>
+            </div>
+            <p class="mb-4 text-[13px]" style="color: var(--rw-fg-muted)">数据质量巡检与报表</p>
+            <div class="flex items-center justify-between text-xs" style="color: var(--rw-fg-subtle)">
+              <span>TL · 陈北</span><span class="num">3 名成员</span>
+            </div>
+          </div>
+          <!-- 未同步（本地新建未推送） -->
+          <div class="rw-card rw-hover p-5">
+            <div class="mb-3 flex items-start justify-between">
+              <span class="font-display text-[15px] font-semibold">渠道触达组</span>
+              <span class="pill pill-muted"><span class="pill-dot"></span>未同步</span>
+            </div>
+            <p class="mb-4 text-[13px]" style="color: var(--rw-fg-muted)">多渠道消息触达编排</p>
+            <div class="flex items-center justify-between text-xs" style="color: var(--rw-fg-subtle)">
+              <span>TL · 周砚</span><span class="num">2 名成员</span>
+            </div>
+          </div>
+        </div>
+        <p class="mt-3 text-xs" style="color: var(--rw-fg-subtle)">
+          徽标三态：<b style="color: var(--rw-success)">运行面已同步</b>（asTeamId 存在且最近同步成功）·
+          <b style="color: var(--rw-warning)">同步失败</b>（上游不可达/被拒，进入详情可重试）·
+          <b style="color: var(--rw-fg-muted)">未同步</b>（本地团队尚未推送，TL 未发布时为此态）
+        </p>
+      </section>
+
+      <!-- ═════════ B. 团队详情页：Tab + 运行面状态 + 任务列表 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">B</span>
+          <h2 class="font-display text-[15px] font-semibold">团队详情页 — 运行面状态行 + 「成员 / 任务」Tab</h2>
+        </div>
+
+        <div class="rw-card p-6">
+          <!-- 面包屑返回 -->
+          <button class="btn-text mb-4 -ml-2 inline-flex items-center gap-1">← 返回团队列表</button>
+
+          <!-- 信息头 -->
+          <div class="mb-5 flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="mb-2 flex flex-wrap items-center gap-2.5">
+                <h3 class="font-display text-xl font-semibold tracking-tight">增长策划组</h3>
+                <span class="pill pill-warning">TL · 林夏</span>
+                <span class="pill pill-success"><span class="pill-dot"></span>运行面已同步</span>
+                <span class="pill pill-muted">4 名成员</span>
+              </div>
+              <p class="mt-1 text-sm" style="color: var(--rw-fg-muted)">季度内容增长与活动策划</p>
+              <p class="mt-0.5 text-[13px]" style="color: var(--rw-fg-subtle)"><span class="font-medium" style="color: var(--rw-fg-muted)">目标：</span>Q4 内容产量 +40%</p>
+              <!-- 运行面状态行（新增） -->
+              <div class="mt-3 flex flex-wrap items-center gap-2 text-xs" style="color: var(--rw-fg-subtle)">
+                <span>AgentScope 团队</span>
+                <span class="kbd">c6f4311a-2495-4180-ac29-e4f335f9c6e1</span>
+                <span>·</span>
+                <span class="num">2026-10-21 14:38 同步</span>
+                <button class="btn-text !px-2 !py-0.5 !text-xs">↻ 重新同步</button>
+              </div>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <button class="btn-default">✎ 编辑</button>
+              <button class="btn-default" style="border-color: var(--rw-danger); color: var(--rw-danger)">🗑</button>
+            </div>
+          </div>
+
+          <!-- Tabs（MASTER §5.3 详情页模式） -->
+          <div class="mb-5 flex items-center border-b" style="border-color: var(--rw-border)">
+            <div class="tab">成员管理<span class="num">4</span></div>
+            <div class="tab active">任务<span class="num">3</span></div>
+          </div>
+
+          <!-- 任务面板（agent-tasks 浅映射 · 只读） -->
+          <div class="mb-3 flex items-center justify-between">
+            <p class="text-xs" style="color: var(--rw-fg-subtle)">
+              任务来自 AgentScope 运行面（只读浅映射）；创建与分派在 AgentScope 控制台完成
+            </p>
+            <button class="btn-default !h-8">↻ 刷新</button>
+          </div>
+          <div class="overflow-hidden rounded-[8px] border" style="border-color: var(--rw-border)">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs" style="background: var(--rw-muted-subtle); color: var(--rw-fg-muted)">
+                  <th class="px-4 py-2.5 font-medium">任务</th>
+                  <th class="px-4 py-2.5 font-medium">状态</th>
+                  <th class="px-4 py-2.5 font-medium">分派对象</th>
+                  <th class="px-4 py-2.5 font-medium text-right">最近更新</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-hover" style="border-top: 1px solid var(--rw-border)">
+                  <td class="px-4 py-2.5">撰写 Q4 增长复盘初稿</td>
+                  <td class="px-4 py-2.5"><span class="pill pill-success"><span class="pill-dot"></span>active</span></td>
+                  <td class="px-4 py-2.5 text-[13px]" style="color: var(--rw-fg-muted)">林夏（TL）</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-subtle)">10-21 14:02</td>
+                </tr>
+                <tr class="row-hover" style="border-top: 1px solid var(--rw-border)">
+                  <td class="px-4 py-2.5">竞品活动监测周报</td>
+                  <td class="px-4 py-2.5"><span class="pill pill-muted"><span class="pill-dot"></span>pending</span></td>
+                  <td class="px-4 py-2.5 text-[13px]" style="color: var(--rw-fg-muted)">—</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-subtle)">10-21 09:41</td>
+                </tr>
+                <tr class="row-hover" style="border-top: 1px solid var(--rw-border)">
+                  <td class="px-4 py-2.5">落地页文案 A/B 测试</td>
+                  <td class="px-4 py-2.5"><span class="pill pill-danger"><span class="pill-dot"></span>failed</span></td>
+                  <td class="px-4 py-2.5 text-[13px]" style="color: var(--rw-fg-muted)">苏晴</td>
+                  <td class="px-4 py-2.5 text-right num text-[13px]" style="color: var(--rw-fg-subtle)">10-20 18:17</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-xs leading-relaxed" style="color: var(--rw-fg-subtle)">
+            状态取自上游 agent-tasks 原值（active / pending / completed / failed…）；点击行展开描述与 policy 运行参数（version / maxHops 等）
+          </p>
+        </div>
+
+        <!-- B2 任务空态 -->
+        <div class="rw-card mt-4 p-6">
+          <div class="mb-3 flex items-center gap-2"><span class="section-tag">B2</span><span class="text-[13px]" style="color: var(--rw-fg-muted)">任务 Tab 空态（上游无任务）</span></div>
+          <div class="flex flex-col items-center justify-center py-10 text-center">
+            <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-[8px]" style="background: var(--rw-muted-subtle); color: var(--rw-fg-subtle); font-size: 20px">📭</div>
+            <p class="mb-1 text-sm" style="color: var(--rw-fg-muted)">该团队在运行面还没有任务</p>
+            <p class="mb-4 text-xs" style="color: var(--rw-fg-subtle)">到 AgentScope 控制台为该团队创建第一个任务，回到此处刷新即可看到</p>
+            <button class="btn-primary">↻ 刷新</button>
+          </div>
+        </div>
+
+        <!-- B3 同步失败横幅 -->
+        <div class="rw-card mt-4 p-6">
+          <div class="mb-3 flex items-center gap-2"><span class="section-tag">B3</span><span class="text-[13px]" style="color: var(--rw-fg-muted)">同步失败态（详情页顶部横幅，真实原因透出）</span></div>
+          <div class="sync-banner flex items-center justify-between gap-4 px-4 py-3">
+            <div class="flex items-start gap-2.5 text-[13px]" style="color: var(--rw-warning)">
+              <span>⚠</span>
+              <div>
+                <p class="font-medium">AgentScope 同步失败：AgentScope 上游错误（HTTP 503）：service unavailable</p>
+                <p class="mt-0.5 text-xs" style="color: var(--rw-fg-subtle)">本地修改已保存；团队当前以本地为准，上游可能滞后</p>
+              </div>
+            </div>
+            <button class="btn-default !h-8" style="border-color: var(--rw-warning); color: var(--rw-warning)">↻ 重试同步</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═════════ C. 新建团队弹窗：同步开关 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">C</span>
+          <h2 class="font-display text-[15px] font-semibold">新建团队弹窗 — 「同步至 AgentScope 运行面」开关</h2>
+        </div>
+        <div class="modal-mask rounded-[12px] p-12">
+          <div class="modal mx-auto w-[560px] p-6">
+            <h3 class="font-display mb-5 text-[15px] font-semibold">新建团队</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="mb-1.5 block text-xs" style="color: var(--rw-fg-muted)">团队名称</label>
+                <input class="input" value="增长策划组" />
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs" style="color: var(--rw-fg-muted)">团队简介（可选）</label>
+                <input class="input" placeholder="一句话说明团队职责" />
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs" style="color: var(--rw-fg-muted)">项目领导（TL）</label>
+                <input class="input" value="林夏（已发布 · 运行面就绪）" readonly />
+                <p class="mt-1 text-xs" style="color: var(--rw-fg-subtle)">TL 决定上游 leaderAgentId；未发布员工不可任 TL（无运行面身份）</p>
+              </div>
+              <div class="flex items-start gap-2.5 rounded-[8px] px-3.5 py-3" style="background: var(--rw-muted-subtle)">
+                <div class="mt-0.5 flex h-4 w-4 items-center justify-center rounded-[4px] text-[10px]" style="background: var(--rw-accent); color: var(--rw-accent-fg)">✓</div>
+                <div class="text-[13px]">
+                  <p style="color: var(--rw-fg)">同步至 AgentScope 运行面</p>
+                  <p class="text-xs" style="color: var(--rw-fg-subtle)">创建即在运行面建立同名团队（leaderAgentId = TL）；关闭则仅本地建队，后续可在详情页手动同步</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+              <button class="btn-default">取消</button>
+              <button class="btn-primary">创 建</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═════════ D. 删除确认：上游留档语义 ═════════ -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="section-tag">D</span>
+          <h2 class="font-display text-[15px] font-semibold">删除团队确认 — 上游留档语义（AgentScope 无删除端点）</h2>
+        </div>
+        <div class="rw-card inline-block p-4" style="box-shadow: var(--rw-shadow-float)">
+          <div class="max-w-[320px]">
+            <p class="mb-1 text-sm font-medium">删除团队「增长策划组」？</p>
+            <p class="mb-3 text-xs leading-relaxed" style="color: var(--rw-fg-muted)">
+              本地团队将归档；AgentScope 运行面将<b style="color: var(--rw-warning)">保留存档</b>（上游暂不支持删除），其任务历史仍可在控制台查看。
+            </p>
+            <div class="flex justify-end gap-2">
+              <button class="btn-default !h-8">取消</button>
+              <button class="btn-primary" style="background: var(--rw-danger)">删 除</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>

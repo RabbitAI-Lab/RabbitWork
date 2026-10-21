@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, parseQuery, toErrorResponse } from "@/server/http";
 import { MEMBERS_INCLUDE, toTeamDto } from "@/server/team-dto";
+import { syncTeamRuntime } from "@/server/team-sync";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,11 +31,23 @@ export async function GET(req: Request) {
   }
 }
 
-/** 创建团队。 */
+/** 创建团队（TEAM-001 §2.2.1：可选随建指定 TL 并同步 AgentScope 运行面）。 */
 export async function POST(req: Request) {
   try {
     const user = await requirePermission("ORG_TEAM:CREATE");
     const input = await parseBody(req, teamCreateInput);
+    // TL 预校验：必须存在且已发布（与入队口径一致）
+    let leader: { id: string; asAgentId: string | null } | null = null;
+    if (input.leaderEmployeeId) {
+      const employee = await prisma.digitalEmployee.findFirst({
+        where: { id: input.leaderEmployeeId, orgId: defaultOrgId(), deletedAt: null },
+        select: { id: true, asAgentId: true, status: true },
+      });
+      if (!employee || employee.status !== "PUBLISHED") {
+        throw new DomainError(ErrCode.STAFF_NOT_PUBLISHED, "项目领导必须是已发布数字员工");
+      }
+      leader = employee;
+    }
     try {
       const team = await prisma.team.create({
         data: {
@@ -43,10 +56,14 @@ export async function POST(req: Request) {
           description: input.description ?? null,
           goal: input.goal ?? null,
           creatorId: user.uid,
+          ...(leader ? { members: { create: { employeeId: leader.id, role: "LEADER" } } } : {}),
         },
         include: MEMBERS_INCLUDE,
       });
-      return jsonOk(toTeamDto(team), { status: 201 });
+      // 同步运行面（默认开）：上游失败不阻塞创建，落 asSyncError（TEAM-001 §2.2.1）
+      const final =
+        (input.syncToRuntime ?? true) && leader ? await syncTeamRuntime(team.id) : team;
+      return jsonOk(toTeamDto(final ?? team), { status: 201 });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
         throw new DomainError(ErrCode.VALIDATION_FAILED, `团队名「${input.name}」已存在`);

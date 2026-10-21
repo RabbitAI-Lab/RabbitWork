@@ -1,5 +1,12 @@
-/** AgentScope 真实客户端：JWT 登录/缓存、agents/chats/turns/events（契约 2026-10-17 实测冻结）。 */
-import type { AgentScopeOptions, AsAgent, AsRawEvent, ChatHandle } from "./types";
+/** AgentScope 真实客户端：JWT 登录/缓存、agents/chats/turns/events + teams 浅映射（契约 2026-10-17/10-21 实测冻结）。 */
+import type {
+  AgentScopeOptions,
+  AsAgent,
+  AsAgentTask,
+  AsRawEvent,
+  AsTeam,
+  ChatHandle,
+} from "./types";
 
 export class AgentScopeError extends Error {
   constructor(
@@ -115,6 +122,48 @@ export class AgentScopeClient {
     if (!data.agent?.id)
       throw new AgentScopeError(500, JSON.stringify(data), "AgentScope 建档无返回 id");
     return data.agent;
+  }
+
+  // ───── teams（TEAM-001 浅映射；契约 2026-10-21 实测） ─────
+
+  async listTeams(): Promise<AsTeam[]> {
+    const data = await this.api<{ items?: AsTeam[] }>(`/api/v1/teams?${this.scope()}`);
+    return data.items ?? [];
+  }
+
+  async createTeam(input: { name: string; leaderAgentId: string }): Promise<AsTeam> {
+    const data = await this.api<{ team?: AsTeam }>("/api/v1/teams", {
+      method: "POST",
+      body: JSON.stringify({
+        tenant: this.opts.tenant,
+        namespace: this.opts.namespace,
+        name: input.name,
+        leaderAgentId: input.leaderAgentId,
+      }),
+    });
+    if (!data.team?.id) {
+      throw new AgentScopeError(500, JSON.stringify(data), "AgentScope 建队无返回 id");
+    }
+    return data.team;
+  }
+
+  async updateTeam(teamId: string, input: { name: string; leaderAgentId: string }): Promise<AsTeam> {
+    // 上游 PATCH 实测要求 name+leaderAgentId 两者必填（缺一 400）
+    const data = await this.api<{ team?: AsTeam }>(
+      `/api/v1/teams/${encodeURIComponent(teamId)}?${this.scope()}`,
+      { method: "PATCH", body: JSON.stringify(input) },
+    );
+    if (!data.team?.id) {
+      throw new AgentScopeError(500, JSON.stringify(data), "AgentScope 更新团队无返回");
+    }
+    return data.team;
+  }
+
+  // ───── agent-tasks（只读浅映射） ─────
+
+  async listAgentTasks(): Promise<AsAgentTask[]> {
+    const data = await this.api<{ items?: unknown[] }>(`/api/v1/agent-tasks?${this.scope()}`);
+    return (data.items ?? []).map(normalizeTask).filter((t): t is AsAgentTask => t !== null);
   }
 
   // ───── chats / turns ─────
@@ -249,6 +298,24 @@ function chatHandleOf(data: Record<string, unknown>): ChatHandle {
 
 function str(v: unknown): string | null {
   return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+/**
+ * agent-tasks 条目归一化（R-TASK-SHAPE：上游形状未冻结，按候选键名防御式提取；
+ * 无 id 的条目整体丢弃，其余字段缺失置 null——视图层按空值降级展示）。
+ */
+function normalizeTask(raw: unknown): AsAgentTask | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const t = raw as Record<string, unknown>;
+  const id = str(t.id) ?? str(t.taskId);
+  if (!id) return null;
+  return {
+    id,
+    title: str(t.title) ?? str(t.name) ?? str(t.summary),
+    status: str(t.status) ?? str(t.state),
+    assignee: str(t.assignee) ?? str(t.assigneeAgentId) ?? str(t.agentId),
+    updatedAt: str(t.updatedAt) ?? str(t.lastModifiedAt) ?? str(t.createdAt),
+  };
 }
 
 /** 解析 JWT exp（ms）；解析失败返回 null（调用方按 1 小时兜底） */

@@ -490,7 +490,9 @@ model Team {
   goal        String?   @db.VarChar(1024) // 团队目标
   status      String    @default("ACTIVE") @db.VarChar(32) // ACTIVE | ARCHIVED
   creatorId   String?   @map("creator_id")
-  asTeamId    String?   @map("as_team_id") @db.VarChar(64) // AgentScope teams 映射（S6+）
+  asTeamId    String?   @map("as_team_id") @db.VarChar(64) // AgentScope teams 映射（TEAM-001 浅映射）
+  asSyncedAt  DateTime? @map("as_synced_at") @db.Timestamptz(3) // 最近一次上游同步成功时间
+  asSyncError String?   @map("as_sync_error") @db.VarChar(512) // 最近同步失败原因（透出给前端，重试成功清空）
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)

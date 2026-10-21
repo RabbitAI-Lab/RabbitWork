@@ -3,6 +3,7 @@ import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { MEMBERS_INCLUDE, toTeamDetailDto } from "@/server/team-dto";
+import { syncTeamRuntime } from "@/server/team-sync";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +43,11 @@ export async function POST(req: Request, ctx: Ctx) {
       });
     });
 
-    const updated = await prisma.team.findUnique({ where: { id }, include: MEMBERS_INCLUDE });
+    // 设 TL 触发运行面同步（TEAM-001 §2.2：新队长 → ensureTeam 建/改上游团队）
+    const updated =
+      input.role === "LEADER"
+        ? await syncTeamRuntime(id)
+        : await prisma.team.findUnique({ where: { id }, include: MEMBERS_INCLUDE });
     return jsonOk(toTeamDetailDto(updated!));
   } catch (e) {
     return toErrorResponse(e);

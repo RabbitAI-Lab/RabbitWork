@@ -29,9 +29,11 @@ export default defineConfig({
   webServer: {
     // 全部必需 env 经 bash 默认展开注入（global-setup 起的 PG 端口即默认值；E2E_* 为显式
     // 覆盖口——CI service 库或修复循环常驻库复用模式，rules/testing §3.4.2）
+    // AGENTSCOPE 默认 mock（mock.ts 头注「CI/e2e 一律 mock」；E2E_AGENTSCOPE_MODE=real 可覆盖）
     command:
       `bash -c 'DATABASE_URL="\${E2E_DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:${E.e2e.pgPort}/${E.e2e.database}}" ` +
-      `REDIS_URL="\${E2E_REDIS_URL:-}" PORT=${E.e2e.webPort} pnpm --filter web start'`,
+      `REDIS_URL="\${E2E_REDIS_URL:-}" AGENTSCOPE_MODE="\${E2E_AGENTSCOPE_MODE:-mock}" ` +
+      `PORT=${E.e2e.webPort} pnpm --filter web start'`,
     cwd: "..",
     url: `${E.e2e.webUrl}/api/v1/system/health`,
     reuseExistingServer: !process.env.CI,

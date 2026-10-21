@@ -1,6 +1,7 @@
 /** Mock 运行时：无 AgentScope 实例时的确定性脚本回复（CI/e2e 一律走本模式——蓝图 §8）。 */
 import { randomUUID } from "node:crypto";
-import type { AgentScopeOptions, AsRawEvent, ChatHandle } from "./types";
+import { AgentScopeError } from "./client";
+import type { AgentScopeOptions, AsAgentTask, AsRawEvent, AsTeam, ChatHandle } from "./types";
 
 interface MockChat {
   sessionId: string;
@@ -11,11 +12,17 @@ interface MockChat {
 /**
  * 事件信封与真实实例同构（event_delta/item.completed/usage.recorded/run.ended），
  * 供上层归一化链路与真实模式共用同一套代码路径。
+ *
+ * teams 浅映射确定性约定（TEAM-001）：
+ * - 团队名以 "FAIL:" 开头 → ensureTeam 抛 503（e2e/jmx 同步失败态演练；改名后即恢复）；
+ * - 每个经 ensureTeam 建出的团队自动挂 2 条任务（C6 有数据）；LOCAL_ONLY 团队无任务（C7 空态）。
  */
 export class MockAgentScope {
   readonly mode = "mock" as const;
   private agents = new Map<string, { displayName: string; description?: string }>();
   private chats = new Map<string, MockChat>();
+  private teams = new Map<string, AsTeam>();
+  private tasks = new Map<string, AsAgentTask[]>();
   private seq = 0;
 
   constructor(_opts: AgentScopeOptions) {
@@ -44,6 +51,57 @@ export class MockAgentScope {
       status: "active",
       version: 1,
     };
+  }
+
+  async listTeams(): Promise<AsTeam[]> {
+    return [...this.teams.values()].map((t) => ({ ...t }));
+  }
+
+  async createTeam(input: { name: string; leaderAgentId: string }): Promise<AsTeam> {
+    return this.upsertTeam(undefined, input);
+  }
+
+  async updateTeam(teamId: string, input: { name: string; leaderAgentId: string }): Promise<AsTeam> {
+    return this.upsertTeam(teamId, input);
+  }
+
+  async listAgentTasks(teamId?: string): Promise<AsAgentTask[]> {
+    if (!teamId) return [...this.tasks.values()].flat();
+    return [...(this.tasks.get(teamId) ?? [])];
+  }
+
+  private upsertTeam(teamId: string | undefined, input: { name: string; leaderAgentId: string }): AsTeam {
+    if (input.name.startsWith("FAIL:")) {
+      // 故障注入（确定性）：同步失败态的 e2e/jmx 演练开关
+      throw new AgentScopeError(503, "mock injected failure", "AgentScope 上游不可用（mock 注入）");
+    }
+    const existing = teamId ? this.teams.get(teamId) : undefined;
+    if (teamId && !existing) {
+      throw new AgentScopeError(404, "mock team not found", "AgentScope 团队不存在（mock）");
+    }
+    const id = existing?.id ?? `mock-team-${randomUUID().slice(0, 8)}`;
+    const team: AsTeam = {
+      ...existing,
+      id,
+      name: input.name,
+      leaderAgentId: input.leaderAgentId,
+      status: "active",
+      policy: existing?.policy ?? {},
+      version: (existing?.version ?? 0) + 1,
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    this.teams.set(id, team);
+    if (!existing) {
+      this.tasks.set(
+        id,
+        [
+          { id: `mock-task-${id}-1`, title: "Mock 演练任务·撰写复盘初稿", status: "active", assignee: null, updatedAt: new Date().toISOString() },
+          { id: `mock-task-${id}-2`, title: "Mock 演练任务·竞品监测周报", status: "pending", assignee: null, updatedAt: new Date().toISOString() },
+        ],
+      );
+    }
+    return { ...team };
   }
 
   async createChat(agentId: string, message?: string): Promise<ChatHandle> {

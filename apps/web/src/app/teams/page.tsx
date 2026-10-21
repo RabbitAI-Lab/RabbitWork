@@ -2,24 +2,66 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { App, Button, Empty, Form, Input, Modal, Skeleton } from "antd";
+import { App, Button, Empty, Form, Input, Modal, Select, Skeleton, Switch } from "antd";
 import { PlusOutlined, TeamOutlined, ArrowRightOutlined, CrownOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { teamApi } from "@rabbit/api-client";
-import type { TeamCreateInput } from "@rabbit/shared";
+import { staffApi, teamApi } from "@rabbit/api-client";
+import type { TeamCreateInput, TeamDto } from "@rabbit/shared";
 
-/** 我的团队（DS v2.1）:团队列表 + 创建。 */
+/** 同步徽标三态（TEAM-001 §2.1 状态机派生）。 */
+function SyncBadge({ team }: { team: TeamDto }) {
+  if (team.syncState === "SYNCED") {
+    return (
+      <span
+        className="bg-rw-success-subtle text-rw-success inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+        data-testid={`team-sync-badge-${team.name}`}
+      >
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rw-success" />
+        运行面已同步
+      </span>
+    );
+  }
+  if (team.syncState === "SYNC_FAILED") {
+    return (
+      <span
+        className="bg-rw-warning-subtle text-rw-warning inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+        data-testid={`team-sync-badge-${team.name}`}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-rw-warning" />
+        同步失败
+      </span>
+    );
+  }
+  return (
+    <span
+      className="bg-rw-muted-subtle text-rw-fg-muted inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
+      data-testid={`team-sync-badge-${team.name}`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-rw-fg-subtle" />
+      未同步
+    </span>
+  );
+}
+
+type CreateForm = TeamCreateInput & { syncToRuntime: boolean };
+
+/** 我的团队（DS v2.1）：团队列表 + 创建（TEAM-001：可选 TL 随建同步运行面）。 */
 export default function TeamsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { message } = App.useApp();
   const [open, setOpen] = useState(false);
-  const [form] = Form.useForm<TeamCreateInput>();
+  const [form] = Form.useForm<CreateForm>();
+  const leaderId = Form.useWatch("leaderEmployeeId", form);
 
   const list = useQuery({ queryKey: ["teams"], queryFn: () => teamApi.list({ pageSize: 50 }) });
+  const staffs = useQuery({
+    queryKey: ["staffs", "published"],
+    queryFn: () => staffApi.list({ pageSize: 100 }),
+  });
   const create = useMutation({
-    mutationFn: (input: TeamCreateInput) => teamApi.create(input),
+    mutationFn: (input: CreateForm) => teamApi.create(input),
     onSuccess: () => {
       message.success("团队已创建,去添加成员吧");
       setOpen(false);
@@ -28,6 +70,9 @@ export default function TeamsPage() {
     },
     onError: (e) => message.error(e instanceof Error ? e.message : "创建失败"),
   });
+
+  // TL 候选：仅已发布员工（有运行面身份；后端同样校验）
+  const leaders = (staffs.data?.items ?? []).filter((s) => s.status === "PUBLISHED");
 
   return (
     <AppShell active="teams">
@@ -86,7 +131,7 @@ export default function TeamsPage() {
                     <TeamOutlined />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-[15px] font-semibold text-rw-fg">
                         {t.name}
                       </span>
@@ -96,6 +141,7 @@ export default function TeamsPage() {
                           {t.leaderName}
                         </span>
                       )}
+                      <SyncBadge team={t} />
                     </div>
                     <div className="mt-0.5 truncate text-xs text-rw-fg-subtle">
                       {t.description || t.goal || "暂无描述"}
@@ -131,7 +177,15 @@ export default function TeamsPage() {
             form={form}
             layout="vertical"
             requiredMark={false}
-            onFinish={(v) => create.mutate(v)}
+            initialValues={{ syncToRuntime: true }}
+            onFinish={(v) =>
+              create.mutate({
+                ...v,
+                // 未选 TL 时同步开关无意义（无运行面身份），按仅本地建队提交（TEAM-001 §2.2.1）
+                syncToRuntime: Boolean(v.syncToRuntime && v.leaderEmployeeId),
+                leaderEmployeeId: v.leaderEmployeeId || undefined,
+              })
+            }
           >
             <Form.Item
               name="name"
@@ -143,8 +197,37 @@ export default function TeamsPage() {
             <Form.Item name="description" label="团队简介(可选)">
               <Input placeholder="一句话说明团队的职责" maxLength={512} />
             </Form.Item>
-            <Form.Item name="goal" label="团队目标(可选)" className="!mb-0">
+            <Form.Item name="goal" label="团队目标(可选)">
               <Input.TextArea rows={2} placeholder="如:每周产出 5 篇优质内容" maxLength={1024} />
+            </Form.Item>
+            <Form.Item
+              name="leaderEmployeeId"
+              label="项目领导(TL,可选)"
+              extra="TL 决定运行面 leaderAgentId;须为已发布数字员工,可创建后再设置"
+            >
+              <Select
+                data-testid="team-form-leader"
+                placeholder="选择已发布的数字员工"
+                allowClear
+                virtual={false}
+                options={leaders.map((s) => ({
+                  value: s.id,
+                  label: `${s.name}(${s.title})`,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item
+              name="syncToRuntime"
+              label="同步至 AgentScope 运行面"
+              valuePropName="checked"
+              className="!mb-0"
+              extra={
+                leaderId
+                  ? "创建即在运行面建立同名团队(leaderAgentId = TL);上游失败不阻塞创建"
+                  : "选择 TL 后才会真正同步;当前将仅本地建队"
+              }
+            >
+              <Switch data-testid="team-form-sync" disabled={!leaderId} />
             </Form.Item>
           </Form>
         </Modal>

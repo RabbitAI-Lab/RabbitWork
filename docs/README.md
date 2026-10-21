@@ -59,6 +59,10 @@
 
 > 随迭代产出时在本节补全；规格必须用 [plan/功能规格模板.md](./plan/功能规格模板.md) 的固定七章结构。
 
+| 编号 | 规格 | 状态 |
+| ---- | ---- | ---- |
+| TEAM-001 | [团队协作复用 AgentScope teams（浅映射）](./sprint-team-1/TEAM-001-agentscope-team-sync.md) | Prototyped |
+
 ## 七、支撑文档
 
 | 文档 | 说明 |

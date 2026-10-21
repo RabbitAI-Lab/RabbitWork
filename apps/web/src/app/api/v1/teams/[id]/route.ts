@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { MEMBERS_INCLUDE, toTeamDetailDto } from "@/server/team-dto";
+import { syncTeamRuntime } from "@/server/team-sync";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,16 +38,18 @@ export async function PATCH(req: Request, ctx: Ctx) {
     await findTeam(id);
     const input = await parseBody(req, teamUpdateInput);
     try {
-      const team = await prisma.team.update({
+      await prisma.team.update({
         where: { id },
         data: {
           ...(input.name !== undefined ? { name: input.name } : {}),
           ...(input.description !== undefined ? { description: input.description ?? null } : {}),
           ...(input.goal !== undefined ? { goal: input.goal ?? null } : {}),
         },
-        include: MEMBERS_INCLUDE,
       });
-      return jsonOk(toTeamDetailDto(team));
+      // 改名影响上游团队标识（TEAM-001 §2.2.2）：asTeamId 已关联或已有 TL 时同步运行面
+      const synced = input.name !== undefined ? await syncTeamRuntime(id) : null;
+      const final = synced ?? (await findTeam(id));
+      return jsonOk(toTeamDetailDto(final));
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
         throw new DomainError(ErrCode.VALIDATION_FAILED, `团队名「${input.name}」已存在`);
