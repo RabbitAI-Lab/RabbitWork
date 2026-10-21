@@ -5,6 +5,7 @@ export type { Permission, PermissionAction } from "./permissions";
 export * from "./resource";
 export * from "./knowledge";
 export * from "./obs";
+export * from "./persona-templates";
 export * from "./staff";
 export * from "./team";
 export { SESSION_COOKIE, SESSION_TTL_SEC, signSession, verifySession } from "./token";

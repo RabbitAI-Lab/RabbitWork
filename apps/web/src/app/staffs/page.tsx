@@ -30,6 +30,7 @@ import { AppShell } from "@/components/AppShell";
 import { StatusPill } from "@/components/StatusPill";
 import { CountNumber } from "@/components/CountNumber";
 import { chatApi, staffApi } from "@rabbit/api-client";
+import { PERSONA_TEMPLATES, personaTemplateByKey } from "@rabbit/shared";
 import type { StaffCreateInput, StaffDto, StaffUpdateInput } from "@rabbit/shared";
 
 type Filter = "ALL" | "PUBLISHED" | "DRAFT" | "OFFLINE";
@@ -364,6 +365,29 @@ export default function StaffsPage() {
               editing ? update.mutate({ id: editing.id, input: values }) : create.mutate(values)
             }
           >
+            {!editing && (
+              <Form.Item label="从模板开始（STAFF-002）" className="!mb-4">
+                <Select
+                  data-testid="staff-form-template"
+                  placeholder="选择预置人设模板,一键预填（可改）"
+                  allowClear
+                  virtual={false}
+                  options={PERSONA_TEMPLATES.map((t) => ({
+                    value: t.key,
+                    label: `${t.name} · ${t.title}`,
+                  }))}
+                  onChange={(key) => {
+                    const tpl = key ? personaTemplateByKey(String(key)) : undefined;
+                    if (!tpl) return;
+                    form.setFieldsValue({
+                      title: tpl.title,
+                      personaPrompt: tpl.personaPrompt,
+                      boundary: tpl.boundary,
+                    });
+                  }}
+                />
+              </Form.Item>
+            )}
             <div className="grid grid-cols-2 gap-x-4">
               <Form.Item
                 name="name"
