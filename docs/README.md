@@ -64,6 +64,8 @@
 | TEAM-001 | [团队协作复用 AgentScope teams（浅映射）](./sprint-team-1/TEAM-001-agentscope-team-sync.md) | Implemented |
 | OBS-001 | [消息反馈 + 运行留痕 + 最小看板](./sprint-obs-1/OBS-001-feedback-rundashboard.md) | Implemented |
 | KNW-001 | [知识库与检索调试](./sprint-knw-1/KNW-001-kb-retrieval.md) | Implemented |
+| STAFF-002 | [人设模板](./sprint-staff-2/STAFF-002-persona-templates.md) | Implemented |
+| SKILL-001 | [技能管理页](./sprint-skill-1/SKILL-001-skill-page.md) | Implemented |
 
 ## 七、支撑文档
 

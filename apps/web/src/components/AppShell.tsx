@@ -12,12 +12,13 @@ import {
   AppstoreOutlined,
   LineChartOutlined,
   BookOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export type MenuKey = "office" | "staffs" | "teams" | "runs" | "knowledge";
+export type MenuKey = "office" | "staffs" | "teams" | "runs" | "knowledge" | "skills";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -60,6 +61,13 @@ const MENUS: Array<{
     label: "知识库",
     icon: <BookOutlined />,
     match: /^\/knowledge(\/|$)/,
+  },
+  {
+    key: "skills",
+    href: "/skills",
+    label: "技能",
+    icon: <ThunderboltOutlined />,
+    match: /^\/skills(\/|$)/,
   },
 ];
 
