@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-cron-1（蓝图 S7 自动化） |
 | 优先级     | P1 |
 | 所属模块   | cron |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-23；单测 98 / e2e 36 / jmx 9 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-23 |
 | 上游依赖   | ScheduledTask/Run 表（一次建齐,零 DDL） · 员工发布链路（asAgentId） · conversations/messages 发送链路 |
 | 下游消费   | BullMQ 队列化（引擎引入时迁移） |

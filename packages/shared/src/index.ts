@@ -4,6 +4,7 @@ export type { Envelope } from "./envelope";
 export { isValidPermission, PERMISSIONS } from "./permissions";
 export type { Permission, PermissionAction } from "./permissions";
 export * from "./resource";
+export * from "./cron";
 export * from "./knowledge";
 export * from "./mcp";
 export * from "./model";

@@ -71,6 +71,7 @@
 | MODEL-001 | [模型配置与验证](./sprint-model-1/MODEL-001-model-config.md) | Implemented |
 | OBS-002 | [用量统计与审计](./sprint-obs-2/OBS-002-usage-audit.md) | Implemented |
 | OBS-003 | [API Key 与开放 API](./sprint-obs-3/OBS-003-api-keys.md) | Implemented |
+| CRON-001 | [定时任务](./sprint-cron-1/CRON-001-scheduled-tasks.md) | Implemented |
 
 ## 七、支撑文档
 

@@ -160,3 +160,48 @@ export const apiKeyApi = {
     post<ApiKeyCreatedDto>("/api/v1/api-keys", input),
   revoke: (id: string) => del<{ ok: boolean }>(`/api/v1/api-keys/${id}`),
 };
+
+// ───── cron（CRON-001 定时任务） ─────
+
+export interface CronTaskDto {
+  id: string;
+  name: string;
+  cron: string;
+  employeeId: string;
+  inputTemplate: string;
+  enabled: boolean;
+  lastRunAt: string | null;
+  createdAt: string;
+}
+
+export interface CronRunDto {
+  id: string;
+  status: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  error: string | null;
+}
+
+export const cronApi = {
+  list: () => get<{ items: CronTaskDto[]; total: number }>("/api/v1/scheduled-tasks"),
+  create: (input: { name: string; cron: string; employeeId: string; inputTemplate: string }) =>
+    post<CronTaskDto>("/api/v1/scheduled-tasks", input),
+  update: (
+    id: string,
+    input: Partial<{
+      name: string;
+      cron: string;
+      employeeId: string;
+      inputTemplate: string;
+      enabled: boolean;
+    }>,
+  ) => patch<CronTaskDto>(`/api/v1/scheduled-tasks/${id}`, input),
+  remove: (id: string) => del<{ ok: boolean }>(`/api/v1/scheduled-tasks/${id}`),
+  runNow: (id: string) =>
+    post<{ runId: string; status: string; error?: string }>(
+      `/api/v1/scheduled-tasks/${id}/run`,
+      {},
+    ),
+  runs: (id: string) =>
+    get<{ items: CronRunDto[]; total: number }>(`/api/v1/scheduled-tasks/${id}/runs`),
+};

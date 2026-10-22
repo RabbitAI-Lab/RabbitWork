@@ -2,6 +2,7 @@ export { ApiError, baseUrl, del, downloadRaw, get, patch, post, put, request } f
 export { kbApi, mcpApi, modelApi, skillApi, staffResourceApi, toolApi } from "./resource";
 export {
   apiKeyApi,
+  cronApi,
   auditApi,
   authApi,
   chatApi,
