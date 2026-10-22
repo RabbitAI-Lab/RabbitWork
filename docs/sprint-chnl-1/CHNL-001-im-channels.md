@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-chnl-1（蓝图 S9+ 压轴） |
 | 优先级     | P1 |
 | 所属模块   | chnl |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-23；单测 113 / e2e 50 / jmx 13 计划全绿；走查待人工——蓝图功能清单收官） |
 | 最后更新日期 | 2026-10-23 |
 | 上游依赖   | conversations/messages 链路 · 员工发布 |
 | 上游依据   | 蓝图 §4 F8/§6 S9+（评估 AgentScope channels 直用 vs 平台侧网关）;**上游 channels 端点 404（2026-10-23 实测）→ 平台侧网关骨架** |

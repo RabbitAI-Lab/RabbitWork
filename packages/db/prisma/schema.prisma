@@ -489,6 +489,26 @@ model ScheduledTaskRun {
   @@map("scheduled_task_runs")
 }
 
+// ───────────────────────── channel 域（CHNL-001 渠道接入,域首份规格一次建齐） ─────────────────────────
+
+model ChannelConfig {
+  id           String    @id @default(uuid())
+  orgId        String    @map("org_id")
+  name         String    @db.VarChar(128)
+  platform     String    @db.VarChar(32) // feishu | dingtalk | wecom
+  employeeId   String    @map("employee_id") // 绑定员工（消息进入该员工会话）
+  tokenHash    String    @map("token_hash") @db.VarChar(256) // rw_ch_ token 的 pepper 摘要
+  enabled      Boolean   @default(true)
+  lastMessageAt DateTime? @map("last_message_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  @@unique([orgId, name])
+  @@index([orgId, deletedAt])
+  @@map("channel_configs")
+}
+
 model ApiKey {
   id         String    @id @default(uuid())
   orgId      String    @map("org_id")

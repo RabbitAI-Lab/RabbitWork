@@ -75,6 +75,7 @@
 | CHAT-003 | [HITL 人工接管](./sprint-chat-3/CHAT-003-hitl-handoff.md) | Implemented |
 | SKILL-002 | [SOP 状态机编排](./sprint-skill-2/SKILL-002-sop-orchestration.md) | Implemented |
 | STAFF-003 | [员工广场](./sprint-staff-3/STAFF-003-staff-gallery.md) | Implemented |
+| CHNL-001 | [渠道接入](./sprint-chnl-1/CHNL-001-im-channels.md) | Implemented |
 
 ## 七、支撑文档
 

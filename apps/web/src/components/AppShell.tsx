@@ -14,11 +14,11 @@ import {
   BookOutlined,
   ThunderboltOutlined,
   ToolOutlined,
-  ApiOutlined,
   RobotOutlined,
   ClockCircleOutlined,
   UserSwitchOutlined,
   AppstoreFilled,
+  ApiOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
@@ -36,7 +36,8 @@ export type MenuKey =
   | "models"
   | "cron"
   | "handoffs"
-  | "gallery";
+  | "gallery"
+  | "channels";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -128,6 +129,13 @@ const MENUS: Array<{
     label: "广场",
     icon: <AppstoreFilled />,
     match: /^\/gallery(\/|$)/,
+  },
+  {
+    key: "channels",
+    href: "/channels",
+    label: "渠道",
+    icon: <ApiOutlined />,
+    match: /^\/channels(\/|$)/,
   },
 ];
 

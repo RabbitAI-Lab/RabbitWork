@@ -258,3 +258,26 @@ export const galleryApi = {
       {},
     ),
 };
+
+// ───── channels（CHNL-001 渠道接入） ─────
+
+export interface ChannelRow {
+  id: string;
+  name: string;
+  platform: "feishu" | "dingtalk" | "wecom";
+  employeeId: string;
+  enabled: boolean;
+  lastMessageAt: string | null;
+  createdAt: string;
+}
+
+export const channelApi = {
+  list: () => get<{ items: ChannelRow[]; total: number }>("/api/v1/channels"),
+  create: (input: { name: string; platform: string; employeeId: string }) =>
+    post<ChannelRow & { token: string }>("/api/v1/channels", input),
+  update: (
+    id: string,
+    input: Partial<{ name: string; enabled: boolean; employeeId: string; platform: string }>,
+  ) => patch<ChannelRow>(`/api/v1/channels/${id}`, input),
+  remove: (id: string) => del<{ ok: boolean }>(`/api/v1/channels/${id}`),
+};
