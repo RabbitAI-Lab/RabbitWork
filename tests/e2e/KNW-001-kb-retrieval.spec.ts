@@ -84,9 +84,13 @@ test("KNW-001-02 员工绑定知识库(Transfer)并回显", async ({
   // 员工详情 → 知识库 Tab → Transfer 选库右移 → 保存
   await page.goto(`/staffs/${staffId}`);
   await page.getByRole("tab", { name: "知识库" }).click();
-  // Transfer 项是 label 结构——点条目文本即切换勾选；data-testid 不落在 Transfer 根节点
-  // （antd 不透传），改用全局唯一文本/按钮名定位（kbName 经 uniq 唯一）
-  await page.getByText(kbName, { exact: true }).first().click();
+  // Transfer 项是 label 结构——点条目文本即切换勾选；antd 不透传 testid 到根节点。
+  // 高负载下坐标点击偶发被遮罩拦（resolved 但 click 挂起,本轮 11.6m 实证）——
+  // 原生 click()（bubbles:true,同 chat 反馈按钮先例）
+  await page
+    .getByText(kbName, { exact: true })
+    .first()
+    .evaluate((el) => (el as HTMLElement).click());
   await page.getByRole("button", { name: "right" }).click();
   await page.getByRole("button", { name: /保存配置/u }).click();
 

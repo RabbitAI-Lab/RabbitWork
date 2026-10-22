@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-obs-2（蓝图 S5 模型与运营收尾） |
 | 优先级     | P1 |
 | 所属模块   | obs |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-23；单测 90 / e2e 30 / jmx 7 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-22 |
 | 上游依赖   | OBS-001 /runs 页与看板 · UsageDaily/AuditLog 表（一次建齐,零 DDL） · RunRecord 终态写入链路（events 路由） |
 | 下游消费   | OBS-003 API Key 审计联动 |
@@ -15,6 +15,8 @@
 | 工作量估算 | 后端 1 人日 / 前端 1 人日 / 联调 0.5 人日 |
 
 ## 1. 概述
+
+> **收编登记（2026-10-22 实施时发现）**：UsageDaily 终态增量 upsert 已在 events 路由既有实现（规格外先行产物,含 messages 计数）——本规格收编,C1 变更为「验证既有写入」,实际开发聚焦读取面与审计面。
 
 治理域首份规格：① **用量日聚合**——run 终态时增量 upsert `usage_dailies`（员工×天,token/runs 计数）+ /runs 页「用量」Tab（按天条形 + Top 员工）;② **审计日志**——`audit()` 只插入 helper + 核心变更动作埋点 + 「审计」Tab（仅 ADMIN）。
 

@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { toMcpDto } from "@/server/mcp-dto";
+import { audit } from "@/server/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function GET() {
 /** 注册 MCP 服务。 */
 export async function POST(req: Request) {
   try {
-    await requirePermission("ORG_RESOURCE:WRITE");
+    const user = await requirePermission("ORG_RESOURCE:WRITE");
     const input = await parseBody(req, mcpCreateInput);
     try {
       const row = await prisma.mcpServerConfig.create({
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
           configJson: input.config as Prisma.InputJsonValue,
         },
       });
+      void audit({ actorId: user.uid, action: "mcp.create", targetType: "mcp", targetId: row.id });
       return jsonOk(toMcpDto(row), { status: 201 });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {

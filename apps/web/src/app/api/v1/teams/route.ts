@@ -5,6 +5,7 @@ import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, parseQuery, toErrorResponse } from "@/server/http";
 import { MEMBERS_INCLUDE, toTeamDto } from "@/server/team-dto";
 import { syncTeamRuntime } from "@/server/team-sync";
+import { audit } from "@/server/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,6 +63,12 @@ export async function POST(req: Request) {
       });
       // 同步运行面（默认开）：上游失败不阻塞创建，落 asSyncError（TEAM-001 §2.2.1）
       const final = (input.syncToRuntime ?? true) && leader ? await syncTeamRuntime(team.id) : team;
+      void audit({
+        actorId: user.uid,
+        action: "team.create",
+        targetType: "team",
+        targetId: team.id,
+      });
       return jsonOk(toTeamDto(final ?? team), { status: 201 });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {

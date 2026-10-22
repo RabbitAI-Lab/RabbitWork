@@ -9,6 +9,7 @@ import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, toErrorResponse } from "@/server/http";
 import type { KbDocumentDto } from "@rabbit/shared";
+import { audit } from "@/server/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,7 +75,7 @@ export async function GET(_req: Request, ctx: Ctx) {
  */
 export async function POST(req: Request, ctx: Ctx) {
   try {
-    await requirePermission("ORG_RESOURCE:WRITE");
+    const user = await requirePermission("ORG_RESOURCE:WRITE");
     const { id } = await ctx.params;
     const base = await prisma.knowledgeBase.findFirst({
       where: { id, orgId: defaultOrgId(), deletedAt: null },
@@ -134,6 +135,13 @@ export async function POST(req: Request, ctx: Ctx) {
           status: "SUCCEEDED",
           progress: chunks.length,
         },
+      });
+      void audit({
+        actorId: user.uid,
+        action: "kb.upload",
+        targetType: "kb_document",
+        targetId: doc.id,
+        detail: { title: file.name, chunks: chunks.length },
       });
       return jsonOk(toDocDto(ready, chunks.length), { status: 201 });
     } catch (e) {

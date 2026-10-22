@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Empty, Skeleton, Table, Tabs, Tag } from "antd";
+import { auditApi, authApi } from "@rabbit/api-client";
+import type { AuditLogDto } from "@rabbit/shared";
+import { useQuery } from "@tanstack/react-query";
 import { ReloadOutlined } from "@ant-design/icons";
 import { AppShell } from "@/components/AppShell";
 import { obsApi } from "@rabbit/api-client";
@@ -66,8 +68,16 @@ const FILTERS = [
 /** 运行观测（OBS-001）：页头最小看板 + RunRecord 留痕列表。 */
 export default function RunsPage() {
   const [filter, setFilter] = useState<string>("");
+  const [pageTab, setPageTab] = useState("runs");
 
   const stats = useQuery({ queryKey: ["runs", "stats"], queryFn: () => obsApi.runStats() });
+  const usage = useQuery({ queryKey: ["usage", "daily"], queryFn: () => obsApi.usage(14) });
+  const auditLogs = useQuery({
+    queryKey: ["audit", "logs"],
+    queryFn: () => auditApi.logs(1, 30),
+    retry: false,
+  });
+  const me = useQuery({ queryKey: ["me"], queryFn: authApi.me, staleTime: 60_000, retry: false });
   const runs = useQuery({
     queryKey: ["runs", "list", filter],
     queryFn: () => obsApi.runs({ status: filter || undefined, pageSize: 20 }),
@@ -129,8 +139,29 @@ export default function RunsPage() {
           )}
         </div>
 
-        {/* 留痕列表 */}
-        <div className="rounded-rw-md border border-rw-border bg-rw-card p-6">
+        {/* 页面级 Tab（OBS-002）：运行｜用量｜审计 */}
+        <div className="mb-6">
+          <Tabs
+            activeKey={pageTab}
+            onChange={setPageTab}
+            items={[
+              { key: "runs", label: "运行" },
+              { key: "usage", label: "用量" },
+              { key: "audit", label: "审计" },
+            ]}
+          />
+        </div>
+
+        {pageTab === "usage" ? (
+          <UsagePanel usage={usage} />
+        ) : pageTab === "audit" ? (
+          <AuditPanel logs={auditLogs} isAdmin={me.data?.role === "ADMIN"} />
+        ) : null}
+
+        {/* 留痕列表（运行 Tab 内容） */}
+        <div
+          className={`rounded-rw-md border border-rw-border bg-rw-card p-6 ${pageTab === "runs" ? "" : "hidden"}`}
+        >
           <Tabs
             activeKey={filter}
             onChange={setFilter}
@@ -221,5 +252,183 @@ export default function RunsPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+/** 用量面板（OBS-002 §3-D：14 天纯 CSS 条形 + Top5 员工）。 */
+function UsagePanel({
+  usage,
+}: {
+  usage: {
+    isLoading: boolean;
+    data?: {
+      days: Array<{ day: string; runs: number; tokenIn: number; tokenOut: number }>;
+      topEmployees: Array<{
+        employeeId: string;
+        employeeName: string;
+        runs: number;
+        tokenTotal: number;
+      }>;
+    };
+  };
+}) {
+  if (usage.isLoading) {
+    return (
+      <div className="rounded-rw-md border border-rw-border bg-rw-card p-6">
+        <Skeleton active paragraph={{ rows: 4 }} />
+      </div>
+    );
+  }
+  const days = usage.data?.days ?? [];
+  const max = Math.max(...days.map((d) => d.tokenIn + d.tokenOut), 1);
+  return (
+    <div className="space-y-6" data-testid="usage-panel">
+      <div className="rounded-rw-md border border-rw-border bg-rw-card p-6">
+        <h3 className="font-display text-rw-fg mb-4 text-[15px] font-semibold">
+          近 14 天 Token 消耗
+        </h3>
+        {days.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="还没有用量——发起第一轮对话后按天聚合"
+            className="!my-8"
+          />
+        ) : (
+          <div className="flex h-40 items-end gap-1.5" data-testid="usage-bars">
+            {days.map((d) => (
+              <div
+                key={d.day}
+                title={`${d.day} · 入${fmtK(d.tokenIn)} 出${fmtK(d.tokenOut)} · ${d.runs} 次`}
+                className="bg-rw-accent min-w-0 flex-1 rounded-t-[4px] transition-opacity duration-[140ms] ease-out hover:opacity-70"
+                style={{ height: `${Math.max(((d.tokenIn + d.tokenOut) / max) * 100, 2)}%` }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="rounded-rw-md border border-rw-border bg-rw-card p-6">
+        <h3 className="font-display text-rw-fg mb-4 text-[15px] font-semibold">
+          Top 员工（14 天）
+        </h3>
+        <Table
+          data-testid="usage-top-table"
+          rowKey="employeeId"
+          size="small"
+          pagination={false}
+          locale={{ emptyText: "暂无数据" }}
+          dataSource={usage.data?.topEmployees ?? []}
+          columns={[
+            { title: "员工", dataIndex: "employeeName" },
+            {
+              title: "次数",
+              dataIndex: "runs",
+              width: 100,
+              align: "right",
+              render: (n: number) => <span className="tabular-nums text-[13px]">{n}</span>,
+            },
+            {
+              title: "Token 合计",
+              dataIndex: "tokenTotal",
+              width: 130,
+              align: "right",
+              render: (n: number) => <span className="tabular-nums text-[13px]">{fmtK(n)}</span>,
+            },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+function fmtK(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
+function auditActionColor(action: string): string {
+  if (action.includes("failed") || action.includes("delete")) return "error";
+  if (action.startsWith("auth.")) return "warning";
+  return "default";
+}
+
+/** 审计面板（OBS-002 §3-E：仅 ADMIN）。 */
+function AuditPanel({
+  logs,
+  isAdmin,
+}: {
+  logs: { isLoading: boolean; data?: { items: AuditLogDto[]; total: number }; isError: boolean };
+  isAdmin: boolean;
+}) {
+  if (!isAdmin) {
+    return (
+      <div
+        className="rounded-rw-md border border-rw-border bg-rw-card p-12"
+        data-testid="audit-forbidden"
+      >
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="审计日志仅管理员可查看"
+          className="!my-4"
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-rw-md border border-rw-border bg-rw-card p-6" data-testid="audit-panel">
+      <Table
+        data-testid="audit-table"
+        rowKey="id"
+        size="small"
+        loading={logs.isLoading}
+        locale={{
+          emptyText: (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="暂无审计记录"
+              className="!my-8"
+            />
+          ),
+        }}
+        dataSource={logs.data?.items ?? []}
+        pagination={{ pageSize: 30, size: "small", showSizeChanger: false }}
+        columns={[
+          {
+            title: "时间",
+            dataIndex: "createdAt",
+            width: 150,
+            render: (v: string) => (
+              <span className="text-rw-fg-subtle tabular-nums text-[13px]">
+                {v.replace("T", " ").slice(5, 16)}
+              </span>
+            ),
+          },
+          {
+            title: "动作",
+            dataIndex: "action",
+            width: 180,
+            render: (a: string) => (
+              <Tag bordered={false} color={auditActionColor(a)}>
+                {a}
+              </Tag>
+            ),
+          },
+          {
+            title: "操作者",
+            dataIndex: "actorId",
+            width: 120,
+            render: (v: string | null) =>
+              v ? <span className="font-mono text-xs">{v.slice(0, 8)}…</span> : "—",
+          },
+          {
+            title: "目标",
+            render: (_, r) => (
+              <span className="font-mono text-xs">
+                {r.targetId?.slice(0, 12) ?? "—"}
+                {r.targetType ? ` (${r.targetType})` : ""}
+              </span>
+            ),
+          },
+        ]}
+      />
+    </div>
   );
 }

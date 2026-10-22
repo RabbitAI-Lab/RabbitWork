@@ -5,6 +5,7 @@ import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { MEMBERS_INCLUDE, toTeamDetailDto } from "@/server/team-dto";
 import { syncTeamRuntime } from "@/server/team-sync";
+import { audit } from "@/server/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,13 +65,14 @@ export async function PATCH(req: Request, ctx: Ctx) {
 /** 软删除。 */
 export async function DELETE(_req: Request, ctx: Ctx) {
   try {
-    await requirePermission("ORG_TEAM:DELETE");
+    const user = await requirePermission("ORG_TEAM:DELETE");
     const { id } = await ctx.params;
     await findTeam(id);
     await prisma.team.update({
       where: { id },
       data: { deletedAt: new Date(), status: "ARCHIVED" },
     });
+    void audit({ actorId: user.uid, action: "team.delete", targetType: "team", targetId: id });
     return jsonOk({ ok: true });
   } catch (e) {
     return toErrorResponse(e);

@@ -5,6 +5,7 @@ import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { toModelDto } from "@/server/model-dto";
 import { encryptText } from "@/server/model-secret";
+import { audit } from "@/server/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export async function GET() {
 /** 注册模型（apiKey 加密落库;isDefault 互斥清旧）。 */
 export async function POST(req: Request) {
   try {
-    await requirePermission("ORG_RESOURCE:WRITE");
+    const user = await requirePermission("ORG_RESOURCE:WRITE");
     const input = await parseBody(req, modelCreateInput);
     const orgId = defaultOrgId();
     const row = await prisma.$transaction(async (tx) => {
@@ -48,6 +49,12 @@ export async function POST(req: Request) {
           isDefault: input.isDefault ?? false,
         },
       });
+    });
+    void audit({
+      actorId: user.uid,
+      action: "model.create",
+      targetType: "model",
+      targetId: row.id,
     });
     return jsonOk(toModelDto(row), { status: 201 });
   } catch (e) {

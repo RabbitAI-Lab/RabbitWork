@@ -77,3 +77,44 @@ export function deriveRunStats(counts: {
     tokens7d: counts.tokens7d,
   };
 }
+
+// ───── 用量日聚合（GET /api/v1/usage/daily,OBS-002） ─────
+
+export const usageQuery = z.object({
+  days: z.coerce.number().int().min(1).max(90).default(14),
+});
+export type UsageQuery = z.infer<typeof usageQuery>;
+
+export const usageDayDto = z.object({
+  day: z.string(),
+  runs: z.number(),
+  tokenIn: z.number(),
+  tokenOut: z.number(),
+});
+export type UsageDayDto = z.infer<typeof usageDayDto>;
+
+export const usageTopEmployeeDto = z.object({
+  employeeId: z.string(),
+  employeeName: z.string(),
+  runs: z.number(),
+  tokenTotal: z.number(),
+});
+export type UsageTopEmployeeDto = z.infer<typeof usageTopEmployeeDto>;
+
+export const usageSummaryDto = z.object({
+  days: z.array(usageDayDto),
+  topEmployees: z.array(usageTopEmployeeDto),
+});
+export type UsageSummaryDto = z.infer<typeof usageSummaryDto>;
+
+// ───── 审计日志（GET /api/v1/audit-logs,仅 ADMIN） ─────
+
+export const auditLogDto = z.object({
+  id: z.string(),
+  actorId: z.string().nullable(),
+  action: z.string(),
+  targetType: z.string().nullable(),
+  targetId: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type AuditLogDto = z.infer<typeof auditLogDto>;

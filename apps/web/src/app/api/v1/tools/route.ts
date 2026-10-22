@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { encodeSecureHeaders, splitHeaders, toToolDto } from "@/server/tool-dto";
+import { audit } from "@/server/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function GET() {
 /** 创建工具（敏感头加密列,TOOL-001 §2.1）。 */
 export async function POST(req: Request) {
   try {
-    await requirePermission("ORG_RESOURCE:WRITE");
+    const user = await requirePermission("ORG_RESOURCE:WRITE");
     const input = await parseBody(req, toolCreateInput);
     const { plain, secure } = splitHeaders(input.headers);
     try {
@@ -40,6 +41,12 @@ export async function POST(req: Request) {
           headersJson: plain,
           secureHeaders: Object.keys(secure).length > 0 ? encodeSecureHeaders(secure) : null,
         },
+      });
+      void audit({
+        actorId: user.uid,
+        action: "tool.create",
+        targetType: "tool",
+        targetId: row.id,
       });
       return jsonOk(toToolDto(row), { status: 201 });
     } catch (e) {

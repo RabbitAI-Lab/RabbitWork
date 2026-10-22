@@ -8,8 +8,10 @@ import type {
   MeDto,
   MessageDto,
   MessageSendInput,
+  AuditLogDto,
   RunDto,
   RunStatsDto,
+  UsageSummaryDto,
   StaffCreateInput,
   StaffDto,
   StaffUpdateInput,
@@ -138,4 +140,12 @@ export const obsApi = {
     return get<RunsResult>(`/api/v1/runs?${q.toString()}`);
   },
   runStats: () => get<RunStatsDto>("/api/v1/runs/stats"),
+  usage: (days = 14) => get<UsageSummaryDto>(`/api/v1/usage/daily?days=${days}`),
+};
+
+// ───── audit（OBS-002,仅 ADMIN） ─────
+
+export const auditApi = {
+  logs: (page = 1, pageSize = 20) =>
+    get<PageResult<AuditLogDto>>(`/api/v1/audit-logs?page=${page}&pageSize=${pageSize}`),
 };
