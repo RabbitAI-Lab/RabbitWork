@@ -237,3 +237,24 @@ export const handoffApi = {
       conclusion ? { conclusion } : {},
     ),
 };
+
+// ───── gallery（STAFF-003 员工广场） ─────
+
+export interface GalleryItem {
+  id: string;
+  name: string;
+  title: string;
+  personaSummary: string;
+  avatarUrl: string | null;
+  copyCount: number;
+  createdAt: string;
+}
+
+export const galleryApi = {
+  list: () => get<{ items: GalleryItem[]; total: number }>("/api/v1/gallery"),
+  copy: (id: string) =>
+    post<{ id: string; name: string; visibility: "PRIVATE"; status: string }>(
+      `/api/v1/gallery/${id}/copy`,
+      {},
+    ),
+};

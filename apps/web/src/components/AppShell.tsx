@@ -18,6 +18,7 @@ import {
   RobotOutlined,
   ClockCircleOutlined,
   UserSwitchOutlined,
+  AppstoreFilled,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
@@ -34,7 +35,8 @@ export type MenuKey =
   | "mcp"
   | "models"
   | "cron"
-  | "handoffs";
+  | "handoffs"
+  | "gallery";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -119,6 +121,13 @@ const MENUS: Array<{
     label: "人工接管",
     icon: <UserSwitchOutlined />,
     match: /^\/handoffs(\/|$)/,
+  },
+  {
+    key: "gallery",
+    href: "/gallery",
+    label: "广场",
+    icon: <AppstoreFilled />,
+    match: /^\/gallery(\/|$)/,
   },
 ];
 
