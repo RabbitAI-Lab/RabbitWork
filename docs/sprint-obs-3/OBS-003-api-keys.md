@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-obs-3（蓝图 S6 开放能力） |
 | 优先级     | P1 |
 | 所属模块   | obs |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-23；单测 91 / e2e 33 / jmx 8 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-23 |
 | 上游依赖   | ApiKey 表（一次建齐,零 DDL）· OBS-002 audit() |
 | 下游消费   | 渠道接入（CHNL-001）· 外部编排 |
@@ -72,6 +72,11 @@
 ## 6. 基线深度对标
 
 蓝图 §3.4：rw_live_ 前缀/pepper 摘要/三级 scope——对齐（scope 三级列齐,绑定分阶段）;StaffDeck 密钥模型同构。
+
+## 6.5 实现勘误（2026-10-23）
+
+1. **middleware 放行开放面**：`/api/open/**` 此前会被 session middleware 401 拦截（外部集成无 cookie 永远到不了 Bearer 鉴权）——isPublicApi 增补 `/api/open/`（开放面由 withApiKey 自鉴权）。
+2. 发消息开放端点首期同步投递（sendTurn 成功即 201）;回复获取由调用方轮询会话详情——事件流消费随渠道迭代。
 
 ## 7. 里程碑与验收
 

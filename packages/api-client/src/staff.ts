@@ -8,6 +8,8 @@ import type {
   MeDto,
   MessageDto,
   MessageSendInput,
+  ApiKeyCreatedDto,
+  ApiKeyDto,
   AuditLogDto,
   RunDto,
   RunStatsDto,
@@ -148,4 +150,13 @@ export const obsApi = {
 export const auditApi = {
   logs: (page = 1, pageSize = 20) =>
     get<PageResult<AuditLogDto>>(`/api/v1/audit-logs?page=${page}&pageSize=${pageSize}`),
+};
+
+// ───── api keys（OBS-003） ─────
+
+export const apiKeyApi = {
+  list: () => get<PageResult<ApiKeyDto>>("/api/v1/api-keys"),
+  create: (input: { name: string; expiresInDays?: number }) =>
+    post<ApiKeyCreatedDto>("/api/v1/api-keys", input),
+  revoke: (id: string) => del<{ ok: boolean }>(`/api/v1/api-keys/${id}`),
 };

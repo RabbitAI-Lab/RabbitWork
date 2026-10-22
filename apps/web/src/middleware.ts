@@ -12,8 +12,11 @@ export async function middleware(request: NextRequest) {
   const claims = await verifySession(request.cookies.get(SESSION_COOKIE)?.value, secret);
 
   const isApi = pathname.startsWith("/api/");
+  // /api/open/** 走独立 Bearer API Key 鉴权（OBS-003 withApiKey）——middleware 放行
   const isPublicApi =
-    pathname.startsWith("/api/v1/auth/") || pathname.startsWith("/api/v1/system/");
+    pathname.startsWith("/api/v1/auth/") ||
+    pathname.startsWith("/api/v1/system/") ||
+    pathname.startsWith("/api/open/");
 
   let res: NextResponse;
   if (!claims && isApi && !isPublicApi) {

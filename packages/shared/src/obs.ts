@@ -118,3 +118,29 @@ export const auditLogDto = z.object({
   createdAt: z.string(),
 });
 export type AuditLogDto = z.infer<typeof auditLogDto>;
+
+// ───── API Key（OBS-003,rw_live_ 三级密钥首期 ACCOUNT） ─────
+
+export const APIKEY_SCOPES = ["ACCOUNT", "STAFF", "CLIENT"] as const;
+
+export const apiKeyCreateInput = z.object({
+  name: z.string().trim().min(1).max(128),
+  expiresInDays: z.number().int().min(1).max(3650).nullable().optional(),
+});
+export type ApiKeyCreateInput = z.infer<typeof apiKeyCreateInput>;
+
+export const apiKeyDto = z.object({
+  id: z.string(),
+  name: z.string(),
+  scope: z.enum(APIKEY_SCOPES),
+  keyPrefix: z.string(),
+  lastUsedAt: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  revokedAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type ApiKeyDto = z.infer<typeof apiKeyDto>;
+
+/** 创建响应：明文仅此一次返回 */
+export const apiKeyCreatedDto = apiKeyDto.extend({ plaintext: z.string() });
+export type ApiKeyCreatedDto = z.infer<typeof apiKeyCreatedDto>;

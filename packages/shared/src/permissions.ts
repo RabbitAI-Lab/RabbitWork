@@ -11,10 +11,11 @@ export type PermissionAction =
   | "DELETE"
   | "PUBLISH" // 域专用：数字员工发布/下线（STAFF-001）
   | "SEND" // 域专用：会话发消息/打断（CHAT-001）
-  | "WRITE"; // 域专用：资源域变更类合一（技能/知识库建档与改档，RESOURCE 域）
+  | "WRITE" // 域专用：资源域变更类合一
+  | "MANAGE"; // 域专用：密钥管理（OBS-003）（技能/知识库建档与改档，RESOURCE 域）
 
 const PERMISSION_RE =
-  /^(SYSTEM|ORG|PROJECT)_[A-Z][A-Z_]*:(READ|CREATE|UPDATE|DELETE|PUBLISH|SEND|WRITE)$/;
+  /^(SYSTEM|ORG|PROJECT)_[A-Z][A-Z_]*:(READ|CREATE|UPDATE|DELETE|PUBLISH|SEND|WRITE|MANAGE)$/;
 
 /** S0 基线 + S1 staff/chat 域权限点；后续域随规格登记。 */
 export const PERMISSIONS = [
@@ -48,6 +49,7 @@ export const PERMISSIONS = [
   "ORG_RESOURCE:WRITE",
   // obs 域（运行观测；反馈写走既有 ORG_CHAT:SEND）
   "ORG_RUN:READ",
+  "ORG_APIKEY:MANAGE", // API Key 管理（OBS-003;动作词非 READ——MEMBER 不放行）
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

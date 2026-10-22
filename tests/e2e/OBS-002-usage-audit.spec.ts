@@ -37,14 +37,14 @@ test("OBS-002-01 对话产生用量:用量 Tab 当日条形 + Top 员工", async
   await page.getByRole("tab", { name: "用量" }).click();
   await expect(page.getByTestId("usage-panel")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("usage-bars").locator("div").first()).toBeVisible();
-  // 员工维度断言走 API（Top5 按总量排序,单轮用量的新员工可能挤不进前五——不作为 UI 依据）
+  // 聚合维度断言走 API（员工维度挤 Top5 不稳,见 KNW 同款教训——按当日总量断言）
   const usage = await page.request.get("/api/v1/usage/daily?days=1");
   expect(usage.status()).toBe(200);
   const uj = (await usage.json()) as {
-    data: { topEmployees: Array<{ employeeId: string; runs: number }> };
+    data: { days: Array<{ day: string; runs: number }> };
   };
-  const mine = uj.data.topEmployees.find((e) => e.employeeId === staffId);
-  expect(mine?.runs ?? 0).toBeGreaterThanOrEqual(1);
+  const today = uj.data.days.at(-1);
+  expect(today?.runs ?? 0).toBeGreaterThanOrEqual(1);
 
   await expectNoConsoleErrors();
   await page.request.delete(`/api/v1/staffs/${staffId}`);
