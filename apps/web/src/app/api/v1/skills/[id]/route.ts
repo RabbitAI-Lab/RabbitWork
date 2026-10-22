@@ -1,5 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { DomainError, ErrCode, skillUpdateInput } from "@rabbit/shared";
+import {
+  DomainError,
+  ErrCode,
+  skillUpdateInput,
+  sopGraph as sopGraphSchema,
+  validateSopGraph,
+} from "@rabbit/shared";
 import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
@@ -24,7 +30,21 @@ export async function PATCH(req: Request, ctx: Ctx) {
     await requirePermission("ORG_RESOURCE:WRITE");
     const { id } = await ctx.params;
     await findSkill(id);
-    const input = await parseBody(req, skillUpdateInput);
+    const raw = await parseBody(req, skillUpdateInput);
+    const input = raw as typeof raw & { sopGraph?: unknown };
+    if (input.sopGraph !== undefined) {
+      const parsed = sopGraphSchema.safeParse(input.sopGraph);
+      if (!parsed.success) {
+        throw new DomainError(
+          ErrCode.VALIDATION_FAILED,
+          `sopGraph 非法：${parsed.error.issues[0]?.message ?? ""}`,
+        );
+      }
+      const errs = validateSopGraph(parsed.data);
+      if (errs.length > 0)
+        throw new DomainError(ErrCode.VALIDATION_FAILED, `SOP 图非法：${errs[0]}`);
+      input.sopGraph = parsed.data;
+    }
     try {
       const row = await prisma.skillDefinition.update({
         where: { id },
@@ -34,6 +54,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
           ...(input.kind !== undefined ? { kind: input.kind } : {}),
           ...(input.promptTemplate !== undefined
             ? { promptTemplate: input.promptTemplate ?? null }
+            : {}),
+          ...(input.sopGraph !== undefined
+            ? { sopGraph: input.sopGraph as Prisma.InputJsonValue }
             : {}),
           version: { increment: 1 },
         },

@@ -15,6 +15,8 @@ export const skillCreateInput = z.object({
   description: z.string().trim().max(512).optional(),
   kind: z.enum(SKILL_KINDS).default("PROMPT"),
   promptTemplate: z.string().trim().max(20000).optional(),
+  /** SOP 图（SKILL-002;kind=SOP 时必填,结构校验在路由经 sopGraphSchema） */
+  sopGraph: z.unknown().optional(),
 });
 export type SkillCreateInput = z.infer<typeof skillCreateInput>;
 
@@ -27,6 +29,7 @@ export const skillDto = z.object({
   name: z.string(),
   description: z.string().nullable(),
   kind: z.enum(SKILL_KINDS),
+  sopGraph: z.unknown().nullable(),
   promptTemplate: z.string().nullable(),
   version: z.number(),
   createdAt: z.string(),

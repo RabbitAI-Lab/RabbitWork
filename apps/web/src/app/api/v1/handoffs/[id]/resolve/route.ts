@@ -3,6 +3,7 @@ import { prisma } from "@/server/db";
 import { requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
 import { audit } from "@/server/audit";
+import { resumeSopAfterHandoff } from "@/server/sop-run";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,6 +47,8 @@ export async function POST(req: Request, ctx: Ctx) {
         content: input.conclusion ? `人工接管已解决：${input.conclusion}` : "人工接管已解决",
       },
     });
+    // SOP 运行中的会话:解决后续跑（SKILL-002 §2.3;非 SOP 会话无副作用）
+    void resumeSopAfterHandoff(record.conversationId).catch(() => {});
     void audit({
       actorId: user.uid,
       action: "handoff.resolve",

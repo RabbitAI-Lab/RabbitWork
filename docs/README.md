@@ -73,6 +73,7 @@
 | OBS-003 | [API Key 与开放 API](./sprint-obs-3/OBS-003-api-keys.md) | Implemented |
 | CRON-001 | [定时任务](./sprint-cron-1/CRON-001-scheduled-tasks.md) | Implemented |
 | CHAT-003 | [HITL 人工接管](./sprint-chat-3/CHAT-003-hitl-handoff.md) | Implemented |
+| SKILL-002 | [SOP 状态机编排](./sprint-skill-2/SKILL-002-sop-orchestration.md) | Implemented |
 
 ## 七、支撑文档
 

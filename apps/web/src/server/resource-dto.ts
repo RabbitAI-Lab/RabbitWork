@@ -10,6 +10,7 @@ export function toSkillDto(row: SkillDefinition): SkillDto {
     description: row.description,
     kind: row.kind === "SOP" ? "SOP" : "PROMPT",
     promptTemplate: row.promptTemplate,
+    sopGraph: (row as { sopGraph?: unknown }).sopGraph ?? null,
     version: row.version,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

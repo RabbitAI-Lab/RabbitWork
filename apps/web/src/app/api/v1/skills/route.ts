@@ -1,5 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { DomainError, ErrCode, skillCreateInput } from "@rabbit/shared";
+import {
+  DomainError,
+  ErrCode,
+  skillCreateInput,
+  sopGraph as sopGraphSchema,
+  validateSopGraph,
+} from "@rabbit/shared";
 import { prisma } from "@/server/db";
 import { defaultOrgId, requirePermission } from "@/server/auth";
 import { jsonOk, parseBody, toErrorResponse } from "@/server/http";
@@ -26,7 +32,21 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     await requirePermission("ORG_RESOURCE:WRITE");
-    const input = await parseBody(req, skillCreateInput);
+    const raw = await parseBody(req, skillCreateInput);
+    const input = raw as typeof raw & { sopGraph?: unknown };
+    if (input.kind === "SOP") {
+      const parsed = sopGraphSchema.safeParse(input.sopGraph ?? {});
+      if (!parsed.success) {
+        throw new DomainError(
+          ErrCode.VALIDATION_FAILED,
+          `sopGraph 非法：${parsed.error.issues[0]?.message ?? ""}`,
+        );
+      }
+      const errs = validateSopGraph(parsed.data);
+      if (errs.length > 0)
+        throw new DomainError(ErrCode.VALIDATION_FAILED, `SOP 图非法：${errs[0]}`);
+      input.sopGraph = parsed.data;
+    }
     try {
       const row = await prisma.skillDefinition.create({
         data: {
@@ -35,6 +55,10 @@ export async function POST(req: Request) {
           description: input.description ?? null,
           kind: input.kind,
           promptTemplate: input.promptTemplate ?? null,
+          ...("sopGraph" in input && input.sopGraph !== undefined
+            ? // Prisma Json 输入边界断言（rules/typescript §3.2）
+              { sopGraph: input.sopGraph as Prisma.InputJsonValue }
+            : {}),
         },
       });
       return jsonOk(toSkillDto(row), { status: 201 });

@@ -11,6 +11,7 @@ export * from "./model";
 export * from "./obs";
 export * from "./persona-templates";
 export * from "./staff";
+export * from "./sop";
 export * from "./team";
 export * from "./tool";
 export { SESSION_COOKIE, SESSION_TTL_SEC, signSession, verifySession } from "./token";

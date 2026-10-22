@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-skill-2（蓝图 S9+ 团队与渠道批次） |
 | 优先级     | P1 |
 | 所属模块   | skill |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-23；单测 107 / e2e 44 / jmx 11 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-23 |
 | 上游依赖   | SkillDefinition.sopGraph 列（一次建齐,零 DDL） · SKILL-001 /skills 页 · 员工发布链路 |
 | 下游消费   | 员工绑定 SOP 技能;运行留痕 |
@@ -108,6 +108,12 @@ SOP 技能启用（kind=SOP）：**节点序列定义 + 条件分支**的状态�
 ## 6. 基线深度对标
 
 蓝图：蒸馏+可视化编辑——本切片落状态机编排与执行;蒸馏与画布登记增强。
+
+## 6.5 实现勘误（2026-10-23）
+
+1. **resume 死循环修复**：续跑进入 human 起点节点会再次创建 HANDOFF（永久暂停）——resume 首节点为 human 时直接走出边。
+2. skills create 落库曾漏 sopGraph（zod 已收但 data 未带）——补 Prisma Json 边界断言。
+3. 续跑为 fire-and-forget,e2e 断言用 expect.poll 轮询强信号（§3.5.1）;R-RESUME-VARS（续跑变量不持久化）维持登记。
 
 ## 7. 里程碑与验收
 

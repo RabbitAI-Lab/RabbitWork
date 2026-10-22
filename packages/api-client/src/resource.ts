@@ -32,6 +32,13 @@ export const skillApi = {
   create: (input: SkillCreateInput) => post<SkillDto>("/api/v1/skills", input),
   update: (id: string, input: SkillUpdateInput) => patch<SkillDto>(`/api/v1/skills/${id}`, input),
   remove: (id: string) => del<{ ok: boolean }>(`/api/v1/skills/${id}`),
+  /** 运行 SOP（SKILL-002;同步至完成或人工暂停） */
+  run: (id: string, input: { employeeId: string; variables?: Record<string, string | number> }) =>
+    post<{
+      conversationId: string;
+      status: "COMPLETED" | "PAUSED_HANDOFF";
+      steps: Array<{ nodeId: string; type: string; note: string }>;
+    }>(`/api/v1/skills/${id}/run`, input),
 };
 
 export const kbApi = {
