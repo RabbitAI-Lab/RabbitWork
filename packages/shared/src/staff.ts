@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const STAFF_STATUSES = ["DRAFT", "PUBLISHED", "OFFLINE"] as const;
 export const STAFF_VISIBILITIES = ["PRIVATE", "ORG", "GALLERY"] as const;
-export const CONVERSATION_STATUSES = ["ACTIVE", "IDLE", "TERMINATED"] as const;
+export const CONVERSATION_STATUSES = ["ACTIVE", "IDLE", "TERMINATED", "HANDOFF"] as const;
 export const RUN_STATUSES = ["STARTED", "STREAMING", "SUCCEEDED", "FAILED", "INTERRUPTED"] as const;
 
 // ───── staff DTO ─────
@@ -145,3 +145,31 @@ export type PageQuery = z.infer<typeof pageQuery>;
 export function pageEnvelope<T>(items: T[], total: number, page: number, pageSize: number) {
   return { items, total, page, pageSize };
 }
+
+// ───── HITL 人工接管（CHAT-003） ─────
+
+export const handoffCreateInput = z.object({
+  reason: z.string().trim().min(1).max(512),
+});
+export type HandoffCreateInput = z.infer<typeof handoffCreateInput>;
+
+export const handoffResolveInput = z.object({
+  conclusion: z.string().trim().max(1024).optional(),
+});
+export type HandoffResolveInput = z.infer<typeof handoffResolveInput>;
+
+export const HANDOFF_STATUSES = ["PENDING", "HANDLING", "RESOLVED"] as const;
+
+export const handoffDto = z.object({
+  id: z.string(),
+  conversationId: z.string(),
+  conversationTitle: z.string(),
+  status: z.enum(HANDOFF_STATUSES),
+  initiatedBy: z.string().nullable(),
+  handledBy: z.string().nullable(),
+  reason: z.string().nullable(),
+  conclusion: z.string().nullable(),
+  createdAt: z.string(),
+  resolvedAt: z.string().nullable(),
+});
+export type HandoffDto = z.infer<typeof handoffDto>;

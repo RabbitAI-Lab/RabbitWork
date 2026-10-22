@@ -89,6 +89,8 @@ export const chatApi = {
   detail: (id: string) => get<ConversationDetail>(`/api/v1/conversations/${id}`),
   send: (id: string, input: MessageSendInput) =>
     post<{ runId: string; userMessage: MessageDto }>(`/api/v1/conversations/${id}/messages`, input),
+  handoff: (id: string, input: { reason: string }) =>
+    post<import("@rabbit/shared").HandoffDto>(`/api/v1/conversations/${id}/handoff`, input),
   interrupt: (id: string) =>
     post<{ ok: boolean; upstream: boolean }>(`/api/v1/conversations/${id}/interrupt`),
 };
@@ -204,4 +206,34 @@ export const cronApi = {
     ),
   runs: (id: string) =>
     get<{ items: CronRunDto[]; total: number }>(`/api/v1/scheduled-tasks/${id}/runs`),
+};
+
+// ───── HITL 人工接管（CHAT-003） ─────
+
+export interface HandoffRow {
+  id: string;
+  conversationId: string;
+  conversationTitle: string;
+  status: "PENDING" | "HANDLING" | "RESOLVED";
+  initiatedBy: string | null;
+  handledBy: string | null;
+  reason: string | null;
+  conclusion: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export const handoffApi = {
+  list: (params: { status?: string; page?: number } = {}) => {
+    const q = new URLSearchParams();
+    if (params.status) q.set("status", params.status);
+    q.set("page", String(params.page ?? 1));
+    return get<{ items: HandoffRow[]; total: number }>(`/api/v1/handoffs?${q.toString()}`);
+  },
+  claim: (id: string) => post<{ id: string; status: string }>(`/api/v1/handoffs/${id}/claim`, {}),
+  resolve: (id: string, conclusion?: string) =>
+    post<{ id: string; status: string }>(
+      `/api/v1/handoffs/${id}/resolve`,
+      conclusion ? { conclusion } : {},
+    ),
 };

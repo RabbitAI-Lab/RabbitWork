@@ -72,6 +72,7 @@
 | OBS-002 | [用量统计与审计](./sprint-obs-2/OBS-002-usage-audit.md) | Implemented |
 | OBS-003 | [API Key 与开放 API](./sprint-obs-3/OBS-003-api-keys.md) | Implemented |
 | CRON-001 | [定时任务](./sprint-cron-1/CRON-001-scheduled-tasks.md) | Implemented |
+| CHAT-003 | [HITL 人工接管](./sprint-chat-3/CHAT-003-hitl-handoff.md) | Implemented |
 
 ## 七、支撑文档
 

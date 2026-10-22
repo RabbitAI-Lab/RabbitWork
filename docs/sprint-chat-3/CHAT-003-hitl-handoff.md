@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-chat-3（蓝图 S8 HITL 与接管） |
 | 优先级     | P1 |
 | 所属模块   | chat |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-23；单测 100 / e2e 39 / jmx 10 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-23 |
 | 上游依赖   | HumanHandoffRecord 表（一次建齐「列建齐不开功能」——本规格启用） · conversations/messages 链路 |
 | 下游消费   | AgentScope approvals/inbox 推送（上游 200 但需 namespace-member 体系,登记 R-UPSTREAM-APPROVAL 为后续增强） |

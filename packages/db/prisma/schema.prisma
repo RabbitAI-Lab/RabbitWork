@@ -513,6 +513,7 @@ model HumanHandoffRecord {
   initiatedBy String?   @map("initiated_by") @db.VarChar(64)
   handledBy   String?   @map("handled_by") @db.VarChar(64)
   reason      String?   @db.VarChar(512)
+  conclusion  String?   @db.VarChar(1024) // 处理结论（CHAT-003 启用列——域首份规格补齐）
   resolvedAt  DateTime? @map("resolved_at") @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
 

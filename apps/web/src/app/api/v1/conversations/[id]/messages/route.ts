@@ -40,6 +40,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       orderBy: { seq: "desc" },
       select: { seq: true },
     });
+    // HANDOFF 态拦截（CHAT-003 §2:人工处理中暂停自动回复——真实原因透出）
+    if (conversation.status === "HANDOFF") {
+      throw new DomainError(
+        ErrCode.VALIDATION_FAILED,
+        "该会话人工处理中（HANDOFF）,解决接管后可继续对话",
+      );
+    }
     const userMessage = await prisma.messageMirror.create({
       data: { conversationId: id, seq: (last?.seq ?? 0) + 1, role: "USER", content },
     });

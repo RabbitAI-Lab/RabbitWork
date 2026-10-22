@@ -3,6 +3,7 @@ export { kbApi, mcpApi, modelApi, skillApi, staffResourceApi, toolApi } from "./
 export {
   apiKeyApi,
   cronApi,
+  handoffApi,
   auditApi,
   authApi,
   chatApi,
@@ -11,4 +12,4 @@ export {
   staffApi,
   teamApi,
 } from "./staff";
-export type { ConversationDetail, PageResult } from "./staff";
+export type { ConversationDetail, HandoffRow, PageResult } from "./staff";

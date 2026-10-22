@@ -17,6 +17,7 @@ import {
   ApiOutlined,
   RobotOutlined,
   ClockCircleOutlined,
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
@@ -32,7 +33,8 @@ export type MenuKey =
   | "tools"
   | "mcp"
   | "models"
-  | "cron";
+  | "cron"
+  | "handoffs";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -110,6 +112,13 @@ const MENUS: Array<{
     label: "定时任务",
     icon: <ClockCircleOutlined />,
     match: /^\/scheduled-tasks(\/|$)/,
+  },
+  {
+    key: "handoffs",
+    href: "/handoffs",
+    label: "人工接管",
+    icon: <UserSwitchOutlined />,
+    match: /^\/handoffs(\/|$)/,
   },
 ];
 

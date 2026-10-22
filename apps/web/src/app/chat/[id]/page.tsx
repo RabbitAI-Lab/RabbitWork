@@ -11,12 +11,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { App, Avatar, Input, Modal } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import { AppShell } from "@/components/AppShell";
 import { ChatPersonaCard } from "@/components/ChatPersonaCard";
 import { ChatBubble, ChatStreamingBubble } from "@/components/ChatBubble";
 import { ChatComposer } from "@/components/ChatComposer";
-import { chatApi, conversationEventsUrl, obsApi } from "@rabbit/api-client";
+import { chatApi, conversationEventsUrl, handoffApi, obsApi } from "@rabbit/api-client";
 import type { ChatEvent, MessageDto } from "@rabbit/shared";
 import "../chat.css";
 
@@ -45,6 +45,9 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<MessageDto[]>([]);
   /** OBS-001 👎 评语弹层目标消息 */
   const [feedbackTarget, setFeedbackTarget] = useState<MessageDto | null>(null);
+  /** CHAT-003 转人工弹层 */
+  const [handoffOpen, setHandoffOpen] = useState(false);
+  const [handoffReason, setHandoffReason] = useState("");
   const [feedbackComment, setFeedbackComment] = useState("");
   const [streamingText, setStreamingText] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -204,6 +207,17 @@ export default function ChatPage() {
     [ctxMessage],
   );
 
+  const handoff = useMutation({
+    mutationFn: (reason: string) => chatApi.handoff(id, { reason }),
+    onSuccess: () => {
+      ctxMessage.success("已转人工——会话暂停自动回复");
+      setHandoffOpen(false);
+      setHandoffReason("");
+      void queryClient.invalidateQueries({ queryKey: ["conversation", id] });
+    },
+    onError: (e) => ctxMessage.error(e instanceof Error ? e.message : "转人工失败"),
+  });
+
   const onFeedback = useCallback(
     (msg: MessageDto, next: "UP" | "DOWN" | null) => {
       // 再点当前评分 = 撤销；DOWN 走评语弹层（可选填）；UP 直接提交（OBS-001 §2.1）
@@ -297,6 +311,34 @@ export default function ChatPage() {
             </button>
           </header>
 
+          {/* CHAT-003：HANDOFF 黄条 + 转人工入口 */}
+          {detail.data?.conversation.status === "HANDOFF" && (
+            <div
+              className="bg-rw-warning-subtle border-rw-warning text-rw-warning mb-3 flex items-center justify-between rounded-rw-md border px-4 py-2 text-[13px]"
+              data-testid="handoff-banner"
+            >
+              <span>人工处理中——员工暂停自动回复,解决接管后恢复</span>
+              <button
+                type="button"
+                className="text-rw-accent text-xs underline"
+                onClick={() => router.push("/handoffs")}
+              >
+                去处理 →
+              </button>
+            </div>
+          )}
+          <div className="mb-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setHandoffOpen(true)}
+              disabled={detail.data?.conversation.status === "HANDOFF"}
+              className="text-rw-fg-muted hover:text-rw-accent inline-flex items-center gap-1 text-xs transition-colors duration-[140ms] ease-out disabled:opacity-40"
+              data-testid="handoff-btn"
+            >
+              <UserSwitchOutlined /> 转人工
+            </button>
+          </div>
+
           {/* 消息流 */}
           <div ref={scrollRef} className="rw-chat-messages scroll-slim" data-testid="chat-messages">
             {messages.length === 0 && !streamingText && !streaming ? (
@@ -349,6 +391,30 @@ export default function ChatPage() {
             sending={send.isPending}
           />
         </section>
+
+        {/* CHAT-003 转人工弹层 */}
+        <Modal
+          title="转人工处理"
+          open={handoffOpen}
+          onCancel={() => setHandoffOpen(false)}
+          onOk={() => handoffReason.trim() && handoff.mutate(handoffReason.trim())}
+          okText="转人工"
+          cancelText="取消"
+          confirmLoading={handoff.isPending}
+          destroyOnHidden
+        >
+          <p className="text-rw-fg-subtle mb-2 text-xs">
+            会话将暂停自动回复,由人工在「人工接管」工作台处理
+          </p>
+          <Input.TextArea
+            data-testid="handoff-reason-input"
+            rows={3}
+            maxLength={512}
+            value={handoffReason}
+            onChange={(e) => setHandoffReason(e.target.value)}
+            placeholder="转人工原因（必填）,如：退款诉求超出答复边界"
+          />
+        </Modal>
 
         {/* 👎 反馈评语弹层（OBS-001 §2.1：评语可选，仅 DOWN） */}
         <Modal
