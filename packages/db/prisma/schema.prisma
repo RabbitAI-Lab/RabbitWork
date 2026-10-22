@@ -177,6 +177,29 @@ model EmployeeModelBinding {
   @@map("employee_model_bindings")
 }
 
+// ───────────────────────── model 域（MODEL-001 模型配置,域首份规格一次建齐） ─────────────────────────
+
+model ModelConfig {
+  id             String    @id @default(uuid())
+  orgId          String    @map("org_id")
+  name           String    @db.VarChar(128)
+  protocol       String    @db.VarChar(48) // openai_chat_completions | anthropic | gemini
+  baseUrl        String    @map("base_url") @db.VarChar(512)
+  modelId        String    @map("model_id") @db.VarChar(128) // 如 gpt-4o-mini / claude-sonnet-5-5
+  apiKeyEnc      String    @map("api_key_enc") // AES-GCM 密文（MODEL_APIKEY_SECRET 主密钥）
+  status         String    @default("UNVERIFIED") @db.VarChar(32) // UNVERIFIED | VERIFYING | VERIFIED | FAILED
+  isDefault      Boolean   @default(false) @map("is_default")
+  lastError      String?   @map("last_error") @db.Text
+  lastVerifiedAt DateTime? @map("last_verified_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  @@unique([orgId, name])
+  @@index([orgId, deletedAt])
+  @@map("model_configs")
+}
+
 model EmployeeResourceBinding {
   id              String   @id @default(uuid())
   employeeId      String   @map("employee_id")

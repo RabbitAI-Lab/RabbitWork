@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-model-1（蓝图 S5 模型与运营） |
 | 优先级     | P1 |
 | 所属模块   | model |
-| 文档状态   | Prototyped |
+| 文档状态   | Implemented（2026-10-22；单测 90 / e2e 27 / jmx 6 计划全绿；走查待人工） |
 | 最后更新日期 | 2026-10-22 |
 | 上游依赖   | 无（**模型域首份规格——新表一次建齐**；上游实证无 models/llm/providers 端点,2026-10-22 四路径 404） |
 | 下游消费   | 员工绑定模型（远期）· KNW-001 R-VECTOR（pgvector+embedding）· 对话模型选择 |
@@ -91,6 +91,12 @@ model ModelConfig {
 ## 6. 基线深度对标
 
 蓝图 F4：协议化配置+验证状态机+默认模型——本地全量实现（上游无对应端点,同 TOOL/KNW 降级决策链）。
+
+## 6.5 实现勘误（2026-10-22）
+
+1. **schema @map 遗漏**：baseUrl/modelId/lastError 初版漏 `@map`（migration 为 snake_case 而 client 找 camelCase 列 → 500）——已补齐;库列无需变更（migration 本就是目标态）。
+2. **表单协议默认值**：注册表单 protocol 无默认值时 required 校验静默拦截（无请求无提示）——补 `initialValues` 默认 openai_chat_completions。
+3. **e2e 断言口径**：默认互斥断言走 API（行内「设默认」按钮文案会误伤 contains /默认/ 类断言）;创建链路断言经列表回读（glob 集合 URL 竞态,既有教训）。
 
 ## 7. 里程碑与验收
 

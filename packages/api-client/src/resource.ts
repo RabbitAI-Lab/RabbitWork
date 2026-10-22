@@ -1,6 +1,10 @@
 /** 资源域（技能/知识库/员工绑定）API（RESOURCE-001）。 */
 import { del, get, patch, post, put } from "./client";
 import type {
+  ModelCreateInput,
+  ModelDto,
+  ModelUpdateInput,
+  ModelVerifyResultDto,
   McpCreateInput,
   McpDto,
   McpTestResultDto,
@@ -79,4 +83,15 @@ export const mcpApi = {
   update: (id: string, input: McpUpdateInput) => patch<McpDto>(`/api/v1/mcp-servers/${id}`, input),
   remove: (id: string) => del<{ ok: boolean }>(`/api/v1/mcp-servers/${id}`),
   test: (id: string) => post<McpTestResultDto>(`/api/v1/mcp-servers/${id}/test`, {}),
+};
+
+// ───── models（MODEL-001 模型配置） ─────
+
+export const modelApi = {
+  list: () => get<{ items: ModelDto[]; total: number }>("/api/v1/models"),
+  create: (input: ModelCreateInput) => post<ModelDto>("/api/v1/models", input),
+  update: (id: string, input: ModelUpdateInput) => patch<ModelDto>(`/api/v1/models/${id}`, input),
+  remove: (id: string) => del<{ ok: boolean }>(`/api/v1/models/${id}`),
+  verify: (id: string) => post<ModelVerifyResultDto>(`/api/v1/models/${id}/verify`, {}),
+  setDefault: (id: string) => post<ModelDto>(`/api/v1/models/${id}/default`, {}),
 };

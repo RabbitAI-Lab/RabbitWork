@@ -15,6 +15,7 @@ import {
   ThunderboltOutlined,
   ToolOutlined,
   ApiOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
@@ -28,7 +29,8 @@ export type MenuKey =
   | "knowledge"
   | "skills"
   | "tools"
-  | "mcp";
+  | "mcp"
+  | "models";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -92,6 +94,13 @@ const MENUS: Array<{
     label: "MCP 服务",
     icon: <ApiOutlined />,
     match: /^\/mcp(\/|$)/,
+  },
+  {
+    key: "models",
+    href: "/models",
+    label: "模型",
+    icon: <RobotOutlined />,
+    match: /^\/models(\/|$)/,
   },
 ];
 
