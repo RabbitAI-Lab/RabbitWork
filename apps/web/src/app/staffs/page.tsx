@@ -140,7 +140,7 @@ export default function StaffsPage() {
 
   return (
     <AppShell active="staffs">
-      <div className="mx-auto max-w-6xl px-8 py-8" data-testid="staffs-page">
+      <div className="mx-auto max-w-[1600px] px-8 py-8" data-testid="staffs-page">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">

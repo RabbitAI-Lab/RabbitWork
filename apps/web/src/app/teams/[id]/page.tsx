@@ -137,7 +137,7 @@ export default function TeamDetailPage() {
 
   return (
     <AppShell active="teams">
-      <div className="mx-auto max-w-5xl px-8 py-8" data-testid="team-detail-page">
+      <div className="mx-auto max-w-[1600px] px-8 py-8" data-testid="team-detail-page">
         {detail.isLoading ? (
           <Skeleton avatar active paragraph={{ rows: 4 }} />
         ) : detail.isError || !team ? (

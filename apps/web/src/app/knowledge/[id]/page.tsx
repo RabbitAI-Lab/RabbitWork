@@ -88,7 +88,7 @@ export default function KbDetailPage() {
 
   return (
     <AppShell active="knowledge">
-      <div className="mx-auto max-w-5xl px-8 py-8" data-testid="kb-detail-page">
+      <div className="mx-auto max-w-[1600px] px-8 py-8" data-testid="kb-detail-page">
         {list.isLoading ? (
           <Skeleton active paragraph={{ rows: 4 }} />
         ) : !kb ? (

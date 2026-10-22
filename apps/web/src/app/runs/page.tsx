@@ -77,7 +77,7 @@ export default function RunsPage() {
 
   return (
     <AppShell active="runs">
-      <div className="mx-auto max-w-5xl px-8 py-8" data-testid="runs-page">
+      <div className="mx-auto max-w-[1600px] px-8 py-8" data-testid="runs-page">
         <div className="mb-7 flex items-end justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-rw-fg">

@@ -131,7 +131,7 @@ export default function StaffDetailPage() {
 
   return (
     <AppShell active="staffs">
-      <div className="mx-auto max-w-5xl px-8 py-8" data-testid="staff-detail-page">
+      <div className="mx-auto max-w-[1600px] px-8 py-8" data-testid="staff-detail-page">
         {staffQ.isLoading ? (
           <Skeleton avatar active paragraph={{ rows: 4 }} />
         ) : !staff ? (
