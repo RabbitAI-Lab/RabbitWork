@@ -1,28 +1,36 @@
 "use client";
 
 /**
- * OFFICE-004 · 等距（isometric 2.5D）楼层视图（Pixi v8,Client Component）
- * ─────────────────────────────────────────────────────────
- * 用户指定效果准绳：pixoffice.online/office（bundle 逆向——等距场景/房间/家具/小人+状态）。
- * 网格 (col,row) → 等距屏幕坐标 sx=(col-row)*T/2, sy=(col+row)*T/4;深度按 (col+row) 升序。
- * 家具两色立方（顶亮侧暗）;小人=头+身+名字牌+在线呼吸点;支持拖拽平移与滚轮缩放。
+ * OFFICE-004 v2 · 等距办公室楼层（Pixi v8,Client Component）
+ * ────────────────────────────────────────────────────────────
+ * 效果准绳 pixoffice.online/office（用户点名,2026-10-23）：立体房间感（墙+窗）、
+ * 成组办公家具（桌板+腿+显示器+转椅）、区域地毯、坐姿员工、会议室与休息角。
+ * 20 工位网格数据绑定不变（floor-seat ↔ staff;props 兼容 PixiFloorPlan）。
+ *
+ * 等距坐标：tile (c,r) 中心 → sx=(c-r)*TW/2, sy=(c+r)*TH/2（TW=96 TH=48）;
+ * 深度 painter's：按 (c+r) 升序、同排按 r 升序。
  */
 
 import { useEffect, useRef } from "react";
-import { Application, Container, Graphics, Text } from "pixi.js";
+import { Application, Container, Graphics, Text, type ColorSource } from "pixi.js";
 import type { StaffDto } from "@rabbit/shared";
 import { readThemeTokens } from "../PixiWorkstation/draw";
 
 const FLOOR_COLS = 5;
 const FLOOR_ROWS = 4;
-const FLOOR_SEATS_TOTAL = FLOOR_COLS * FLOOR_ROWS;
-/** 等距 tile 宽（屏幕像素）;高 = W/2 */
-const TILE_W = 96;
-const TILE_H = TILE_W / 2;
-const CANVAS_W = 720;
-const CANVAS_H = 460;
-const ZOOM_MIN = 0.6;
-const ZOOM_MAX = 1.6;
+const FLOOR_SEATS = FLOOR_COLS * FLOOR_ROWS;
+/** 等距 tile 宽高（屏幕像素） */
+const TW = 96;
+const TH = 48;
+/** 地板外扩圈（会议室/走道/休息角） */
+const PAD = 2;
+const GRID_COLS = FLOOR_COLS + PAD * 2;
+const GRID_ROWS = FLOOR_ROWS + PAD * 2;
+const WALL_H = 58;
+const CANVAS_W = 980;
+const CANVAS_H = 620;
+const ZOOM_MIN = 0.55;
+const ZOOM_MAX = 1.8;
 
 export interface IsometricFloorPlanProps {
   floor: number;
@@ -31,50 +39,100 @@ export interface IsometricFloorPlanProps {
   onSeatClick?: (seat: number, staff?: StaffDto) => void;
 }
 
-/** 网格坐标 → 等距屏幕坐标（tile 中心） */
-function iso(col: number, row: number): { x: number; y: number } {
-  return {
-    x: (col - row) * (TILE_W / 2),
-    y: (col + row) * (TILE_H / 2),
-  };
+/* ───────── 等距几何原语 ───────── */
+
+/** 网格 → 世界坐标（tile 中心） */
+function iso(c: number, r: number): { x: number; y: number } {
+  return { x: (c - r) * (TW / 2), y: (c + r) * (TH / 2) };
 }
 
-interface Theme {
+/** 中心 (cx,cy) 的菱形四顶点 */
+function diamond(cx: number, cy: number, w: number, h: number): number[] {
+  return [cx, cy - h / 2, cx + w / 2, cy, cx, cy + h / 2, cx - w / 2, cy];
+}
+
+interface IsoTheme {
   accent: number;
   card: number;
+  tileA: number;
+  tileB: number;
   border: number;
   borderStrong: number;
-  fg: number;
+  wallFace: number;
+  wallTop: number;
+  deskTop: number;
+  deskSide: number;
+  chair: number;
+  chairBack: number;
+  monitor: number;
+  screen: number;
+  carpet: number;
+  carpetAlt: number;
+  plant: number;
+  plantDark: number;
+  pot: number;
+  skin: number;
+  hair: number;
+  sofa: number;
+  sofaSide: number;
+  rug: number;
   fgMuted: number;
   fgSubtle: number;
+  windowSky: number;
 }
 
-function readIsoTheme(): Theme {
+function readTheme(): IsoTheme {
   const t = readThemeTokens();
   const root = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
-  const hex = (v: string, fallback: number) => {
+  const dark =
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+  const hex = (v: string, fb: number) => {
     const raw = root?.getPropertyValue(v)?.trim();
     if (raw && /^#[0-9a-fA-F]{6}$/.test(raw)) return Number.parseInt(raw.slice(1), 16);
-    return fallback;
+    return fb;
   };
+  // 暖木卡通风（对齐用户参照图:蜂蜜木地板/奶咖墙/厚木家具/翠绿点缀）
   return {
     accent: t.accent,
-    card: hex("--rw-card", 0xffffff),
-    border: hex("--rw-border", 0xe4e8ee),
-    borderStrong: hex("--rw-border-strong", 0xcbd5e1),
-    fg: t.labelFg,
-    fgMuted: t.labelFg,
+    card: hex("--rw-card", dark ? 0x111827 : 0xfffbf2),
+    tileA: dark ? 0x5a4230 : 0xf0d5a8,
+    tileB: dark ? 0x4f3a2a : 0xe6c48f,
+    border: dark ? 0x2a2018 : 0xd9b57e,
+    borderStrong: dark ? 0x3b2e22 : 0xc9a066,
+    wallFace: dark ? 0x3d332a : 0xf5e9d4,
+    wallTop: dark ? 0x4a3e31 : 0xe8d6b8,
+    deskTop: dark ? 0xa87f4d : 0xf3c477,
+    deskSide: dark ? 0x83603a : 0xd9a052,
+    chair: dark ? 0x5e7d6c : 0x74b891,
+    chairBack: dark ? 0x4a6556 : 0x5aa37c,
+    monitor: 0x4a3b2e,
+    screen: dark ? 0x8fe3c0 : 0xbef0da,
+    carpet: dark ? 0x5c4a33 : 0xf7e3bd,
+    carpetAlt: dark ? 0x514536 : 0xead2a4,
+    plant: dark ? 0x3d8459 : 0x4caf6e,
+    plantDark: dark ? 0x2f6846 : 0x3c8f57,
+    pot: dark ? 0x8a5a3c : 0xc07845,
+    skin: 0xffd9b3,
+    hair: 0x4a3728,
+    sofa: dark ? 0x4f8a68 : 0x6cbf8e,
+    sofaSide: dark ? 0x3f7052 : 0x53a374,
+    rug: dark ? 0x6b5b40 : 0xf2ddba,
+    fgMuted: hex("--rw-fg-muted", 0x64748b),
     fgSubtle: hex("--rw-fg-subtle", 0x94a3b8),
+    windowSky: dark ? 0x2a5a6e : 0xaee0f2,
   };
 }
 
-/** 画一块等距菱形瓷砖 */
-function tile(g: Graphics, cx: number, cy: number, w: number, h: number, fill: number, alpha = 1) {
-  g.poly([cx, cy - h / 2, cx + w / 2, cy, cx, cy + h / 2, cx - w / 2, cy]);
-  g.fill({ color: fill, alpha });
+function fillPoly(g: Graphics, pts: number[], color: ColorSource, alpha = 1, stroke?: ColorSource) {
+  g.poly(pts);
+  g.fill({ color, alpha });
+  if (stroke !== undefined) {
+    g.poly(pts);
+    g.stroke({ color: stroke, width: 1, alpha: 0.5 });
+  }
 }
 
-/** 等距立方体（家具）:顶面菱形 + 左右两侧面 */
+/** 立方体（顶面菱形 w×d 抬升 z + 左右侧面;左面亮右面暗） */
 function cube(
   g: Graphics,
   cx: number,
@@ -82,53 +140,200 @@ function cube(
   w: number,
   d: number,
   z: number,
-  top: number,
-  side: number,
-  border: number,
+  top: ColorSource,
+  side: ColorSource,
+  stroke?: ColorSource,
 ) {
-  // 底面中心在 (cx, cy);顶面上移 z
   const h = d / 2;
   const ty = cy - z;
-  // 左侧面（朝左下）
-  g.poly([cx - w / 2, ty, cx, ty + h, cx, ty + h + z, cx - w / 2, ty + z]);
-  g.fill({ color: side });
-  // 右侧面（朝右下）
-  g.poly([cx + w / 2, ty, cx, ty + h, cx, ty + h + z, cx + w / 2, ty + z]);
-  g.fill({ color: side });
-  // 顶面
-  g.poly([cx, ty - h / 2, cx + w / 2, ty, cx, ty + h / 2, cx - w / 2, ty]);
-  g.fill({ color: top });
-  g.stroke({ color: border, width: 1, alpha: 0.6 });
+  fillPoly(g, [cx - w / 2, ty, cx, ty + h, cx, ty + h + z, cx - w / 2, ty + z], side, 1);
+  fillPoly(g, [cx + w / 2, ty, cx, ty + h, cx, ty + h + z, cx + w / 2, ty + z], side, 0.78);
+  fillPoly(g, diamond(cx, cy - z, w, d), top, 1, stroke);
 }
 
-/** Q 版员工小人:呼吸点 + 头 + 身 + 名字牌 */
-function person(
+/** 沿网格线立墙（有厚度条:内面+顶+外面） */
+function wallSeg(
   g: Graphics,
-  cx: number,
-  cy: number,
-  name: string,
-  th: Theme,
-  online: boolean,
-  label: Text,
+  c0: number,
+  r0: number,
+  lenC: number,
+  lenR: number,
+  h: number,
+  th: IsoTheme,
 ) {
-  const headR = 7;
-  const bodyH = 12;
-  const bodyW = 16;
-  // 头
-  g.circle(cx, cy - bodyH - headR, headR);
-  g.fill({ color: th.accent, alpha: online ? 1 : 0.5 });
-  // 身
-  g.roundRect(cx - bodyW / 2, cy - bodyH, bodyW, bodyH, 5);
-  g.fill({ color: th.accent, alpha: online ? 0.8 : 0.4 });
-  // 呼吸点（在线）
-  if (online) {
-    g.circle(cx + headR - 1, cy - bodyH - headR * 2, 2.5);
-    g.fill({ color: th.accent });
-  }
-  label.text = name;
-  label.style.fill = th.fgMuted;
-  label.position.set(cx, cy - bodyH - headR * 2 - 20);
+  const a = iso(c0, r0);
+  const b = iso(c0 + lenC, r0 + lenR);
+  const a2 = iso(c0 + 0.45, r0 + 0.45);
+  const b2 = iso(c0 + lenC + 0.45, r0 + lenR + 0.45);
+  // 内立面
+  fillPoly(g, [a.x, a.y, b.x, b.y, b.x, b.y - h, a.x, a.y - h], th.wallFace, 1, th.borderStrong);
+  // 顶面
+  fillPoly(g, [a.x, a.y, b.x, b.y, b2.x, b2.y, a2.x, a2.y], th.wallTop, 1, th.borderStrong);
+  // 外立面（薄,更暗）
+  fillPoly(g, [a2.x, a2.y, b2.x, b2.y, b2.x, b2.y - h, a2.x, a2.y - h], th.wallTop, 0.75);
 }
+
+/** 墙上窗户（蓝白格 + 窗棂） */
+function windowPane(g: Graphics, c: number, r: number, th: IsoTheme, wUnits = 1.3) {
+  const p = iso(c, r);
+  const w = (TW / 2) * wUnits;
+  const y0 = p.y - WALL_H + 10;
+  const y1 = p.y - 12;
+  fillPoly(
+    g,
+    [p.x - w, y0, p.x + w, y0, p.x + w, y1, p.x - w, y1],
+    th.windowSky,
+    0.95,
+    th.borderStrong,
+  );
+  g.moveTo(p.x, y0);
+  g.lineTo(p.x, y1);
+  g.moveTo(p.x - w, (y0 + y1) / 2);
+  g.lineTo(p.x + w, (y0 + y1) / 2);
+  g.stroke({ color: th.borderStrong, width: 1, alpha: 0.85 });
+}
+
+/** 工位组：地垫+桌板+桌腿+显示器（发光屏）+转椅（occupied 时满透明度） */
+function workstation(g: Graphics, cx: number, cy: number, th: IsoTheme, occupied: boolean) {
+  const a = occupied ? 1 : 0.5;
+  // 工位地垫
+  fillPoly(g, diamond(cx, cy, TW * 0.92, TH * 0.92), th.carpet, occupied ? 0.9 : 0.3);
+  // 桌板（厚立方 70×42×14）
+  cube(g, cx, cy - 4, 70, 42, 14, th.deskTop, th.deskSide, th.border);
+  // 桌腿
+  cube(g, cx - 26, cy + 2, 8, 8, 12, th.deskSide, th.deskSide, th.border);
+  cube(g, cx + 26, cy + 2, 8, 8, 12, th.deskSide, th.deskSide, th.border);
+  // 显示器（薄板+屏+底座柱,置于桌右上）
+  const mx = cx + 13;
+  const my = cy - 17;
+  const mz = 34;
+  fillPoly(
+    g,
+    [mx - 17, my - mz, mx + 17, my - mz + 11, mx + 17, my - mz + 19, mx - 17, my - mz + 8],
+    th.monitor,
+    a,
+  );
+  fillPoly(
+    g,
+    [mx - 14, my - mz + 2, mx + 14, my - mz + 11, mx + 14, my - mz + 16, mx - 14, my - mz + 7],
+    occupied ? th.screen : th.monitor,
+    occupied ? 1 : 0.4,
+  );
+  cube(g, mx, my, 10, 6, 22, th.monitor, th.monitor, th.border);
+  // 转椅（座垫立方 + 靠背薄板,桌左前）
+  const chx = cx - 16;
+  const chy = cy + 22;
+  cube(g, chx, chy, 26, 18, 9, th.chair, th.chairBack, th.border);
+  const bY = chy - 22;
+  fillPoly(
+    g,
+    [chx - 13, bY, chx + 4, bY + 9, chx + 4, bY + 21, chx - 13, bY + 12],
+    th.chairBack,
+    a,
+    th.border,
+  );
+  return { chx, chy };
+}
+
+/** 坐姿员工（Q 版大头:头身 2:1,肤色脸+发+衣服+呼吸点） */
+function seatedPerson(g: Graphics, chx: number, chy: number, th: IsoTheme, online: boolean) {
+  const a = online ? 1 : 0.6;
+  const bodyY = chy + 6;
+  // 身体（小,圆角,accent 绿衣服）
+  g.roundRect(chx - 9, bodyY - 13, 18, 15, 6);
+  g.fill({ color: th.accent, alpha: a * 0.92 });
+  // 大头（肤色圆 + 头发弧 + 眼睛）
+  g.circle(chx, bodyY - 22, 11);
+  g.fill({ color: th.skin, alpha: a });
+  g.circle(chx, bodyY - 26, 10.5);
+  g.fill({ color: th.hair, alpha: a * 0.95 });
+  // 眼睛（两点）
+  g.circle(chx - 4, bodyY - 20, 1.4);
+  g.fill({ color: 0x2d2a26, alpha: a });
+  g.circle(chx + 4, bodyY - 20, 1.4);
+  g.fill({ color: 0x2d2a26, alpha: a });
+  // 腮红
+  g.circle(chx - 7, bodyY - 16, 2);
+  g.fill({ color: 0xff9d80, alpha: a * 0.5 });
+  g.circle(chx + 7, bodyY - 16, 2);
+  g.fill({ color: 0xff9d80, alpha: a * 0.5 });
+  // 在线呼吸点
+  if (online) {
+    g.circle(chx + 15, bodyY - 31, 3.2);
+    g.fill({ color: th.accent });
+    g.circle(chx + 15, bodyY - 31, 6.5);
+    g.fill({ color: th.accent, alpha: 0.22 });
+  }
+}
+
+/** 会议室：大地毯+长桌+中央小绿植+围椅 */
+function meetingRoom(g: Graphics, th: IsoTheme) {
+  const c = iso(6, 1);
+  fillPoly(g, diamond(c.x, c.y, TW * 2.5, TH * 2.5), th.carpetAlt, 0.85);
+  cube(g, c.x, c.y, 130, 86, 16, th.deskTop, th.deskSide, th.border);
+  cube(g, c.x - 44, c.y + 8, 10, 10, 14, th.deskSide, th.deskSide, th.border);
+  cube(g, c.x + 44, c.y + 8, 10, 10, 14, th.deskSide, th.deskSide, th.border);
+  cube(g, c.x, c.y - 10, 12, 9, 8, th.pot, th.pot, th.border);
+  g.circle(c.x, c.y - 23, 6);
+  g.fill({ color: th.plant, alpha: 0.95 });
+  for (const d of [
+    [-32, -36],
+    [32, -36],
+    [-32, 40],
+    [32, 40],
+  ] as const) {
+    cube(g, c.x + d[0], c.y + d[1], 22, 16, 8, th.chair, th.chairBack, th.border);
+  }
+}
+
+/** 休息角：暖色地毯 + L 型沙发 + 茶几 + 大绿植 */
+function loungeCorner(g: Graphics, th: IsoTheme) {
+  const c = iso(1, 6);
+  fillPoly(g, diamond(c.x, c.y, TW * 2.2, TH * 2.2), th.rug, 0.9);
+  // 沙发 L 两段
+  cube(g, c.x - 24, c.y - 10, 64, 26, 15, th.sofa, th.sofaSide, th.border);
+  cube(g, c.x + 28, c.y + 14, 26, 52, 15, th.sofa, th.sofaSide, th.border);
+  // 沙发靠垫
+  fillPoly(
+    g,
+    [c.x - 52, c.y - 32, c.x - 6, c.y - 32 + 10, c.x - 6, c.y - 32 + 24, c.x - 52, c.y - 32 + 14],
+    th.sofaSide,
+    1,
+    th.border,
+  );
+  // 茶几
+  cube(g, c.x - 4, c.y + 22, 34, 24, 11, th.deskTop, th.deskSide, th.border);
+  // 大绿植
+  cube(g, c.x + 44, c.y - 30, 18, 16, 16, th.pot, th.pot, th.border);
+  g.circle(c.x + 44, c.y - 60, 15);
+  g.fill({ color: th.plant, alpha: 0.95 });
+  g.circle(c.x + 33, c.y - 48, 9);
+  g.fill({ color: th.plantDark, alpha: 0.9 });
+  g.circle(c.x + 55, c.y - 51, 10);
+  g.fill({ color: th.plantDark, alpha: 0.85 });
+  g.circle(c.x + 44, c.y - 72, 8);
+  g.fill({ color: th.plant, alpha: 0.9 });
+}
+
+/** 地区文字牌 */
+function areaTag(layer: Container, text: string, c: number, r: number, th: IsoTheme) {
+  const label = new Text({
+    text,
+    style: { fontFamily: "PingFang SC, sans-serif", fontSize: 12, fill: th.fgSubtle },
+  });
+  label.anchor.set(0.5);
+  const bg = new Graphics();
+  const w = label.width + 16;
+  const p = iso(c, r);
+  bg.roundRect(p.x - w / 2, p.y - 11, w, 22, 5);
+  bg.fill({ color: th.card, alpha: 0.95 });
+  bg.stroke({ color: th.border, width: 1 });
+  label.position.set(p.x, p.y);
+  layer.addChild(bg);
+  layer.addChild(label);
+}
+
+/* ───────── 组件 ───────── */
 
 export function IsometricFloorPlan({
   floor,
@@ -145,6 +350,7 @@ export function IsometricFloorPlan({
     let app: Application | null = null;
     let destroyed = false;
     let observer: MutationObserver | null = null;
+    let detach: (() => void) | null = null;
 
     const setup = async () => {
       try {
@@ -166,152 +372,82 @@ export function IsometricFloorPlan({
         a.canvas.setAttribute("role", "img");
         a.canvas.setAttribute(
           "aria-label",
-          `OFFICE-004 等距楼层视图：${floor}F，${FLOOR_SEATS_TOTAL} 个工位`,
+          `等距办公室楼层 ${floor}F：${FLOOR_SEATS} 工位、会议室与休息角`,
         );
 
         const world = new Container();
-        world.x = CANVAS_W / 2;
-        world.y = 40;
+        const anchor = iso((GRID_COLS - 1) / 2, (GRID_ROWS - 1) / 2);
+        world.x = CANVAS_W / 2 - anchor.x;
+        world.y = 80;
         a.stage.addChild(world);
         a.stage.eventMode = "static";
 
-        const seatsLayer = new Container();
         const bgLayer = new Container();
+        const seatLayer = new Container();
+        const tagLayer = new Container();
         world.addChild(bgLayer);
-        world.addChild(seatsLayer);
+        world.addChild(seatLayer);
+        world.addChild(tagLayer);
 
-        // ── 背景：地板瓷砖 + 两面墙 + 房间标签（一次性绘制） ──
         const bg = new Graphics();
         bgLayer.addChild(bg);
-        const labels: Text[] = [];
+        const seatViews = new Map<number, { holder: Container; g: Graphics; label: Text }>();
 
-        function drawBg() {
-          const th = readIsoTheme();
+        const drawBg = () => {
+          const th = readTheme();
           bg.clear();
-          // 地板瓷砖
-          for (let r = 0; r < FLOOR_ROWS + 2; r++) {
-            for (let c = 0; c < FLOOR_COLS + 2; c++) {
-              const p = iso(c - 1, r - 1);
-              tile(bg, p.x, p.y, TILE_W, TILE_H, th.card, 0.9);
-              bg.poly([
-                p.x,
-                p.y - TILE_H / 2,
-                p.x + TILE_W / 2,
-                p.y,
-                p.x,
-                p.y + TILE_H / 2,
-                p.x - TILE_W / 2,
-                p.y,
-              ]);
-              bg.stroke({ color: th.border, width: 1, alpha: 0.5 });
+          tagLayer.removeChildren();
+          // 地板（棋盘微差瓷砖）
+          for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+              const p = iso(c, r);
+              const color = (c + r) % 2 === 0 ? th.tileA : th.tileB;
+              bg.poly(diamond(p.x, p.y, TW, TH));
+              bg.fill({ color, alpha: 0.97 });
+              bg.poly(diamond(p.x, p.y, TW, TH));
+              bg.stroke({ color: th.border, width: 1, alpha: 0.38 });
             }
           }
-          // 北墙（沿 col 方向的瓷砖边）与西墙（沿 row 方向）
-          const n0 = iso(-1, -1);
-          const n1 = iso(FLOOR_COLS + 1, -1);
-          const s0 = iso(-1, FLOOR_ROWS + 1);
-          const wallH = 46;
-          // 西墙（col=-1 一侧,沿 row 增长）
-          bg.poly([
-            n0.x - TILE_W / 2,
-            n0.y,
-            n0.x,
-            n0.y + TILE_H / 2,
-            n0.x,
-            n0.y + TILE_H / 2 + (FLOOR_ROWS + 2) * TILE_H,
-            n0.x - TILE_W / 2,
-            n0.y + (FLOOR_ROWS + 2) * TILE_H,
-          ]);
-          bg.fill({ color: th.card, alpha: 0.9 });
-          bg.poly([
-            n0.x - TILE_W / 2,
-            n0.y,
-            n0.x,
-            n0.y + TILE_H / 2,
-            n0.x,
-            n0.y + TILE_H / 2 + (FLOOR_ROWS + 2) * TILE_H,
-            n0.x - TILE_W / 2,
-            n0.y + (FLOOR_ROWS + 2) * TILE_H,
-          ]);
-          bg.stroke({ color: th.borderStrong, width: 1.5 });
-          // 北墙（row=-1 一侧,沿 col 增长）
-          bg.poly([
-            n0.x - TILE_W / 2,
-            n0.y,
-            n1.x + TILE_W / 2,
-            n1.y,
-            n1.x + TILE_W / 2,
-            n1.y + wallH,
-            n0.x - TILE_W / 2,
-            n0.y + wallH,
-          ]);
-          bg.fill({ color: th.card, alpha: 0.9 });
-          bg.poly([
-            n0.x - TILE_W / 2,
-            n0.y,
-            n1.x + TILE_W / 2,
-            n1.y,
-            n1.x + TILE_W / 2,
-            n1.y + wallH,
-            n0.x - TILE_W / 2,
-            n0.y + wallH,
-          ]);
-          bg.stroke({ color: th.borderStrong, width: 1.5 });
-          void s0;
-          void wallH;
-          // 房间标签
-          for (const l of labels) l.destroy();
-          labels.length = 0;
-          const mkLabel = (text: string, col: number, row: number) => {
-            const t = new Text({
-              text,
-              style: { fontFamily: "PingFang SC, sans-serif", fontSize: 11, fill: th.fgSubtle },
-            });
-            t.anchor.set(0.5);
-            const p = iso(col, row);
-            t.position.set(p.x, p.y - 8);
-            bgLayer.addChild(t);
-            labels.push(t);
-          };
-          mkLabel("会议室", 4, 0);
-          mkLabel("开放工位区", 2, 3);
-          mkLabel("休息角", 4, 4);
-          // 绿植（休息角）
-          const plant = iso(4, 4);
-          bg.circle(plant.x + 34, plant.y - 6, 8);
-          bg.fill({ color: 0x3fa576, alpha: 0.85 });
-          bg.circle(plant.x + 34, plant.y - 14, 5);
-          bg.fill({ color: 0x3fa576, alpha: 0.7 });
-        }
-        drawBg();
+          // 北墙（沿 row=0）+ 西墙（沿 col=0）
+          wallSeg(bg, 0, 0, GRID_COLS - 0.1, 0, WALL_H, th);
+          wallSeg(bg, 0, 0, 0, GRID_ROWS - 0.1, WALL_H, th);
+          // 窗
+          windowPane(bg, 2, 0, th);
+          windowPane(bg, 5, 0, th);
+          windowPane(bg, 0, 3, th, 0.85);
+          // 会议室 + 休息角 + 房间牌
+          meetingRoom(bg, th);
+          loungeCorner(bg, th);
+          areaTag(tagLayer, "会议室", 6, 2.5, th);
+          areaTag(tagLayer, "开放工位区", 3, 4.4, th);
+          areaTag(tagLayer, "休息角", 1, 7.4, th);
+        };
 
-        // ── 工位层:每工位 = 桌 + 椅 + 小人/空位（深度序重建） ──
-        interface SeatView {
-          holder: Container;
-          gfx: Graphics;
-          label: Text;
-        }
-        const seatViews = new Map<number, SeatView>();
-        for (let row = 0; row < FLOOR_ROWS; row++) {
-          for (let col = 0; col < FLOOR_COLS; col++) {
-            const seatNum = row * FLOOR_COLS + col + 1;
+        for (let r = 0; r < FLOOR_ROWS; r++) {
+          for (let c = 0; c < FLOOR_COLS; c++) {
+            const seatNum = r * FLOOR_COLS + c + 1;
             const holder = new Container();
-            const gfx = new Graphics();
+            const g = new Graphics();
             const label = new Text({
               text: "",
-              style: { fontFamily: "PingFang SC, sans-serif", fontSize: 11, fontWeight: "600" },
+              style: {
+                fontFamily: "PingFang SC, sans-serif",
+                fontSize: 11,
+                fontWeight: "600",
+                fill: 0x334155,
+              },
             });
             label.anchor.set(0.5);
-            holder.addChild(gfx);
+            holder.addChild(g);
             holder.addChild(label);
-            const p = iso(col, row);
+            const p = iso(c + PAD, r + PAD);
             holder.x = p.x;
             holder.y = p.y;
             holder.eventMode = "static";
             holder.cursor = "pointer";
             holder.hitArea = {
               contains: (x: number, y: number) =>
-                Math.abs(x) < TILE_W / 2 && y > -TILE_H && y < TILE_H * 1.6,
+                Math.abs(x) < TW / 2 && y > -TH * 1.6 && y < TH * 1.6,
             } as never;
             holder.on("pointertap", () => {
               const now = Date.now();
@@ -319,60 +455,51 @@ export function IsometricFloorPlan({
               dispatchedRef.current = now;
               onSeatClick?.(seatNum, bySeat.get(`${floor}-${seatNum}`));
             });
-            seatsLayer.addChild(holder);
-            seatViews.set(seatNum, { holder, gfx, label });
+            seatLayer.addChild(holder);
+            seatViews.set(seatNum, { holder, g, label });
           }
         }
 
-        function renderSeats() {
-          const th = readIsoTheme();
-          // 深度排序（painter's algorithm）：按 (col+row) 升序重挂
-          const ordered = [...seatViews.entries()].sort((a, b) => {
-            const da = Math.floor((a[0] - 1) / FLOOR_COLS) + ((a[0] - 1) % FLOOR_COLS);
-            const db = Math.floor((b[0] - 1) / FLOOR_COLS) + ((b[0] - 1) % FLOOR_COLS);
-            return da - db;
-          });
-          for (const [, v] of ordered) seatsLayer.addChild(v.holder);
+        const drawSeats = () => {
+          const th = readTheme();
+          // painter 深度序
+          const depth = (n: number) => {
+            const r = Math.floor((n - 1) / FLOOR_COLS) + PAD;
+            const c = ((n - 1) % FLOOR_COLS) + PAD;
+            return (r + c) * 100 + r;
+          };
+          const ordered = [...seatViews.entries()].sort((a, b) => depth(a[0]) - depth(b[0]));
+          for (const [, v] of ordered) seatLayer.addChild(v.holder);
+
           for (const [seatNum, v] of seatViews) {
             const staff = bySeat.get(`${floor}-${seatNum}`);
-            const g = v.gfx;
+            const g = v.g;
             g.clear();
-            const dw = TILE_W * 0.62;
-            const dd = TILE_H * 0.62;
-            // 桌（立方体:顶亮侧暗）
-            const deskTop = staff ? 0xd6dbe4 : th.card;
-            const deskSide = staff ? 0xb9c1cd : 0xd7dce4;
-            cube(g, 0, 0, dw, dd, 16, deskTop, deskSide, th.border);
+            const { chx, chy } = workstation(g, 0, 0, th, !!staff);
             if (staff) {
-              // 椅（小方块在桌前）
-              cube(g, 0, dd * 0.85, dw * 0.45, dd * 0.45, 9, 0xaeb7c4, 0x98a2b3, th.border);
-              // 显示器（细高立方体）
-              cube(g, -dw * 0.22, -2, dw * 0.28, dd * 0.2, 24, 0x2f3b4e, 0x24303f, th.border);
-              // 小人（桌后）
-              person(g, dw * 0.18, -dd * 0.3, staff.name, th, true, v.label);
+              seatedPerson(g, chx, chy, th, true);
+              v.label.text = staff.name;
+              v.label.style.fill = th.fgMuted;
+              v.label.position.set(chx, chy + 42);
             } else {
-              // 空位:「+」提示
-              g.moveTo(-6, 0);
-              g.lineTo(6, 0);
-              g.moveTo(0, -6);
-              g.lineTo(0, 6);
-              g.stroke({ color: th.border, width: 1.5 });
               v.label.text = "";
             }
           }
-        }
-        renderSeats();
+        };
+
+        drawBg();
+        drawSeats();
 
         observer = new MutationObserver(() => {
           drawBg();
-          renderSeats();
+          drawSeats();
         });
         observer.observe(document.documentElement, {
           attributes: true,
           attributeFilter: ["class"],
         });
 
-        // ── 拖拽平移 + 滚轮缩放 ──
+        // 拖拽 + 缩放
         let dragging = false;
         let lastX = 0;
         let lastY = 0;
@@ -404,11 +531,10 @@ export function IsometricFloorPlan({
         window.addEventListener("pointermove", onMove);
         window.addEventListener("pointerup", onUp);
         a.canvas.addEventListener("wheel", onWheel, { passive: false });
-        const detach = () => {
+        detach = () => {
           window.removeEventListener("pointermove", onMove);
           window.removeEventListener("pointerup", onUp);
         };
-        (a.stage as unknown as { __detach?: () => void }).__detach = detach;
       } catch (e) {
         console.error("[IsometricFloorPlan] init failed:", e);
       }
@@ -418,7 +544,6 @@ export function IsometricFloorPlan({
     return () => {
       destroyed = true;
       observer?.disconnect();
-      const detach = (app?.stage as unknown as { __detach?: () => void } | undefined)?.__detach;
       detach?.();
       if (app) {
         try {
