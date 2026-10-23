@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TEAM-001 团队协作复用 AgentScope teams（浅映射）— RabbitWork 高保真原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* =========================================================
+         RabbitWork DS v2.1 tokens（与 apps/web/src/app/theme/tokens.css 同源）
+         ========================================================= */
+      :root {
+        --rw-bg: #fafafa;
+        --rw-card: #ffffff;
+        --rw-fg: #0f172a;
+        --rw-fg-muted: #64748b;
+        --rw-fg-subtle: #94a3b8;
+        --rw-border: #e4e8ee;
+        --rw-border-strong: #cbd5e1;
+        --rw-accent: #10b981;
+        --rw-accent-hover: #059669;
+        --rw-accent-fg: #ffffff;
+        --rw-accent-subtle: #ecfdf5;
+        --rw-success: #10b981;
+        --rw-success-subtle: #ecfdf5;
+        --rw-warning: #d97706;
+        --rw-warning-subtle: #fef3e2;
+        --rw-danger: #dc2626;
+        --rw-danger-subtle: #fdecec;
+        --rw-muted-subtle: #f1f5f9;
+        --rw-ring: rgba(16, 185, 129, 0.45);
+        --rw-shadow-float: 0 8px 24px rgba(15, 23, 42, 0.12);
+        --font-display: "Space Grotesk", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-body: "DM Sans", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --t-fast: 140ms;
+        --t-base: 200ms;
+        --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .dark {
+        --rw-bg: #0b0f1a;
+        --rw-card: #111827;
+        --rw-fg: #f1f5f9;
+        --rw-fg-muted: #94a3b8;
+        --rw-fg-subtle: #5b6b82;
+        --rw-border: #1e293b;
+        --rw-border-strong: #334155;
+        --rw-accent: #34d399;
+        --rw-accent-hover: #6ee7b7;
+        --rw-accent-fg: #052e21;
+        --rw-accent-subtle: rgba(52, 211, 153, 0.12);
+        --rw-success: #34d399;
+        --rw-success-subtle: rgba(52, 211, 153, 0.12);
+        --rw-warning: #f59e0b;
+        --rw-warning-subtle: rgba(245, 158, 11, 0.14);
+        --rw-danger: #f87171;
+        --rw-danger-subtle: rgba(248, 113, 113, 0.12);
+        --rw-muted-subtle: rgba(148, 163, 184, 0.1);
+        --rw-ring: rgba(52, 211, 153, 0.5);
+        --rw-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      html { font-size: 16px; }
+      body {
+        background: var(--rw-bg);
+        color: var(--rw-fg);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        transition: background 200ms var(--ease-out), color 200ms var(--ease-out);
+      }
+      .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+      .font-mono { font-family: var(--font-mono); }
+      .num { font-variant-numeric: tabular-nums; }
+      .rw-card { background: var(--rw-card); border: 1px solid var(--rw-border); border-radius: var(--radius-md); }
+      .rw-hover { transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+      .rw-hover:hover { transform: translateY(-3px); border-color: var(--rw-border-strong); box-shadow: var(--rw-shadow-float); }
+      .btn-primary {
+        background: var(--rw-accent); color: var(--rw-accent-fg); border-radius: var(--radius-sm);
+        padding: 0 16px; height: 32px; font-size: 14px; font-weight: 500;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-primary:hover { background: var(--rw-accent-hover); box-shadow: 0 0 0 4px var(--rw-ring); }
+      .btn-primary:active { transform: scale(0.96); }
+      .btn-default {
+        background: var(--rw-card); color: var(--rw-fg); border: 1px solid var(--rw-border-strong);
+        border-radius: var(--radius-sm); padding: 0 16px; height: 32px; font-size: 14px;
+        transition: all 140ms var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+      }
+      .btn-default:hover { border-color: var(--rw-accent); color: var(--rw-accent); }
+      .btn-text { color: var(--rw-fg-muted); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 14px; transition: all 140ms var(--ease-out); }
+      .btn-text:hover { background: var(--rw-muted-subtle); color: var(--rw-fg); }
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+        padding: 2px 10px; font-size: 12px; font-weight: 500; line-height: 20px;
+      }
+      .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+      .pill-success { background: var(--rw-success-subtle); color: var(--rw-success); }
+      .pill-success .pill-dot { background: var(--rw-success); animation: breathe 2.4s ease-in-out infinite; }
+      .pill-warning { background: var(--rw-warning-subtle); color: var(--rw-warning); }
+      .pill-warning .pill-dot { background: var(--rw-warning); }
+      .pill-muted { background: var(--rw-muted-subtle); color: var(--rw-fg-muted); }
+      .pill-muted .pill-dot { background: var(--rw-fg-subtle); }
+      .pill-danger { background: var(--rw-danger-subtle); color: var(--rw-danger); }
+      .pill-danger .pill-dot { background: var(--rw-danger); }
+      @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+      .tab {
+        padding: 8px 4px; margin-right: 24px; font-size: 14px; color: var(--rw-fg-muted);
+        border-bottom: 2px solid transparent; transition: all 140ms var(--ease-out); cursor: pointer;
+      }
+      .tab:hover { color: var(--rw-fg); }
+      .tab.active { color: var(--rw-accent); border-bottom-color: var(--rw-accent); font-weight: 500; }
+      .tab .num { margin-left: 4px; color: var(--rw-fg-subtle); font-size: 12px; }
+      .modal-mask { background: rgba(15, 23, 42, 0.45); }
+      .modal {
+        background: var(--rw-card); border-radius: var(--radius-lg); box-shadow: var(--rw-shadow-float);
+        border: 1px solid var(--rw-border);
+      }
+      .input {
+        background: var(--rw-card); border: 1px solid var(--rw-border-strong); border-radius: var(--radius-sm);
+        height: 32px; padding: 0 12px; font-size: 14px; color: var(--rw-fg); width: 100%;
+        transition: all 140ms var(--ease-out); outline: none;
+      }
+      .input:focus { border-color: var(--rw-accent); box-shadow: 0 0 0 3px var(--rw-ring); }
+      .avatar {
+        width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--rw-accent-subtle);
+        color: var(--rw-accent); display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 500; flex-shrink: 0;
+      }
+      .row-hover { transition: background 140ms var(--ease-out); }
+      .row-hover:hover { background: var(--rw-muted-subtle); }
+      .section-tag {
+        font-family: var(--font-mono); font-size: 12px; color: var(--rw-accent);
+        background: var(--rw-accent-subtle); border-radius: var(--radius-sm); padding: 2px 8px;
+      }
+      .sync-banner {
+        background: var(--rw-warning-subtle); border: 1px solid var(--rw-warning); border-radius: var(--radius-md);
+      }
+      .kbd { font-family: var(--font-mono); font-size: 11px; background: var(--rw-muted-subtle); border-radius: var(--radius-sm); padding: 1px 6px; color: var(--rw-fg-muted); }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- ═════════ 走查板头 ═════════ -->
+    <header class="sticky top-0 z-10 backdrop-blur-[16px] saturate-[1.4]" style="background: color-mix(in srgb, var(--rw-bg) 82%, transparent); border-bottom: 1px solid var(--rw-border)">
+      <div class="mx-auto flex max-w-[1080px] items-center justify-between px-8 py-3">
+        <div class="flex items-center gap-3">
+          <span class="section-tag">TEAM-001</span>
+          <h1 class="font-display text-[15px] font-semibold">团队协作复用 AgentScope teams · 高保真原型（浅映射）</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs" style="color: var(--rw-fg-subtle)">走查板 · 2026-10-21</span>
+          <button id="themeToggle" class="btn-default !h-8" onclick="document.documentElement.classList.toggle('dark')">🌗 主题切换</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-[1080px] px-8 py-8 space-y-10">
+      <style>
+        .iso-stage { background: var(--rw-muted-subtle); border: 1px solid var(--rw-border); border-radius: 8px; padding: 40px; overflow: auto; }
+        .iso-world { transform: rotateX(55deg) rotateZ(45deg); transform-style: preserve-3d; width: 520px; height: 380px; position: relative; margin: 0 auto; }
+        .tile { position:absolute; width:48px; height:48px; border:1px solid var(--rw-border); background: var(--rw-card); }
+        .wall-n { position:absolute; left:0; top:0; width:520px; height:64px; background:var(--rw-card); border:1px solid var(--rw-border); transform-origin: bottom; transform: rotateX(-90deg); }
+        .wall-w { position:absolute; left:0; top:0; width:64px; height:380px; background:var(--rw-card); border:1px solid var(--rw-border); transform-origin: right; transform: rotateY(90deg); }
+        .desk { position:absolute; width:40px; height:32px; }
+        .desk .top { position:absolute; inset:0; background: #d4d9e2; border-radius:3px; border:1px solid var(--rw-border); }
+        .desk .side { position:absolute; left:0; bottom:-8px; width:100%; height:10px; background:#b7bec9; transform-origin: top; transform: rotateX(-90deg); border-radius:2px; }
+        .person { position:absolute; width:22px; height:30px; transform: translateZ(18px); }
+        .person .head { width:16px; height:16px; border-radius:50%; background: var(--rw-accent); margin: 0 auto; border:2px solid #fff; box-shadow:0 0 0 2px rgba(16,185,129,.35); animation: breathe 2.4s ease-in-out infinite; }
+        .person .torso { width:20px; height:14px; border-radius:6px 6px 3px 3px; background: var(--rw-accent); opacity:.85; margin:1px auto 0; }
+        .person .tag { position:absolute; top:-16px; left:50%; transform: translateX(-50%) rotateZ(-45deg) rotateX(0deg); font-size:9px; white-space:nowrap; color: var(--rw-fg-muted); background: var(--rw-card); padding:0 4px; border:1px solid var(--rw-border); border-radius:3px; }
+        @keyframes breathe { 0%,100%{box-shadow:0 0 0 2px rgba(16,185,129,.35);} 50%{box-shadow:0 0 0 5px rgba(16,185,129,.12);} }
+        .roomlabel { position:absolute; font-size:10px; color:var(--rw-fg-subtle); background:var(--rw-card); border:1px solid var(--rw-border); padding:1px 6px; border-radius:3px; transform: translateZ(1px); }
+        .plant { position:absolute; width:12px; height:12px; border-radius:50% 50% 3px 3px; background:#3fa576; transform: translateZ(8px); }
+      </style>
+
+      <section>
+        <div class="mb-4 flex items-center gap-3"><span class="section-tag">A</span>
+          <h2 class="font-display text-[15px] font-semibold">等距楼层视图（CSS 3D 走查示意——实现为 Pixi 等距投影）</h2></div>
+        <div class="iso-stage" data-testid="iso-stage">
+          <div class="iso-world">
+            <div class="wall-n"></div><div class="wall-w"></div>
+            <!-- 地板由 tile 网格铺成（此处示意 6×4） -->
+            <div class="tile" style="left:0;top:0"></div><div class="tile" style="left:48px;top:0"></div><div class="tile" style="left:96px;top:0"></div><div class="tile" style="left:144px;top:0"></div><div class="tile" style="left:192px;top:0"></div><div class="tile" style="left:240px;top:0"></div>
+            <div class="tile" style="left:0;top:48px"></div><div class="tile" style="left:48px;top:48px"></div><div class="tile" style="left:96px;top:48px"></div><div class="tile" style="left:144px;top:48px"></div><div class="tile" style="left:192px;top:48px"></div><div class="tile" style="left:240px;top:48px"></div>
+            <!-- 开放工位区:桌+人 -->
+            <div class="desk" style="left:60px;top:70px"><div class="top"></div><div class="side"></div></div>
+            <div class="person" style="left:70px;top:52px"><div class="tag">林夏</div><div class="head"></div><div class="torso"></div></div>
+            <div class="desk" style="left:130px;top:70px"><div class="top"></div><div class="side"></div></div>
+            <div class="person" style="left:140px;top:52px"><div class="tag">陈北</div><div class="head"></div><div class="torso"></div></div>
+            <div class="desk" style="left:60px;top:140px"><div class="top"></div><div class="side"></div></div>
+            <div class="person" style="left:70px;top:122px"><div class="tag">苏晴</div><div class="head"></div><div class="torso"></div></div>
+            <!-- 空工位:只有桌 -->
+            <div class="desk" style="left:130px;top:140px;opacity:.45"><div class="top"></div><div class="side"></div></div>
+            <!-- 会议室:大桌 -->
+            <div class="desk" style="left:290px;top:70px;width:88px;height:52px"><div class="top"></div><div class="side" style="height:12px"></div></div>
+            <div class="person" style="left:315px;top:44px"><div class="tag">项目负责人</div><div class="head"></div><div class="torso"></div></div>
+            <div class="roomlabel" style="left:290px;top:135px">会议室</div>
+            <div class="roomlabel" style="left:60px;top:190px">开放工位区</div>
+            <div class="plant" style="left:400px;top:180px"></div>
+            <div class="roomlabel" style="left:375px;top:200px">休息角</div>
+          </div>
+        </div>
+        <p class="mt-3 text-xs" style="color:var(--rw-fg-subtle)">要点：等距投影（网格→菱形透视）;家具体两色（顶亮侧暗）;小人=头+身+名字牌,在线绿呼吸点,空工位半透明;房间名贴墙;悬停描边 accent;拖拽平移+缩放（0.6-1.6x）。家具目录摆放/场景聊天/白板内嵌登记后续。</p>
+      </section>
+
+    </main>
+  </body>
+</html>
