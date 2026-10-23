@@ -76,6 +76,7 @@
 | SKILL-002 | [SOP 状态机编排](./sprint-skill-2/SKILL-002-sop-orchestration.md) | Implemented |
 | STAFF-003 | [员工广场](./sprint-staff-3/STAFF-003-staff-gallery.md) | Implemented |
 | CHNL-001 | [渠道接入](./sprint-chnl-1/CHNL-001-im-channels.md) | Implemented |
+| SYS-002 | [用户与组织管理](./sprint-sys-2/SYS-002-user-management.md) | Implemented |
 
 ## 七、支撑文档
 

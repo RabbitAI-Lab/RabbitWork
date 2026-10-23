@@ -2,6 +2,7 @@ export { ApiError, baseUrl, del, downloadRaw, get, patch, post, put, request } f
 export { kbApi, mcpApi, modelApi, skillApi, staffResourceApi, toolApi } from "./resource";
 export {
   apiKeyApi,
+  userApi,
   channelApi,
   cronApi,
   galleryApi,
@@ -14,4 +15,11 @@ export {
   staffApi,
   teamApi,
 } from "./staff";
-export type { ChannelRow, ConversationDetail, GalleryItem, HandoffRow, PageResult } from "./staff";
+export type {
+  ChannelRow,
+  UserRow,
+  ConversationDetail,
+  GalleryItem,
+  HandoffRow,
+  PageResult,
+} from "./staff";

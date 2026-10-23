@@ -281,3 +281,25 @@ export const channelApi = {
   ) => patch<ChannelRow>(`/api/v1/channels/${id}`, input),
   remove: (id: string) => del<{ ok: boolean }>(`/api/v1/channels/${id}`),
 };
+
+// ───── users（SYS-002 用户管理） ─────
+
+export interface UserRow {
+  id: string;
+  email: string;
+  name: string;
+  role: "ADMIN" | "MEMBER";
+  status: "ACTIVE" | "DISABLED";
+  createdAt: string;
+}
+
+export const userApi = {
+  list: () => get<{ items: UserRow[]; total: number }>("/api/v1/users"),
+  create: (input: { email: string; name: string; role: string; password?: string }) =>
+    post<UserRow & { password: string }>("/api/v1/users", input),
+  update: (id: string, input: Partial<{ role: string; status: string; name: string }>) =>
+    patch<UserRow>(`/api/v1/users/${id}`, input),
+  remove: (id: string) => del<{ ok: boolean }>(`/api/v1/users/${id}`),
+  resetPassword: (id: string) =>
+    post<{ password: string }>(`/api/v1/users/${id}/reset-password`, {}),
+};

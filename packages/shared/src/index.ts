@@ -15,5 +15,6 @@ export * from "./staff";
 export * from "./sop";
 export * from "./team";
 export * from "./tool";
+export * from "./user";
 export { SESSION_COOKIE, SESSION_TTL_SEC, signSession, verifySession } from "./token";
 export type { SessionClaims } from "./token";

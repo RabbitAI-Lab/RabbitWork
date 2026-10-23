@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Avatar, Dropdown } from "antd";
 import {
   LogoutOutlined,
-  TeamOutlined,
   UserOutlined,
   HomeOutlined,
   AppstoreOutlined,
@@ -19,6 +18,7 @@ import {
   UserSwitchOutlined,
   AppstoreFilled,
   ApiOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { authApi } from "@rabbit/api-client";
 import { BrandMark } from "@/components/Brand";
@@ -37,7 +37,8 @@ export type MenuKey =
   | "cron"
   | "handoffs"
   | "gallery"
-  | "channels";
+  | "channels"
+  | "users";
 
 const MENUS: Array<{
   key: MenuKey;
@@ -136,6 +137,13 @@ const MENUS: Array<{
     label: "渠道",
     icon: <ApiOutlined />,
     match: /^\/channels(\/|$)/,
+  },
+  {
+    key: "users",
+    href: "/users",
+    label: "用户管理",
+    icon: <TeamOutlined />,
+    match: /^\/users(\/|$)/,
   },
 ];
 
