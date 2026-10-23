@@ -12,7 +12,8 @@ import {
 } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AppShell } from "@/components/AppShell";
-import { PixiFloorPlan } from "@/components/PixiFloorPlan";
+// OFFICE-004:等距楼层视图（PixiFloorPlan 保留为对照/回退）
+import { IsometricFloorPlan } from "@/components/IsometricFloorPlan";
 import { chatApi, staffApi } from "@rabbit/api-client";
 import { OFFICE_FLOOR_COUNT, OFFICE_SEATS_PER_FLOOR, type StaffDto } from "@rabbit/shared";
 import "./office.css";
@@ -289,7 +290,7 @@ export default function OfficePage() {
               {staffs.isLoading ? (
                 <p className="rw-text-subtle py-8 text-center text-sm">楼层加载中…</p>
               ) : null}
-              <PixiFloorPlan
+              <IsometricFloorPlan
                 floor={floor}
                 bySeat={bySeat}
                 onSeatClick={(seat, staff) => {
