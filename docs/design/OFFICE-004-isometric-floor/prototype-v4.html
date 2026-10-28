@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OFFICE-004 v4 · PixOffice 素材风楼层平面（高保真原型）</title>
+<style>
+  /* RabbitWork DS 速记：中性灰阶 + 运行绿单强调（原型外壳，非交付物） */
+  :root {
+    --bg: #17181c; --panel: #1f2127; --panel-2: #24262e; --border: #30333d;
+    --fg: #e7e9ee; --subtle: #9aa1af; --accent: #10b981; --accent-dim: #0c8a61;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 14px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 16px; font-weight: 650; }
+  .tag { font-size: 12px; color: var(--accent); border: 1px solid var(--accent-dim); border-radius: 999px; padding: 1px 10px; }
+  .tag.gray { color: var(--subtle); border-color: var(--border); }
+  header .sp { flex: 1; }
+  header .hint { font-size: 12px; color: var(--subtle); }
+  .layout { display: flex; gap: 16px; padding: 16px 22px; align-items: flex-start; }
+  aside { width: 218px; flex: none; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .card .eyebrow { font-size: 12px; color: var(--subtle); margin-bottom: 10px; }
+  .floor-btn { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: 9px 12px; margin-bottom: 6px;
+    background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--fg); cursor: pointer; font-size: 13px; }
+  .floor-btn:hover { border-color: var(--subtle); }
+  .floor-btn.on { border-color: var(--accent); background: rgba(16, 185, 129, .08); }
+  .floor-btn .n { color: var(--subtle); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .floor-btn.on .n { color: var(--accent); }
+  .stat { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .stat b { font-variant-numeric: tabular-nums; font-weight: 600; }
+  main { flex: 1; min-width: 0; }
+  .stage { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: auto; cursor: default; }
+  #menu { position: fixed; display: none; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .45); padding: 4px; z-index: 30; min-width: 148px; }
+  #menu .mi { display: flex; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  #menu .mi:hover { background: rgba(16, 185, 129, .1); color: var(--accent); }
+  #menu .sep { height: 1px; background: var(--border); margin: 4px 6px; }
+  #tip { position: fixed; display: none; pointer-events: none; background: rgba(23, 24, 28, .94); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; z-index: 31; }
+  #tip b { color: var(--accent); }
+  footer { padding: 8px 22px 20px; font-size: 12px; color: var(--subtle); }
+</style>
+</head>
+<body>
+<header>
+  <h1>办公室 · 楼层平面 v4</h1>
+  <span class="tag">PixOffice 素材风</span>
+  <span class="tag gray">3 层 × 6 工位·与参照同构</span>
+  <span class="sp"></span>
+  <span class="hint">悬停查看工位 · 点击工位打开操作菜单 · 支持滚轮缩放 / 拖拽平移</span>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="card">
+      <div class="eyebrow">办公楼 · 点击楼层查看平面</div>
+      <div id="floors"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">当前楼层</div>
+      <div class="stat"><span>已入座</span><b id="st-seated" style="color:var(--accent)">0</b></div>
+      <div class="stat"><span>空工位</span><b id="st-free">0</b></div>
+      <div class="stat"><span>在线呼吸点</span><b id="st-online">0</b></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stage"><canvas id="cv" width="1424" height="1105"></canvas></div>
+  </main>
+</div>
+
+<div id="menu"></div>
+<div id="tip"></div>
+<footer>
+  原型说明：素材（房间背景 / 桌椅 / 人物 ×6 包）取自 pixoffice 开源仓库（MIT 代码；美术素材授权需另行确认，内部使用已登记来源）。
+  占座 = typing-back-v2 坐姿打字整帧四拍循环（240ms/帧，相位按姓名错开）；人椅桌按「帧内手位 ↔ 桌键盘」「椅座 ↔ 臀部」对齐。
+</footer>
+
+<script>
+"use strict";
+/* ============ 数据（原型 mock；实现期替换为 staffApi 数据绑定） ============ */
+const CHAR_PACKS = ["app-agent", "code-agent", "data-agent", "file-agent", "review-agent", "office-lead"];
+/* 6 工位 = 6 个人物包一一对应（与 pixoffice 参照场景同构）；楼层递减便于走查空位 */
+const FLOOR_STAFF = {
+  1: [["李研", "code-agent"], ["周策", "office-lead"], ["赵数", "data-agent"], ["钱应", "app-agent"], ["孙卷", "review-agent"], ["吴档", "file-agent"]],
+  2: [["李研", "code-agent"], ["赵数", "data-agent"], ["钱应", "app-agent"], ["吴档", "file-agent"]],
+  3: [["周策", "office-lead"], ["孙卷", "review-agent"]],
+};
+const EMOTES = { wave: "👋", think: "💭", laugh: "😄", idea: "💡", angry: "💢" };
+
+function hashName(s) { let h = 0; for (const c of s) h = (h * 31 + c.codePointAt(0)) >>> 0; return h; }
+const packOf = (name) => CHAR_PACKS[hashName(name) % CHAR_PACKS.length];
+
+/* ============ 素材 ============ */
+const A = "assets/";
+const IMG = {};
+function load(src) { return new Promise((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = err; i.src = src; }); }
+const SRC = {
+  room: A + "room-whiteboard-v3.png",
+  desk: A + "desk.png",
+  chair: A + "chair.png",
+  conf: A + "conference-table.png",
+};
+for (const c of CHAR_PACKS) for (let f = 1; f <= 4; f++) SRC[`${c}-t${f}`] = `${A}characters/${c}/typing${f}.png`;
+
+/* ============ 布局参数（实测自 pixoffice 成品整景 office.png，1402×1122 ≈ 本画布 1:1） ============
+ * 桌宽 250 / 人坐姿高 120 / 人脚 = 桌底 + 15（头顶与显示器屏齐平）/ 名牌在脚下 / 会议桌 430 宽居底。 */
+const W = 1424, H = 1105;
+const SEATS = [
+  { x: 475, y: 470 }, { x: 925, y: 470 },
+  { x: 475, y: 662 }, { x: 925, y: 662 },
+  { x: 475, y: 852 }, { x: 925, y: 852 },
+];
+const CONF = { x: 715, y: 1005, w: 430 };
+const DESK_W = 250;                     // desk 原图 920×582（office.png 实测桌宽）
+const DESK_SCALE = DESK_W / 920;
+const PERSON_SCALE = 0.468;             // 坐姿人高 ≈133px（office.png 观感）
+const CHAIR_SCALE = 0.22;                // 椅背宽于人背：两侧明显露出（office.png 同观感）
+const FRAME_MS = 240;                   // typing-back-v2 四帧打字循环
+const TAG_H = 20;
+/* 工位装配终参：完整坐姿剪影——背/臀/腿连体坐在椅上（臀=帧280→桌心+90，正落在椅座面上），
+ * 身体在桌前空地完整可见，手臂前伸搭桌沿打字；椅子拉出桌底、脚轮在人脚侧 */
+const PERSON_OFF = { x: 2.1, y: 112 };   // 臀=桌心+82 贴桌底、手=+28 搭桌面、臀正落椅座(+84)
+const CHAIR_OFF = 105;
+
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+
+let floor = 1, view = { x: 0, y: 0, k: 1 };   // 平移/缩放
+let hoverSeat = -1, seats = [], emoteBubbles = [];
+
+function seatLayout() {
+  return SEATS.map(({ x, y }, i) => ({
+    n: i + 1, x, y,
+    desk: { x, y, w: 920 * DESK_SCALE, h: 582 * DESK_SCALE },
+    chair: { x, y: y + CHAIR_OFF },
+    person: { x: x + PERSON_OFF.x, y: y + PERSON_OFF.y },
+    hit: { x: x - 135, y: y - 90, w: 270, h: 230 },
+  }));
+}
+
+function staffAt(floor, seat) {
+  const row = (FLOOR_STAFF[floor] || [])[seat - 1];
+  return row ? { name: row[0], pack: row[1] } : null;
+}
+
+/* ── 坐姿打字（typing-back-v2 整帧四拍循环，帧相位按姓名错开） ── */
+function drawWorker(pack, person, t, name) {
+  const ph = (hashName(name) >> 3) % 4;
+  const frame = 1 + (Math.floor(t / FRAME_MS) + ph) % 4;
+  ctx.drawImage(IMG[`${pack}-t${frame}`],
+    person.x - 128 * PERSON_SCALE, person.y - 344 * PERSON_SCALE,
+    256 * PERSON_SCALE, 384 * PERSON_SCALE);
+}
+
+function draw(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
+
+  ctx.drawImage(IMG.room, 0, 0, W, H);
+
+  // 白板动态内容（实现期可绑定楼层任务数据；原型为示意）
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "700 26px PingFang SC, sans-serif"; ctx.fillStyle = "#3a3f3c";
+  ctx.fillText(`${floor}F · 项目推进`, 712, 180);
+  ctx.font = "500 15px PingFang SC, sans-serif"; ctx.fillStyle = "#6b7370";
+  ctx.fillText("今日焦点：评审排期 · 用例补齐 · 缺陷清零", 712, 212);
+  const sticky = [["评审排期", "#ffd98a"], ["用例补齐", "#a8e6a1"], ["缺陷清零", "#9fd0ff"]];
+  sticky.forEach(([txt, color], i) => {
+    const sx = 585 + i * 128, sy = 256;
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate((i - 1) * 0.02);
+    ctx.fillStyle = color; roundRect(-52, -26, 104, 62, 3); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.font = "600 14px PingFang SC, sans-serif";
+    ctx.fillText(txt, 0, 4); ctx.restore();
+  });
+  ctx.textAlign = "start";
+
+  // 深度排序：按座位 y 自远而近绘制
+  for (const s of seats.slice().sort((a, b) => a.y - b.y)) {
+    const staff = staffAt(floor, s.n);
+
+    // 桌（含显示器，朝向人物）
+    ctx.drawImage(IMG.desk, s.desk.x - s.desk.w / 2, s.desk.y - s.desk.h / 2, s.desk.w, s.desk.h);
+
+    // 椅（空位/占位都画：先椅后人，人遮椅背）
+    {
+      const w = 474 * CHAIR_SCALE, h = 492 * CHAIR_SCALE;
+      ctx.drawImage(IMG.chair, s.chair.x - w / 2, s.chair.y - h + 24, w, h);
+    }
+
+    // 人 / 空椅
+    if (staff) {
+      drawWorker(staff.pack, s.person, t, staff.name);
+
+      // 名牌（头顶上方：座号灰 + 姓名白，一行居中）
+      const label = staff.name, seatNo = `${floor}F-${String(s.n).padStart(2, "0")}`;
+      ctx.font = "600 12px PingFang SC, sans-serif";
+      const tw = ctx.measureText(label).width;
+      ctx.font = "500 10px PingFang SC, sans-serif";
+      const nw = ctx.measureText(seatNo).width;
+      const bw = Math.max(76, tw + nw + 30), bx = s.person.x - bw / 2, by = s.person.y + 12;  // 名牌在脚下（office.png 同款）
+      ctx.fillStyle = "rgba(20,21,25,.78)";
+      roundRect(bx, by, bw, TAG_H, 6); ctx.fill();
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "right"; ctx.fillStyle = "#9aa1af";
+      ctx.fillText(seatNo, s.person.x - 6, by + TAG_H / 2 + .5);
+      ctx.textAlign = "left"; ctx.fillStyle = "#e7e9ee";
+      ctx.fillText(label, s.person.x + 6, by + TAG_H / 2 + .5);
+      ctx.textAlign = "start";
+
+      // 在线呼吸点（名牌左端外）
+      const breath = 0.55 + 0.45 * Math.abs(Math.sin(t / 900));
+      ctx.beginPath(); ctx.arc(bx - 9, by + TAG_H / 2, 3.6, 0, 7);
+      ctx.fillStyle = `rgba(16,185,129,${breath})`; ctx.fill();
+    }
+
+    // hover 高亮
+    if (hoverSeat === s.n) {
+      ctx.strokeStyle = staff ? "rgba(16,185,129,.9)" : "rgba(154,161,175,.7)";
+      ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      roundRect(s.hit.x + 2, s.hit.y + 2, s.hit.w - 4, s.hit.h - 4, 10); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  // 底部会议桌（纯场景装饰，最靠近观众）
+  {
+    const cw = CONF.w, ch = 827 / 1902 * cw;
+    ctx.drawImage(IMG.conf, CONF.x - cw / 2, CONF.y - ch / 2, cw, ch);
+  }
+
+  // 表情气泡（点击菜单触发，3.2s）
+  const now = performance.now();
+  emoteBubbles = emoteBubbles.filter((b) => now - b.t0 < 3200);
+  for (const b of emoteBubbles) {
+    const p = (now - b.t0) / 3200;
+    const s = seats[b.seat - 1]; if (!s) continue;
+    const rise = p * 26, alpha = p < .8 ? 1 : 1 - (p - .8) / .2;
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.font = "26px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(b.emoji, s.person.x, s.person.y - PERSON_H - 34 - rise);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(draw);
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ============ 交互 ============ */
+function toWorld(e) { const r = cv.getBoundingClientRect(); const sx = (e.clientX - r.left) / r.width * W, sy = (e.clientY - r.top) / r.height * H; return { x: (sx - view.x) / view.k, y: (sy - view.y) / view.k }; }
+function pick(e) { const p = toWorld(e); for (const s of seats) { const h = s.hit; if (p.x >= h.x && p.x <= h.x + h.w && p.y >= h.y && p.y <= h.y + h.h) return s.n; } return -1; }
+
+cv.addEventListener("pointermove", (e) => {
+  hoverSeat = pick(e);
+  cv.style.cursor = hoverSeat > 0 ? "pointer" : "default";
+  const tip = document.getElementById("tip");
+  if (hoverSeat > 0) {
+    const st = staffAt(floor, hoverSeat);
+    tip.innerHTML = st ? `<b>${st.name}</b> · ${floor}F-${String(hoverSeat).padStart(2, "0")} · 在座工作中`
+                       : `空工位 · ${floor}F-${String(hoverSeat).padStart(2, "0")}`;
+    tip.style.display = "block"; tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 10 + "px";
+  } else tip.style.display = "none";
+});
+cv.addEventListener("pointerleave", () => { hoverSeat = -1; document.getElementById("tip").style.display = "none"; });
+
+const menu = document.getElementById("menu");
+cv.addEventListener("click", (e) => {
+  const n = pick(e); if (n < 0) { menu.style.display = "none"; return; }
+  const st = staffAt(floor, n);
+  menu.innerHTML = st
+    ? `<div class="mi" data-a="chat">💬 发起对话</div><div class="mi" data-a="swap">🔀 更换座位</div><div class="sep"></div>`
+      + Object.entries(EMOTES).map(([k, v]) => `<div class="mi" data-a="emote" data-k="${k}">${v} ${ { wave: "挥手", think: "思考", laugh: "大笑", idea: "灵感", angry: "生气" }[k] }</div>`).join("")
+    : `<div class="mi" data-a="sit">🪑 坐到这里</div>`;
+  menu.style.display = "block";
+  menu.style.left = Math.min(e.clientX, innerWidth - 170) + "px";
+  menu.style.top = Math.min(e.clientY, innerHeight - 220) + "px";
+});
+menu.addEventListener("click", (e) => {
+  const mi = e.target.closest(".mi"); if (!mi) return;
+  const a = mi.dataset.a;
+  if (a === "emote") { const n = pickSeatFromMenu(); emoteBubbles.push({ seat: n, emoji: EMOTES[mi.dataset.k], t0: performance.now() }); }
+  menu.style.display = "none";
+});
+function pickSeatFromMenu() { const r = cv.getBoundingClientRect(); return hoverSeatCache; }
+let hoverSeatCache = -1;
+cv.addEventListener("pointermove", (e) => { hoverSeatCache = pick(e); }); // 菜单定位用缓存
+document.addEventListener("click", (e) => { if (!menu.contains(e.target) && e.target !== cv) menu.style.display = "none"; }, true);
+
+/* 缩放 + 拖拽 */
+let drag = null;
+cv.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY }; });
+addEventListener("pointermove", (e) => { if (!drag) return; view.x += e.clientX - drag.x; view.y += e.clientY - drag.y; drag = { x: e.clientX, y: e.clientY }; });
+addEventListener("pointerup", () => drag = null);
+cv.addEventListener("wheel", (e) => { e.preventDefault(); const k = Math.min(2, Math.max(.6, view.k * (e.deltaY > 0 ? .92 : 1.08))); view.k = k; }, { passive: false });
+
+/* ============ 楼层栏 ============ */
+function renderFloors() {
+  document.getElementById("floors").innerHTML = [1, 2, 3].map((f) => {
+    const n = (FLOOR_STAFF[f] || []).length;
+    return `<button class="floor-btn ${f === floor ? "on" : ""}" data-f="${f}"><span>${f}F</span><span class="n">${n}/6 在座</span></button>`;
+  }).join("");
+  document.getElementById("st-seated").textContent = (FLOOR_STAFF[floor] || []).length;
+  document.getElementById("st-free").textContent = 6 - (FLOOR_STAFF[floor] || []).length;
+  document.getElementById("st-online").textContent = (FLOOR_STAFF[floor] || []).length;
+}
+document.getElementById("floors").addEventListener("click", (e) => {
+  const b = e.target.closest(".floor-btn"); if (!b) return;
+  floor = +b.dataset.f; renderFloors();
+});
+
+/* ============ 启动 ============ */
+(async () => {
+  const jobs = Object.entries(SRC).map(async ([k, v]) => { IMG[k] = await load(v); });
+  await Promise.all(jobs);
+  seats = seatLayout();
+  renderFloors();
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

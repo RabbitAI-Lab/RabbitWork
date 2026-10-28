@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OFFICE-004 v5 · 平面办公室楼层图（高保真原型 · 全自绘零素材）</title>
+<style>
+  /* RabbitWork DS 语义色（原型内联双主题；实施时读 design-system tokens.css 的 --rw-*） */
+  :root {
+    --rw-bg: #f7f8fa; --rw-panel: #ffffff; --rw-border: #e2e5ea; --rw-fg: #1c2128; --rw-subtle: #7b8494;
+    --rw-accent: #10b981; --rw-accent-dim: #0c8a61;
+    /* 平面图配色 v2：中性灰阶系（现代工具感，绿只留给交互语义） */
+    --plan-floor: #eef0f3; --plan-floor-alt: #e6e9ee; --plan-wall: #2f3542; --plan-wall-fill: #d9dde3;
+    --plan-glass: #d8e8ee; --plan-wood: #fbfcfd; --plan-wood-line: #b7bec9; --plan-leaf: #8fae9b;
+    --plan-person-hair: #3d3229; --plan-shadow: rgba(47, 53, 66, .10);
+  }
+  .dark {
+    --rw-bg: #17181c; --rw-panel: #1f2127; --rw-border: #30333d; --rw-fg: #e7e9ee; --rw-subtle: #9aa1af;
+    --plan-floor: #23262e; --plan-floor-alt: #292c35; --plan-wall: #c6ccd8; --plan-wall-fill: #434956;
+    --plan-glass: #2b4652; --plan-wood: #2c303a; --plan-wood-line: #4d5462; --plan-leaf: #46604f;
+    --plan-person-hair: #d9cfc4; --plan-shadow: rgba(0, 0, 0, .32);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--rw-bg); color: var(--rw-fg); font: 14px/1.6 -apple-system, "PingFang SC", sans-serif; transition: background .2s; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--rw-border); }
+  header h1 { font-size: 16px; font-weight: 650; }
+  .tag { font-size: 12px; color: var(--rw-accent); border: 1px solid var(--rw-accent-dim); border-radius: 999px; padding: 1px 10px; }
+  .tag.gray { color: var(--rw-subtle); border-color: var(--rw-border); }
+  header .sp { flex: 1; }
+  header .hint { font-size: 12px; color: var(--rw-subtle); }
+  #themeBtn { background: var(--rw-panel); border: 1px solid var(--rw-border); color: var(--rw-fg); border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+  .layout { display: flex; gap: 16px; padding: 16px 22px; align-items: flex-start; }
+  aside { width: 218px; flex: none; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--rw-panel); border: 1px solid var(--rw-border); border-radius: 8px; padding: 14px; }
+  .card .eyebrow { font-size: 12px; color: var(--rw-subtle); margin-bottom: 10px; }
+  .floor-btn { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: 9px 12px; margin-bottom: 6px;
+    background: transparent; border: 1px solid var(--rw-border); border-radius: 6px; color: var(--rw-fg); cursor: pointer; font-size: 13px; }
+  .floor-btn:hover { border-color: var(--rw-subtle); }
+  .floor-btn.on { border-color: var(--rw-accent); background: rgba(16, 185, 129, .08); }
+  .floor-btn .n { color: var(--rw-subtle); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .floor-btn.on .n { color: var(--rw-accent); }
+  .stat { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .stat b { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: var(--rw-subtle); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  main { flex: 1; min-width: 0; }
+  .stage { position: relative; background: var(--rw-panel); border: 1px solid var(--rw-border); border-radius: 8px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: auto; }
+  #tip { position: fixed; display: none; pointer-events: none; background: var(--rw-panel); border: 1px solid var(--rw-border);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; z-index: 31; box-shadow: 0 4px 16px var(--plan-shadow); }
+  #tip b { color: var(--rw-accent); }
+  footer { padding: 8px 22px 20px; font-size: 12px; color: var(--rw-subtle); }
+</style>
+</head>
+<body>
+<header>
+  <h1>办公室 · 楼层平面图 v5</h1>
+  <span class="tag">全自绘 · 零素材依赖</span>
+  <span class="tag gray">3 层 × 12 工位</span>
+  <span class="sp"></span>
+  <span class="hint">悬停查看工位 · 点击工位打开操作菜单 · 右上角切换主题</span>
+  <button id="themeBtn">🌙 暗色</button>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="card">
+      <div class="eyebrow">办公楼 · 点击楼层查看平面</div>
+      <div id="floors"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">当前楼层</div>
+      <div class="stat"><span>已入座</span><b id="st-seated" style="color:var(--rw-accent)">0</b></div>
+      <div class="stat"><span>空工位</span><b id="st-free">0</b></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">图例</div>
+      <div class="legend">
+        <span><i style="background:var(--rw-accent)"></i>在座员工</span>
+        <span><i style="background:var(--rw-border)"></i>空工位</span>
+        <span><i style="background:var(--plan-wood)"></i>桌面</span>
+        <span><i style="background:var(--plan-leaf)"></i>绿植</span>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stage"><canvas id="cv" width="1200" height="760"></canvas></div>
+  </main>
+</div>
+
+<div id="tip"></div>
+<footer>
+  v5 说明：建筑平面图语言全自绘（墙体双线 / 门弧 / 窗台线 / 家具制图符号），无任何第三方素材（规避 pixoffice 美术授权风险）；
+  配色对齐 RabbitWork DS（中性灰阶 + 运行绿单强调，亮暗双主题）。占座 = 俯视小人（头 + 肩，衣色按姓名哈希）+ 桌面座号牌。
+</footer>
+
+<script>
+"use strict";
+/* ============ 数据（原型 mock；实施期接 staffApi） ============ */
+const NAMES = ["李研", "周策", "赵数", "钱应", "孙卷", "吴档", "郑算", "王图", "冯声", "陈纹", "褚档", "卫码"];
+const FLOOR_STAFF = { 1: NAMES, 2: NAMES.slice(0, 7), 3: NAMES.slice(0, 4) };
+const TONES = ["#0f766e", "#2f6fd0", "#a85d32", "#6f7b42", "#33507a", "#b08325"];
+function hashName(s) { let h = 0; for (const c of s) h = (h * 31 + c.codePointAt(0)) >>> 0; return h; }
+const toneOf = (n) => TONES[hashName(n) % TONES.length];
+
+/* ============ 平面图参数（建筑语言：墙厚/门弧/家具符号） ============ */
+const W = 1200, H = 760, WALL = 12;
+const C = () => getComputedStyle(document.documentElement); // 读 CSS 变量 → 亮暗自动切换
+const v = (name) => C().getPropertyValue(name).trim();
+
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+let floor = 1, hoverSeat = -1;
+
+/* 12 工位：开放区三列 × 四行（俯视桌 116×76，面向北墙） */
+const SEATS = [];
+for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) {
+  SEATS.push({ x: 590 + c * 172, y: 192 + r * 124, n: r * 3 + c + 1 });
+}
+
+function staffAt(f, seat) { const n = (FLOOR_STAFF[f] || [])[seat - 1]; return n ? { name: n } : null; }
+
+/* ───────── 绘制原语 ───────── */
+function wallRect(x, y, w, h) { // 双线墙体：外描边 + 填充
+  ctx.fillStyle = v("--plan-wall-fill");
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = v("--plan-wall"); ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+}
+function windowSeg(x1, y1, x2, y2) { // 窗：墙带断口 + 玻璃双细线
+  ctx.strokeStyle = v("--plan-glass"); ctx.lineWidth = WALL - 4; ctx.lineCap = "butt";
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = v("--plan-wall"); ctx.lineWidth = 1.5;
+  for (const off of [-(WALL - 4) / 2, (WALL - 4) / 2]) {
+    ctx.beginPath();
+    if (y1 === y2) { ctx.moveTo(x1, y1 + off); ctx.lineTo(x2, y2 + off); } else { ctx.moveTo(x1 + off, y1); ctx.lineTo(x2 + off, y2); }
+    ctx.stroke();
+  }
+}
+function doorArc(x, y, r, a0, a1) { // 门：开启弧 + 门板线
+  ctx.strokeStyle = v("--plan-wall"); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x, y, r, a0, a1); ctx.stroke();
+  ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(x, y, r, a0, a1 + Math.PI / 2); ctx.stroke(); ctx.setLineDash([]);
+}
+function desk(x, y, w, h, label, name) { // 俯视桌：白灰面 + 显示器/键盘 + 桌面座号牌（占座附姓名+呼吸点）
+  ctx.fillStyle = v("--plan-shadow"); roundRect(x + 3, y + 4, w, h, 6); ctx.fill();
+  ctx.fillStyle = v("--plan-wood"); roundRect(x, y, w, h, 6); ctx.fill();
+  ctx.strokeStyle = v("--plan-wood-line"); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = v("--plan-wall"); roundRect(x + w / 2 - 28, y + 6, 56, 8, 2); ctx.fill();      // 显示器
+  ctx.fillStyle = v("--rw-panel"); roundRect(x + w / 2 - 21, y + 19, 42, 6, 2); ctx.fill();      // 键盘
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "500 10px -apple-system, PingFang SC"; ctx.fillStyle = v("--rw-subtle");
+  ctx.textAlign = "left"; ctx.fillText(label, x + 8, y + h - 8);          // 座号：左下角
+  if (name) {
+    const breath = .5 + .5 * Math.abs(Math.sin(performance.now() / 900));
+    ctx.fillStyle = "rgba(16,185,129," + (0.35 + 0.6 * breath) + ")";
+    ctx.beginPath(); ctx.arc(x + w - ctx.measureText(name).width - 22, y + h - 11, 3.2, 0, 7); ctx.fill();
+    ctx.fillStyle = v("--rw-fg"); ctx.font = "600 11px -apple-system, PingFang SC";
+    ctx.textAlign = "right"; ctx.fillText(name, x + w - 8, y + h - 8);    // 姓名+呼吸点：右下角
+  }
+  ctx.textAlign = "start";
+}
+function chairTop(x, y, occupied, name) { // 俯视椅（桌南侧）：靠背弧 + 座面；占座画小人
+  const tone = occupied ? toneOf(name) : v("--rw-border");
+  ctx.fillStyle = occupied ? tone : v("--plan-floor-alt");
+  ctx.strokeStyle = occupied ? tone : v("--plan-wall"); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.roundRect(x - 20, y - 20, 40, 40, 10); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = occupied ? tone : v("--plan-wall"); ctx.lineWidth = 5; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.arc(x, y + 2, 17, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); // 靠背弧
+  if (occupied) { // 俯视小人：头（发色圆）+ 双肩弧（衣色）
+    ctx.fillStyle = v("--plan-person-hair");
+    ctx.beginPath(); ctx.arc(x, y - 1, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = tone; ctx.globalAlpha = .9;
+    ctx.beginPath(); ctx.arc(x, y + 4, 13, Math.PI * 1.08, Math.PI * 1.92); ctx.fill(); ctx.globalAlpha = 1;
+  }
+}
+function confTable(x, y) { // 会议桌 + 6 椅
+  ctx.fillStyle = v("--plan-shadow"); roundRect(x + 3, y + 4, 250, 96, 10); ctx.fill();
+  ctx.fillStyle = v("--plan-wood"); roundRect(x, y, 250, 96, 10); ctx.fill();
+  ctx.strokeStyle = v("--plan-wood-line"); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.strokeStyle = v("--plan-wall"); ctx.lineWidth = 1;
+  roundRect(x + 10, y + 8, 230, 80, 8); ctx.stroke();
+  ctx.fillStyle = v("--plan-floor-alt"); ctx.strokeStyle = v("--plan-wall"); ctx.lineWidth = 1;
+  for (let i = 0; i < 3; i++) for (const side of [-1, 1]) {
+    const cx = x + 45 + i * 80, cy = y + (side < 0 ? -12 : 108);
+    ctx.beginPath(); ctx.roundRect(cx - 15, cy - 11, 30, 22, 7); ctx.fill(); ctx.stroke();
+  }
+}
+function plant(x, y, r) { // 绿植：叶圆 + 放射叶脉
+  ctx.fillStyle = v("--plan-leaf"); ctx.globalAlpha = .85;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * (r - 3), y + Math.sin(a) * (r - 3)); ctx.stroke(); }
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ───────── 场景 ───────── */
+function draw() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const M = 44; // 图纸外边距
+
+  // 图纸底 + 地板
+  ctx.fillStyle = v("--rw-panel"); ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = v("--plan-floor"); ctx.fillRect(M, M, W - M * 2, H - M * 2);
+
+  // 地板纹理（淡网格 = 平面图纸感）
+  ctx.strokeStyle = v("--plan-floor-alt"); ctx.lineWidth = 1;
+  for (let gx = M + 60; gx < W - M; gx += 60) { ctx.beginPath(); ctx.moveTo(gx, M); ctx.lineTo(gx, H - M); ctx.stroke(); }
+  for (let gy = M + 60; gy < H - M; gy += 60) { ctx.beginPath(); ctx.moveTo(M, gy); ctx.lineTo(W - M, gy); ctx.stroke(); }
+
+  // 外墙（上墙带三段窗）
+  wallRect(M, M, W - M * 2, WALL);
+  windowSeg(M + 150, M + WALL / 2, M + 560, M + WALL / 2);
+  windowSeg(W - M - 460, M + WALL / 2, W - M - 150, M + WALL / 2);
+  wallRect(M, H - M - WALL, W - M * 2, WALL); windowSeg(M + 420, H - M - WALL / 2, M + 700, H - M - WALL / 2);
+  wallRect(M, M, WALL, H - M * 2);
+  wallRect(W - M - WALL, M, WALL, H - M * 2); windowSeg(W - M - WALL / 2, M + 130, W - M - WALL / 2, H - M - 240);
+
+  // 内墙：两个会议室（左侧上下两间）
+  wallRect(M + WALL, M + WALL, 8, H - M * 2 - WALL * 2);              // 竖墙（贯通）
+  wallRect(M + WALL, 330, 340, 8);                                     // 中横墙（带门洞）
+  ctx.fillStyle = v("--plan-floor"); ctx.fillRect(M + WALL + 180, 326, 56, 16);
+  doorArc(M + WALL + 236, 330, 46, Math.PI, Math.PI * 1.5);
+  wallRect(M + WALL, 560, 340, 8);                                     // 下横墙（带门洞）
+  ctx.fillStyle = v("--plan-floor"); ctx.fillRect(M + WALL + 60, 556, 56, 16);
+  doorArc(M + WALL + 116, 560, 46, Math.PI * 1.5, Math.PI);
+
+  // 区域标注
+  ctx.fillStyle = v("--rw-subtle"); ctx.font = "600 13px -apple-system, PingFang SC";
+  ctx.fillText("会议室 A", M + WALL + 22, M + WALL + 26);
+  ctx.fillText("会议室 B", M + WALL + 22, 356);
+  ctx.fillText("开放工位区 · 12 工位", 560, M + WALL + 26);
+  ctx.font = "500 12px -apple-system, PingFang SC";
+  ctx.fillText("茶水角", M + WALL + 64, 620);
+
+  // 会议室 A（6 椅）
+  confTable(M + WALL + 40, M + WALL + 52);
+  // 会议室 B（4 椅）
+  ctx.save(); ctx.translate(M + WALL + 44, 380); ctx.scale(.92, .92); ctx.translate(-(M + WALL + 44), -380);
+  confTable(M + WALL + 44, 380); ctx.restore();
+
+  // 茶水角（左下间）：吧台 + 绿植
+  ctx.fillStyle = v("--plan-shadow"); roundRect(M + WALL + 30, 640, 150, 40, 8); ctx.fill();
+  ctx.fillStyle = v("--plan-wood"); roundRect(M + WALL + 26, 636, 150, 40, 8); ctx.fill();
+  ctx.strokeStyle = v("--plan-wood-line"); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = v("--rw-subtle"); ctx.font = "500 11px -apple-system";
+  ctx.fillText("☕", M + WALL + 90, 661);
+  plant(M + WALL + 260, 660, 16);
+
+  // 开放工位区：12 工位（桌 116×76 + 座号/姓名上桌 + 椅/小人）
+  for (const s of SEATS) {
+    const st = staffAt(floor, s.n);
+    desk(s.x - 58, s.y - 38, 116, 76, `${floor}F-${String(s.n).padStart(2, "0")}`, st?.name ?? "");
+    chairTop(s.x, s.y + 50, Boolean(st), st?.name ?? "");
+    if (hoverSeat === s.n) { // hover 高亮（工位整体）
+      ctx.strokeStyle = st ? v("--rw-accent") : v("--rw-subtle"); ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      roundRect(s.x - 68, s.y - 48, 136, 134, 10); ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+
+  // 角落绿植
+  plant(W - M - 52, M + 60, 20); plant(M + 60, H - M - 60, 20);
+
+  // 图纸角标（右下）
+  ctx.fillStyle = v("--rw-subtle"); ctx.font = "500 11px -apple-system";
+  ctx.textAlign = "right";
+  ctx.fillText(`${floor}F · 楼层平面 · 比例示意`, W - M, H - 18);
+  ctx.textAlign = "start";
+
+  requestAnimationFrame(draw);
+}
+
+/* ───────── 交互 ───────── */
+function pick(e) {
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+  for (const s of SEATS) if (Math.abs(x - s.x) < 68 && y > s.y - 48 && y < s.y + 86) return s.n;
+  return -1;
+}
+cv.addEventListener("pointermove", (e) => {
+  hoverSeat = pick(e);
+  cv.style.cursor = hoverSeat > 0 ? "pointer" : "default";
+  const tip = document.getElementById("tip");
+  if (hoverSeat > 0) {
+    const st = staffAt(floor, hoverSeat);
+    tip.innerHTML = st ? `<b>${st.name}</b> · ${floor}F-${String(hoverSeat).padStart(2, "0")} · 在座工作中`
+                       : `空工位 · ${floor}F-${String(hoverSeat).padStart(2, "0")}`;
+    tip.style.display = "block"; tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 10 + "px";
+  } else tip.style.display = "none";
+});
+cv.addEventListener("pointerleave", () => { hoverSeat = -1; document.getElementById("tip").style.display = "none"; });
+cv.addEventListener("click", (e) => {
+  const n = pick(e);
+  if (n > 0) console.log("[v5原型] 点击工位", n, staffAt(floor, n)); // 实施期接 onSeatClick 菜单（与现页面一致）
+});
+
+/* 楼层栏 & 主题 */
+function renderFloors() {
+  document.getElementById("floors").innerHTML = [1, 2, 3].map((f) =>
+    `<button class="floor-btn ${f === floor ? "on" : ""}" data-f="${f}"><span>${f}F</span><span class="n">${(FLOOR_STAFF[f] || []).length}/12 在座</span></button>`
+  ).join("");
+  document.getElementById("st-seated").textContent = (FLOOR_STAFF[floor] || []).length;
+  document.getElementById("st-free").textContent = 12 - (FLOOR_STAFF[floor] || []).length;
+}
+document.getElementById("floors").addEventListener("click", (e) => {
+  const b = e.target.closest(".floor-btn"); if (!b) return;
+  floor = +b.dataset.f; renderFloors();
+});
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const dark = document.documentElement.classList.toggle("dark");
+  document.getElementById("themeBtn").textContent = dark ? "☀️ 亮色" : "🌙 暗色";
+});
+
+renderFloors();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

@@ -6,7 +6,7 @@
 | 所属迭代   | sprint-office-2（用户点名效果：pixoffice.online/office,2026-10-23） |
 | 优先级     | P1 |
 | 所属模块   | office |
-| 文档状态   | Implemented（2026-10-23；e2e 59 条全绿——3 例网络抖动重跑绿;走查待人工） |
+| 文档状态   | Implemented（v5 平面楼层图 2026-10-28：全自绘零素材规避授权风险，每层 12 工位 + 双会议室；OFFICE 域 e2e 6/6 绿） |
 | 最后更新日期 | 2026-10-23 |
 | 上游依赖   | office 页既有数据链路（staffs/deskFloor/deskSeat/楼层切换）· Pixi v8（已引入） |
 | 上游依据   | 用户指定效果（PixOffice 完整办公室示例:bundle 逆向——等距场景/房间/家具/员工小人+online 状态/白板/聊天） |
