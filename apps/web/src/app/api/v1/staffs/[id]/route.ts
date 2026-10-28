@@ -60,7 +60,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-/** 软删除（已发布员工先下线语义：PUBLISHED → OFFLINE 再软删）。 */
+/** 软删除（已发布员工先下线语义：PUBLISHED → OFFLINE 再软删）。软删必须释放工位——
+ *  唯一索引 (org_id,desk_floor,desk_seat) 不排除软删行，不清座位会永久占用（OFFICE-004 v4 六座制下 e2e 实证）。 */
 export async function DELETE(_req: Request, ctx: Ctx) {
   try {
     await requirePermission("ORG_STAFF:DELETE");
@@ -68,7 +69,7 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     await findStaff(id);
     await prisma.digitalEmployee.update({
       where: { id },
-      data: { status: "OFFLINE", deletedAt: new Date() },
+      data: { status: "OFFLINE", deskFloor: null, deskSeat: null, deletedAt: new Date() },
     });
     return jsonOk({ ok: true });
   } catch (e) {

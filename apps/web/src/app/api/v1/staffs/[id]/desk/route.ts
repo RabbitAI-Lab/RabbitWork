@@ -32,11 +32,19 @@ export async function PUT(req: Request, ctx: Ctx) {
       );
     }
 
-    const updated = await prisma.digitalEmployee.update({
-      where: { id },
-      data: { deskFloor: input.floor, deskSeat: input.seat },
-    });
-    return jsonOk(toStaffDto(updated));
+    try {
+      const updated = await prisma.digitalEmployee.update({
+        where: { id },
+        data: { deskFloor: input.floor, deskSeat: input.seat },
+      });
+      return jsonOk(toStaffDto(updated));
+    } catch (e) {
+      // 唯一索引 (org_id,desk_floor,desk_seat) 兜底：占用检查与写入间的并发、以及软删未释放座位的历史脏行（P2002）
+      if ((e as { code?: string }).code === "P2002") {
+        throw new DomainError(ErrCode.STAFF_STATE_INVALID, `${input.floor}F-${String(input.seat).padStart(2, "0")} 座位状态冲突（可能被未释放的离职座位占用）`);
+      }
+      throw e;
+    }
   } catch (e) {
     return toErrorResponse(e);
   }
