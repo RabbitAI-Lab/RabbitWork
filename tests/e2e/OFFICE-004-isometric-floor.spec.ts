@@ -7,6 +7,8 @@ import { expect, test } from "./fixtures";
  */
 let seq = 0;
 const uniq = () => `E2E等距${Date.now().toString(36)}${(seq++).toString(36)}`;
+/** OFFICE-004 v5：每层 12 工位（平面图，常量 OFFICE_SEATS_PER_FLOOR） */
+const SEATS_PER_FLOOR = 12;
 
 test("OFFICE-004-01 等距 canvas 渲染 + 既有数据卡不回退", async ({
   authedPage: page,
@@ -17,7 +19,7 @@ test("OFFICE-004-01 等距 canvas 渲染 + 既有数据卡不回退", async ({
   });
   const staffId = ((await staff.json()) as { data: { id: string } }).data.id;
   await page.request.post(`/api/v1/staffs/${staffId}/publish`, { data: {} });
-  for (let seat = 20; seat >= 1; seat--) {
+  for (let seat = SEATS_PER_FLOOR; seat >= 1; seat--) {
     const r = await page.request.put(`/api/v1/staffs/${staffId}/desk`, {
       data: { floor: 1, seat },
     });
@@ -40,8 +42,15 @@ test("OFFICE-004-02 员工入座回显（楼层计数）+ 点击画布无错误"
   authedPage: page,
   expectNoConsoleErrors,
 }) => {
-  // 入座到确定空闲的工位：选 1F 最后一个（20）——若 409 则顺延递减找空位
-  let seat = 20;
+  // 自清场（rules/testing §3.2 用例数据独立）：历史失败 run 遗留的本用例前缀员工可能占满 6 座
+  const stale = await page.request.get("/api/v1/staffs?page=1&pageSize=100");
+  const staleList = ((await stale.json()) as { data: { items: Array<{ id: string; name: string }> } }).data.items;
+  for (const it of staleList.filter((s) => s.name.includes("E2E等距"))) {
+    await page.request.delete(`/api/v1/staffs/${it.id}`);
+  }
+
+  // 入座到确定空闲的工位：选 1F 最后一个（12）——若 409 则顺延递减找空位
+  let seat = SEATS_PER_FLOOR;
   let seated: import("@playwright/test").APIResponse | null = null;
   const staff = await page.request.post("/api/v1/staffs", {
     data: { name: `E2E等距入座${uniq()}`, title: "T", personaPrompt: "x" },
@@ -58,6 +67,7 @@ test("OFFICE-004-02 员工入座回显（楼层计数）+ 点击画布无错误"
     }
   }
   expect(seated?.status(), "1F 应至少有一个空位").toBe(200);
+  const gotSeat = seat; // 记录本用例占用的座位，供删除释放断言复用
 
   await page.goto("/office");
   const canvas = page.getByTestId("office-pixi-floor-wrap").locator("canvas").first();
@@ -66,14 +76,25 @@ test("OFFICE-004-02 员工入座回显（楼层计数）+ 点击画布无错误"
   const floorBtn = page.getByTestId("office-floor-1");
   await expect(floorBtn).toBeVisible();
   const label = await floorBtn.getAttribute("aria-label");
-  expect(label).toMatch(/1\s*工位在用|[2-9]|1[0-9]|20/u);
+  expect(label).toMatch(/([1-9]|1[0-2]) \/ 12 工位在用/u);
   // 点击画布交互不报错（canvas 内坐标自动化不稳定——同 OFFICE-002/003 先例,点到即验证事件链无异常）
   const box = await canvas.boundingBox();
   await page.mouse.click(box!.x + box!.width * 0.5, box!.y + box!.height * 0.2);
   await expect(canvas).toBeVisible();
 
   await expectNoConsoleErrors();
+
+  // 回归（六座制缺陷）：软删员工必须释放工位——删除后同座位可被新员工立即占用（否则幽灵座位锁死楼层）
   await page.request.delete(`/api/v1/staffs/${staffId}`);
+  const next = await page.request.post("/api/v1/staffs", {
+    data: { name: `E2E等距复用${uniq()}`, title: "T", personaPrompt: "x" },
+  });
+  const nextId = ((await next.json()) as { data: { id: string } }).data.id;
+  const reuse = await page.request.put(`/api/v1/staffs/${nextId}/desk`, {
+    data: { floor: 1, seat: gotSeat },
+  });
+  expect(reuse.status(), "删除员工后其原座位应立即可复用").toBe(200);
+  await page.request.delete(`/api/v1/staffs/${nextId}`);
 });
 
 test("OFFICE-004-03 楼层切换重绘", async ({ authedPage: page, expectNoConsoleErrors }) => {

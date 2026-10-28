@@ -1,63 +1,38 @@
 "use client";
 
 /**
- * OFFICE-004 v3 · PixOffice 风格办公室楼层（Pixi v8,Client Component）
+ * OFFICE-004 v5 · 平面办公室楼层图（canvas 全自绘，Client Component）
  * ──────────────────────────────────────────────────────────────────
- * 画法移植自 github.com/workbzw/pixoffice（MIT,packages/scene-office）:
- * 俯视正交网格、圆角桌面+蓝色渐变屏+键盘鼠标、轮滑转椅、软阴影椭圆、
- * 占座绿点;y 轴 zIndex 深度（桌前沿分界,人坐桌后露头）。
- * 数据绑定不变（floor-seat ↔ staff;props 与旧版兼容,office 页零改动）。
+ * 画法与布局以 docs/design/OFFICE-004-isometric-floor/prototype-v5.html 人工确认稿为准
+ * （2026-10-28 用户决策：弃用 pixoffice 素材规避授权风险，改建筑平面图语言全自绘）。
+ * 配色经 tokens.css --rw-plan-* 双值登记（亮暗自动跟随）；绿仅交互语义（在座/hover）。
+ * 交互：hover 高亮、点击工位回调（菜单/对话由页面层承担）。
  */
 
 import { useEffect, useRef } from "react";
-import { Application, Container, FillGradient, Graphics, Text } from "pixi.js";
 import type { StaffDto } from "@rabbit/shared";
+import { OFFICE_SEATS_PER_FLOOR } from "@rabbit/shared";
 
-const FLOOR_COLS = 5;
-const FLOOR_ROWS = 4;
-const FLOOR_SEATS = FLOOR_COLS * FLOOR_ROWS;
-const CANVAS_W = 980;
-const CANVAS_H = 680;
-const ZOOM_MIN = 0.55;
-const ZOOM_MAX = 1.8;
+const W = 1200;
+const H = 760;
+const WALL = 12;
+const M = 44; // 图纸外边距
 
-/** PixOffice DeskEntity STYLE 同源调色（MIT 契约） */
-const STYLE = {
-  shadow: { color: 0x454543, alpha: 0.055 },
-  deskTop: 0xfaf8f4,
-  deskEdge: 0xe8e0d4,
-  deskStroke: 0xd8d0c4,
-  chairDark: 0x556b7d,
-  chair: 0x7a8fa3,
-  chairWheel: 0x3d4a56,
-  monitor: 0x2e3238,
-  screenTop: 0x7ec8ff,
-  screenBottom: 0x4a8fd9,
-  keyboard: 0xeeedea,
-  keyboardStroke: 0xd0ccc4,
-  mouse: 0xf5f4f1,
-  occupied: 0x50b86c,
-  floorTileA: 0xf7f4ee,
-  floorTileB: 0xf2eee6,
-  floorStroke: 0xe7e0d2,
-  wall: 0xeadfce,
-  wallEdge: 0xd9ccba,
-  board: 0xffffff,
-  boardFrame: 0xb9ab93,
-  boardText: 0x343b36,
-  window: 0xcfe8f7,
-  plantPot: 0xc07845,
-  plant: 0x4caf6e,
-  plantDark: 0x3c8f57,
-  skin: 0xffd9b3,
-  hair: 0x4a3728,
-  labelFg: 0x5b6472,
-  hover: 0x10b981,
-} as const;
+/** 衣色池（姓名哈希；与员工详情 Hero 工位照同源的稳重色系） */
+const TONES = ["#0f766e", "#2f6fd0", "#a85d32", "#6f7b42", "#33507a", "#b08325"] as const;
 
-const SEAT_Y = 45;
-const DESK_OFFSET_Y = -8;
-const SCALE = 1.5;
+function hashName(s: string): number {
+  let h = 0;
+  for (const ch of s) h = (h * 31 + ch.codePointAt(0)!) >>> 0;
+  return h;
+}
+const toneOf = (n: string): string => TONES[hashName(n) % TONES.length]!;
+
+/** 12 工位：开放区三列 × 四行（俯视桌 116×76，面向北墙） */
+const SEATS: Array<{ x: number; y: number; n: number }> = [];
+for (let r = 0; r < 4; r++) {
+  for (let c = 0; c < 3; c++) SEATS.push({ x: 590 + c * 172, y: 192 + r * 124, n: r * 3 + c + 1 });
+}
 
 export interface IsometricFloorPlanProps {
   floor: number;
@@ -66,76 +41,6 @@ export interface IsometricFloorPlanProps {
   onSeatClick?: (seat: number, staff?: StaffDto) => void;
 }
 
-/* ───────── PixOffice 画法移植（DeskEntity fallback 系列） ───────── */
-
-/** 桌身（圆角桌面+显示器渐变屏+键盘鼠标）与桌前沿两段 */
-function drawDesk(deskLayer: Container, frontLayer: Container): void {
-  const g = new Graphics();
-  g.roundRect(-46, -6, 92, 34, 10);
-  g.fill(STYLE.deskTop);
-  g.stroke({ color: STYLE.deskStroke, width: 1.5, alpha: 0.55 });
-  g.roundRect(-22, -48, 44, 30, 6);
-  g.fill(STYLE.monitor);
-  const grad = new FillGradient({
-    type: "linear",
-    start: { x: 0, y: 0 },
-    end: { x: 0, y: 1 },
-    colorStops: [
-      { offset: 0, color: STYLE.screenTop },
-      { offset: 1, color: STYLE.screenBottom },
-    ],
-    textureSpace: "local",
-  });
-  g.roundRect(-18, -44, 36, 22, 4);
-  g.fill(grad);
-  g.roundRect(-20, 0, 40, 8, 4);
-  g.fill(STYLE.keyboard);
-  g.stroke({ color: STYLE.keyboardStroke, width: 1, alpha: 0.5 });
-  g.ellipse(18, 6, 5, 7);
-  g.fill(STYLE.mouse);
-  deskLayer.addChild(g);
-  const front = new Graphics();
-  front.roundRect(-44, 22, 88, 8, 4);
-  front.fill(STYLE.deskEdge);
-  frontLayer.addChild(front);
-}
-
-/** 轮滑转椅（靠背+座垫+五轮底座） */
-function drawChair(layer: Container): void {
-  const g = new Graphics();
-  const baseY = 64;
-  g.ellipse(0, baseY, 30, 11);
-  g.fill(STYLE.chairDark);
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
-    g.circle(Math.cos(a) * 24, baseY + Math.sin(a) * 6, 3.5);
-    g.fill(STYLE.chairWheel);
-  }
-  g.roundRect(-24, 40, 48, 18, 14);
-  g.fill(STYLE.chair);
-  g.roundRect(-22, 30, 44, 14, 8);
-  g.fill(STYLE.chair);
-  g.position.set(0, SEAT_Y - 36);
-  layer.addChild(g);
-}
-
-/** 桌后露头（发+脸+在线呼吸点,坐姿人主要被桌面遮挡——PixOffice 同语义） */
-function drawHead(parent: Container): Graphics {
-  const g = new Graphics();
-  g.circle(0, 0, 9);
-  g.fill(STYLE.skin);
-  g.circle(0, -3, 8.6);
-  g.fill(STYLE.hair);
-  g.circle(13, -8, 3);
-  g.fill({ color: STYLE.occupied, alpha: 0.95 });
-  g.circle(13, -8, 6);
-  g.fill({ color: STYLE.occupied, alpha: 0.2 });
-  parent.addChild(g);
-  return g;
-}
-
-/* ───────── 组件 ───────── */
-
 export function IsometricFloorPlan({
   floor,
   bySeat,
@@ -143,282 +48,269 @@ export function IsometricFloorPlan({
   onSeatClick,
 }: IsometricFloorPlanProps) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const dispatchedRef = useRef(0);
+  const clickRef = useRef(onSeatClick);
+  clickRef.current = onSeatClick;
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    let app: Application | null = null;
     let destroyed = false;
-    let observer: MutationObserver | null = null;
-    let detach: (() => void) | null = null;
+    let raf = 0;
+    let hoverSeat = -1;
 
-    const setup = async () => {
-      try {
-        const a = new Application();
-        await a.init({
-          width: CANVAS_W,
-          height: CANVAS_H,
-          backgroundAlpha: 0,
-          antialias: true,
-          resolution: typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1,
-          autoDensity: true,
-        });
-        if (destroyed) {
-          a.destroy(true, { children: true });
-          return;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.width = "100%";
+    canvas.style.height = "auto";
+    canvas.style.display = "block";
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    /* 主题色缓存：读 tokens.css 语义变量，class 切换时失效重取（亮暗跟随） */
+    const cache = new Map<string, string>();
+    let themeDirty = true;
+    const v = (name: string): string => {
+      if (themeDirty) cache.clear();
+      themeDirty = false;
+      const hit = cache.get(name);
+      if (hit) return hit;
+      const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      cache.set(name, val);
+      return val;
+    };
+    const observer = new MutationObserver(() => {
+      themeDirty = true;
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    const roundRect = (x: number, y: number, w: number, h: number, r: number): void => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    };
+
+    /* ── 制图原语 ── */
+    const wallRect = (x: number, y: number, w: number, h: number): void => {
+      ctx.fillStyle = v("--rw-plan-wall-fill");
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = v("--rw-plan-wall");
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    };
+    const windowSeg = (x1: number, y1: number, x2: number, y2: number): void => {
+      ctx.strokeStyle = v("--rw-plan-glass");
+      ctx.lineWidth = WALL - 4;
+      ctx.lineCap = "butt";
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.strokeStyle = v("--rw-plan-wall");
+      ctx.lineWidth = 1.5;
+      for (const off of [-(WALL - 4) / 2, (WALL - 4) / 2]) {
+        ctx.beginPath();
+        if (y1 === y2) { ctx.moveTo(x1, y1 + off); ctx.lineTo(x2, y2 + off); }
+        else { ctx.moveTo(x1 + off, y1); ctx.lineTo(x2 + off, y2); }
+        ctx.stroke();
+      }
+    };
+    const doorArc = (x: number, y: number, r: number, a0: number, a1: number): void => {
+      ctx.strokeStyle = v("--rw-plan-wall");
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, r, a0, a1); ctx.stroke();
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(x, y, r, a0, a1 + Math.PI / 2); ctx.stroke();
+      ctx.setLineDash([]);
+    };
+    const desk = (x: number, y: number, w: number, h: number, label: string, name: string): void => {
+      ctx.fillStyle = v("--rw-plan-shadow"); roundRect(x + 3, y + 4, w, h, 6); ctx.fill();
+      ctx.fillStyle = v("--rw-plan-furniture"); roundRect(x, y, w, h, 6); ctx.fill();
+      ctx.strokeStyle = v("--rw-plan-furniture-line"); ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = v("--rw-plan-wall"); roundRect(x + w / 2 - 28, y + 6, 56, 8, 2); ctx.fill();
+      ctx.fillStyle = v("--rw-card"); roundRect(x + w / 2 - 21, y + 19, 42, 6, 2); ctx.fill();
+      ctx.textBaseline = "alphabetic";
+      ctx.font = "500 10px -apple-system, PingFang SC";
+      ctx.fillStyle = v("--rw-fg-subtle");
+      ctx.textAlign = "left"; ctx.fillText(label, x + 8, y + h - 8);
+      if (name) {
+        const breath = 0.5 + 0.5 * Math.abs(Math.sin(performance.now() / 900));
+        ctx.font = "600 11px -apple-system, PingFang SC";
+        ctx.fillStyle = `rgba(16,185,129,${0.35 + 0.6 * breath})`;
+        ctx.beginPath(); ctx.arc(x + w - ctx.measureText(name).width - 22, y + h - 11, 3.2, 0, 7); ctx.fill();
+        ctx.fillStyle = v("--rw-fg");
+        ctx.textAlign = "right"; ctx.fillText(name, x + w - 8, y + h - 8);
+      }
+      ctx.textAlign = "start";
+    };
+    const chairTop = (x: number, y: number, occupied: boolean, name: string): void => {
+      const tone = occupied ? toneOf(name) : v("--rw-plan-floor-alt");
+      ctx.fillStyle = occupied ? tone : v("--rw-plan-floor-alt");
+      ctx.strokeStyle = occupied ? tone : v("--rw-plan-wall");
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.roundRect(x - 20, y - 20, 40, 40, 10); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 5; ctx.lineCap = "round";
+      ctx.strokeStyle = occupied ? tone : v("--rw-plan-wall");
+      ctx.beginPath(); ctx.arc(x, y + 2, 17, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke();
+      if (occupied) {
+        ctx.fillStyle = "#3d3229"; // 发色（固定值：暗色主题下保持深发以维持俯视辨识）
+        ctx.beginPath(); ctx.arc(x, y - 1, 8, 0, 7); ctx.fill();
+        ctx.fillStyle = tone; ctx.globalAlpha = 0.9;
+        ctx.beginPath(); ctx.arc(x, y + 4, 13, Math.PI * 1.08, Math.PI * 1.92); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    };
+    const confTable = (x: number, y: number, scale = 1): void => {
+      ctx.save();
+      ctx.translate(x + 125 * scale, y + 48 * scale);
+      ctx.scale(scale, scale);
+      ctx.translate(-(x + 125 * scale), -(y + 48 * scale));
+      ctx.fillStyle = v("--rw-plan-shadow"); roundRect(x + 3, y + 4, 250, 96, 10); ctx.fill();
+      ctx.fillStyle = v("--rw-plan-furniture"); roundRect(x, y, 250, 96, 10); ctx.fill();
+      ctx.strokeStyle = v("--rw-plan-furniture-line"); ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.strokeStyle = v("--rw-plan-wall"); ctx.lineWidth = 1;
+      roundRect(x + 10, y + 8, 230, 80, 8); ctx.stroke();
+      ctx.fillStyle = v("--rw-plan-floor-alt");
+      ctx.strokeStyle = v("--rw-plan-wall"); ctx.lineWidth = 1;
+      for (let i = 0; i < 3; i++) {
+        for (const side of [-1, 1]) {
+          const cx = x + 45 + i * 80, cy = y + (side < 0 ? -12 : 108);
+          ctx.beginPath(); ctx.roundRect(cx - 15, cy - 11, 30, 22, 7); ctx.fill(); ctx.stroke();
         }
-        app = a;
-        host.appendChild(a.canvas);
-        a.canvas.setAttribute("role", "img");
-        a.canvas.setAttribute(
-          "aria-label",
-          `办公室楼层 ${floor}F：${FLOOR_SEATS} 工位（PixOffice 风格俯视）`,
-        );
-
-        const world = new Container();
-        world.sortableChildren = true;
-        a.stage.addChild(world);
-        a.stage.eventMode = "static";
-
-        /* ── 房间（地板/墙/白板/窗/绿植,zIndex 最低） ── */
-        const drawRoom = () => {
-          const old = world.getChildByName("room");
-          if (old) old.destroy({ children: true });
-          const room = new Container();
-          room.name = "room";
-          room.zIndex = 0;
-          const g = new Graphics();
-          const TILE = 44;
-          const cols = Math.ceil((CANVAS_W - 40) / TILE);
-          const rows = Math.ceil((CANVAS_H - 150) / TILE);
-          for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-              const color = (c + r) % 2 === 0 ? STYLE.floorTileA : STYLE.floorTileB;
-              g.rect(20 + c * TILE, 130 + r * TILE, TILE, TILE);
-              g.fill({ color, alpha: 0.95 });
-              g.stroke({ color: STYLE.floorStroke, width: 1, alpha: 0.5 });
-            }
-          }
-          g.roundRect(20, 46, CANVAS_W - 40, 84, 10);
-          g.fill(STYLE.wall);
-          g.rect(20, 122, CANVAS_W - 40, 8);
-          g.fill(STYLE.wallEdge);
-          g.roundRect(0, 46, 20, CANVAS_H - 60, 8);
-          g.fill(STYLE.wall);
-          g.roundRect(CANVAS_W / 2 - 170, 58, 340, 58, 6);
-          g.fill(STYLE.board);
-          g.stroke({ color: STYLE.boardFrame, width: 4 });
-          for (const wx of [110, CANVAS_W - 110]) {
-            g.roundRect(wx - 60, 56, 120, 46, 8);
-            g.fill({ color: STYLE.window, alpha: 0.95 });
-            g.stroke({ color: STYLE.boardFrame, width: 3 });
-            g.moveTo(wx, 56);
-            g.lineTo(wx, 102);
-            g.moveTo(wx - 60, 79);
-            g.lineTo(wx + 60, 79);
-            g.stroke({ color: STYLE.boardFrame, width: 2, alpha: 0.7 });
-          }
-          for (const px of [58, CANVAS_W - 44]) {
-            g.roundRect(px - 11, 150, 22, 20, 4);
-            g.fill(STYLE.plantPot);
-            g.circle(px, 142, 14);
-            g.fill({ color: STYLE.plant, alpha: 0.95 });
-            g.circle(px - 9, 150, 8);
-            g.fill({ color: STYLE.plantDark, alpha: 0.9 });
-            g.circle(px + 9, 148, 9);
-            g.fill({ color: STYLE.plantDark, alpha: 0.85 });
-          }
-          room.addChild(g);
-          const boardTitle = new Text({
-            text: `项目推进 · ${floor}F`,
-            style: {
-              fontFamily: "PingFang SC, sans-serif",
-              fontSize: 17,
-              fontWeight: "700",
-              fill: STYLE.boardText,
-            },
-          });
-          boardTitle.anchor.set(0.5);
-          boardTitle.position.set(CANVAS_W / 2, 88);
-          room.addChild(boardTitle);
-          world.addChild(room);
-        };
-        drawRoom();
-
-        /* ── 工位（阴影/桌身/椅/前沿/占座点/露头/名牌 + hover） ── */
-        const seatViews = new Map<
-          number,
-          { indicator: Graphics; head: Graphics; label: Text; hover: Graphics }
-        >();
-        const layout = (seatNum: number): { x: number; y: number } => {
-          const row = Math.floor((seatNum - 1) / FLOOR_COLS);
-          const col = (seatNum - 1) % FLOOR_COLS;
-          return { x: 130 + col * 186, y: 235 + row * 88 };
-        };
-
-        for (let seatNum = 1; seatNum <= FLOOR_SEATS; seatNum++) {
-          const p = layout(seatNum);
-          const root = new Container();
-          root.sortableChildren = true;
-          root.position.set(p.x, p.y);
-          root.eventMode = "static";
-          root.cursor = "pointer";
-
-          const shadowG = new Graphics();
-          const deskLayer = new Container();
-          const chairLayer = new Container();
-          const frontLayer = new Container();
-          const indicator = new Graphics();
-          const hover = new Graphics();
-          const headWrap = new Container();
-          const head = drawHead(headWrap);
-
-          shadowG.ellipse(0, SEAT_Y + 27, 25, 6);
-          shadowG.fill(STYLE.shadow);
-          drawDesk(deskLayer, frontLayer);
-          drawChair(chairLayer);
-
-          for (const part of [
-            shadowG,
-            deskLayer,
-            chairLayer,
-            frontLayer,
-            indicator,
-            hover,
-            headWrap,
-          ]) {
-            part.position.set(0, DESK_OFFSET_Y);
-            part.scale.set(SCALE);
-            root.addChild(part);
-          }
-          headWrap.position.set(0, DESK_OFFSET_Y - 34 * 0 + -52);
-
-          const label = new Text({
-            text: "",
-            style: {
-              fontFamily: "PingFang SC, sans-serif",
-              fontSize: 11,
-              fontWeight: "600",
-              fill: STYLE.labelFg,
-            },
-          });
-          label.anchor.set(0.5);
-          label.position.set(0, 92);
-          root.addChild(label);
-
-          shadowG.zIndex = p.y - 0.6;
-          frontLayer.zIndex = p.y + 20;
-          chairLayer.zIndex = p.y + 21;
-          headWrap.zIndex = p.y + 21.5;
-          deskLayer.zIndex = p.y + 22;
-          indicator.zIndex = p.y + 23;
-          label.zIndex = p.y + 24;
-          hover.zIndex = p.y + 25;
-
-          root.hitArea = {
-            contains: (x: number, y: number) => Math.abs(x) < 82 && y > -86 && y < 82,
-          } as never;
-
-          root.on("pointertap", () => {
-            const now = Date.now();
-            if (now - dispatchedRef.current < 80) return;
-            dispatchedRef.current = now;
-            onSeatClick?.(seatNum, bySeat.get(`${floor}-${seatNum}`));
-          });
-          root.on("pointerenter", () => {
-            const staff = bySeat.get(`${floor}-${seatNum}`);
-            hover.clear();
-            hover.roundRect(-80, -80, 160, 164, 12);
-            hover.stroke({ color: STYLE.hover, width: 2, alpha: staff ? 0.7 : 0.35 });
-          });
-          root.on("pointerleave", () => hover.clear());
-
-          world.addChild(root);
-          seatViews.set(seatNum, { indicator, head, label, hover });
-        }
-
-        const drawSeats = () => {
-          for (const [seatNum, v] of seatViews) {
-            const staff = bySeat.get(`${floor}-${seatNum}`);
-            v.indicator.clear();
-            if (staff) {
-              v.indicator.circle(0, SEAT_Y - 4, 5.5);
-              v.indicator.fill({ color: STYLE.occupied, alpha: 0.85 });
-              v.indicator.stroke({ color: 0xffffff, width: 1.5, alpha: 0.6 });
-            }
-            v.head.visible = !!staff;
-            v.label.text = staff?.name ?? "";
-          }
-        };
-        drawSeats();
-
-        observer = new MutationObserver(() => {
-          drawRoom();
-          drawSeats();
-        });
-        observer.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ["class"],
-        });
-
-        /* ── 拖拽 + 缩放 ── */
-        let dragging = false;
-        let lastX = 0;
-        let lastY = 0;
-        const onDown = (e: PointerEvent) => {
-          if (e.button !== 0) return;
-          dragging = true;
-          lastX = e.clientX;
-          lastY = e.clientY;
-        };
-        const onMove = (e: PointerEvent) => {
-          if (!dragging) return;
-          world.x += e.clientX - lastX;
-          world.y += e.clientY - lastY;
-          lastX = e.clientX;
-          lastY = e.clientY;
-        };
-        const onUp = () => {
-          dragging = false;
-        };
-        const onWheel = (e: WheelEvent) => {
-          e.preventDefault();
-          const next = Math.min(
-            ZOOM_MAX,
-            Math.max(ZOOM_MIN, world.scale.x * (e.deltaY > 0 ? 0.92 : 1.08)),
-          );
-          world.scale.set(next);
-        };
-        a.canvas.addEventListener("pointerdown", onDown);
-        window.addEventListener("pointermove", onMove);
-        window.addEventListener("pointerup", onUp);
-        a.canvas.addEventListener("wheel", onWheel, { passive: false });
-        detach = () => {
-          window.removeEventListener("pointermove", onMove);
-          window.removeEventListener("pointerup", onUp);
-        };
-      } catch (e) {
-        console.error("[PixOfficeScene] init failed:", e);
+      }
+      ctx.restore();
+    };
+    const plant = (x: number, y: number, r: number): void => {
+      ctx.fillStyle = v("--rw-plan-leaf"); ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 1;
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * (r - 3), y + Math.sin(a) * (r - 3)); ctx.stroke();
       }
     };
 
-    setup();
+    const staffAt = (seat: number): StaffDto | undefined => bySeat.get(`${floor}-${seat}`);
+
+    const draw = (): void => {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = v("--rw-card"); ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = v("--rw-plan-floor"); ctx.fillRect(M, M, W - M * 2, H - M * 2);
+
+      ctx.strokeStyle = v("--rw-plan-floor-alt"); ctx.lineWidth = 1;
+      for (let gx = M + 60; gx < W - M; gx += 60) { ctx.beginPath(); ctx.moveTo(gx, M); ctx.lineTo(gx, H - M); ctx.stroke(); }
+      for (let gy = M + 60; gy < H - M; gy += 60) { ctx.beginPath(); ctx.moveTo(M, gy); ctx.lineTo(W - M, gy); ctx.stroke(); }
+
+      // 外墙 + 窗
+      wallRect(M, M, W - M * 2, WALL);
+      windowSeg(M + 150, M + WALL / 2, M + 560, M + WALL / 2);
+      windowSeg(W - M - 460, M + WALL / 2, W - M - 150, M + WALL / 2);
+      wallRect(M, H - M - WALL, W - M * 2, WALL);
+      windowSeg(M + 420, H - M - WALL / 2, M + 700, H - M - WALL / 2);
+      wallRect(M, M, WALL, H - M * 2);
+      wallRect(W - M - WALL, M, WALL, H - M * 2);
+      windowSeg(W - M - WALL / 2, M + 130, W - M - WALL / 2, H - M - 240);
+
+      // 内墙：会议室 A / B + 茶水间（左侧三段）
+      wallRect(M + WALL, M + WALL, 8, H - M * 2 - WALL * 2);
+      wallRect(M + WALL, 330, 340, 8);
+      ctx.fillStyle = v("--rw-plan-floor"); ctx.fillRect(M + WALL + 180, 326, 56, 16);
+      doorArc(M + WALL + 236, 330, 46, Math.PI, Math.PI * 1.5);
+      wallRect(M + WALL, 560, 340, 8);
+      ctx.fillStyle = v("--rw-plan-floor"); ctx.fillRect(M + WALL + 60, 556, 56, 16);
+      doorArc(M + WALL + 116, 560, 46, Math.PI * 1.5, Math.PI);
+
+      // 区域标注
+      ctx.fillStyle = v("--rw-fg-muted"); ctx.font = "600 13px -apple-system, PingFang SC";
+      ctx.fillText("会议室 A", M + WALL + 22, M + WALL + 26);
+      ctx.fillText("会议室 B", M + WALL + 22, 356);
+      ctx.fillText("开放工位区", 560, M + WALL + 26);
+      ctx.font = "500 12px -apple-system, PingFang SC";
+      ctx.fillText("茶水角", M + WALL + 64, 620);
+
+      confTable(M + WALL + 40, M + WALL + 52);
+      confTable(M + WALL + 44, 380, 0.92);
+
+      // 茶水角吧台
+      ctx.fillStyle = v("--rw-plan-shadow"); roundRect(M + WALL + 30, 640, 150, 40, 8); ctx.fill();
+      ctx.fillStyle = v("--rw-plan-furniture"); roundRect(M + WALL + 26, 636, 150, 40, 8); ctx.fill();
+      ctx.strokeStyle = v("--rw-plan-furniture-line"); ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = v("--rw-fg-subtle"); ctx.font = "500 11px -apple-system";
+      ctx.fillText("☕", M + WALL + 90, 661);
+      plant(M + WALL + 260, 660, 16);
+
+      // 12 工位
+      for (const s of SEATS) {
+        if (s.n > OFFICE_SEATS_PER_FLOOR) continue;
+        const st = staffAt(s.n);
+        desk(s.x - 58, s.y - 38, 116, 76, `${floor}F-${String(s.n).padStart(2, "0")}`, st?.name ?? "");
+        chairTop(s.x, s.y + 50, Boolean(st), st?.name ?? "");
+        if (hoverSeat === s.n) {
+          ctx.strokeStyle = st ? v("--rw-accent") : v("--rw-fg-subtle");
+          ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+          roundRect(s.x - 68, s.y - 48, 136, 134, 10); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      plant(W - M - 52, M + 60, 20);
+      plant(M + 60, H - M - 60, 20);
+
+      ctx.fillStyle = v("--rw-fg-subtle"); ctx.font = "500 11px -apple-system";
+      ctx.textAlign = "right";
+      ctx.fillText(`${floor}F · 楼层平面`, W - M, H - 18);
+      ctx.textAlign = "start";
+
+      if (!destroyed) raf = requestAnimationFrame(draw);
+    };
+
+    const pick = (e: MouseEvent): number => {
+      const r = canvas.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * W;
+      const y = ((e.clientY - r.top) / r.height) * H;
+      for (const s of SEATS) {
+        if (s.n > OFFICE_SEATS_PER_FLOOR) continue;
+        if (Math.abs(x - s.x) < 68 && y > s.y - 48 && y < s.y + 86) return s.n;
+      }
+      return -1;
+    };
+    let lastTap = 0;
+    const onClick = (e: MouseEvent): void => {
+      const n = pick(e);
+      if (n < 1) return;
+      const now = Date.now();
+      if (now - lastTap < 80) return;
+      lastTap = now;
+      clickRef.current?.(n, staffAt(n));
+    };
+    const onMove = (e: MouseEvent): void => {
+      hoverSeat = pick(e);
+      canvas.style.cursor = hoverSeat > 0 ? "pointer" : "default";
+    };
+    const onLeave = (): void => {
+      hoverSeat = -1;
+    };
+
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", `办公室楼层 ${floor}F：${OFFICE_SEATS_PER_FLOOR} 工位平面图`);
+    host.appendChild(canvas);
+    canvas.addEventListener("click", onClick);
+    canvas.addEventListener("pointermove", onMove);
+    canvas.addEventListener("pointerleave", onLeave);
+    raf = requestAnimationFrame(draw);
+
     return () => {
       destroyed = true;
-      observer?.disconnect();
-      detach?.();
-      if (app) {
-        try {
-          app.destroy(true, { children: true, texture: true });
-        } catch (e) {
-          console.warn("[PixOfficeScene] destroy ignored:", e);
-        }
-      }
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      canvas.removeEventListener("click", onClick);
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerleave", onLeave);
+      canvas.remove();
     };
-  }, [floor, bySeat, onSeatClick]);
+  }, [floor, bySeat]);
 
-  return (
-    <div ref={hostRef} data-testid={dataTestId} style={{ minHeight: CANVAS_H, width: "100%" }} />
-  );
+  return <div ref={hostRef} data-testid={dataTestId} style={{ minHeight: H / 2, width: "100%" }} />;
 }

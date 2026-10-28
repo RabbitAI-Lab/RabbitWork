@@ -49,9 +49,9 @@ export const staffDto = z.object({
 });
 export type StaffDto = z.infer<typeof staffDto>;
 
-/** 办公室楼层/工位常量（OFFICE-001：每层 20 工位，默认 3 层） */
+/** 办公室楼层/工位常量（OFFICE-004 v5：每层 12 工位（平面图三列×四行），默认 3 层） */
 export const OFFICE_FLOOR_COUNT = 3;
-export const OFFICE_SEATS_PER_FLOOR = 20;
+export const OFFICE_SEATS_PER_FLOOR = 12;
 
 /** 工位分配/切换（OFFICE-001） */
 export const deskAssignInput = z.object({
